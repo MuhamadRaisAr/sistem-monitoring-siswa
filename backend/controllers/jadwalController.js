@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.getAllJadwal = async (req, res) => {
     try {
-        const { kelas, tahun_ajaran_id } = req.query;
+        const { kelas, tahun_ajaran_id, siswa_id } = req.query;
         let query = `
             SELECT j.*, u.nama_lengkap as nama_guru 
             FROM jadwal_pelajaran j
@@ -24,7 +24,33 @@ exports.getAllJadwal = async (req, res) => {
         query += ` ORDER BY FIELD(j.hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'), j.jam_mulai ASC`;
 
         const [rows] = await db.query(query, queryParams);
-        res.json(rows);
+
+        let mappedEkskul = [];
+        if (siswa_id) {
+            // Fetch ekstrakurikuler specifically for this student
+            const [ekskulRows] = await db.query(`
+                SELECT e.*, u.nama_lengkap as nama_guru 
+                FROM ekstrakurikuler e
+                JOIN nilai_ekskul ne ON e.id = ne.ekskul_id
+                LEFT JOIN users u ON e.pembina_id = u.id
+                WHERE e.hari IS NOT NULL AND e.hari != '' AND ne.siswa_id = ?
+            `, [siswa_id]);
+
+            mappedEkskul = ekskulRows.map(e => ({
+                id: 'ekskul_' + e.id,
+                hari: e.hari,
+                jam_mulai: e.jam_mulai || '-',
+                jam_selesai: e.jam_selesai || '-',
+                mata_pelajaran: 'Ekskul: ' + e.nama_ekskul,
+                kelas: '-',
+                guru_id: e.pembina_id,
+                nama_guru: e.nama_guru || 'Belum ditentukan',
+                tahun_ajaran_id: tahun_ajaran_id || null,
+                is_ekskul: true
+            }));
+        }
+
+        res.json([...rows, ...mappedEkskul]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });

@@ -32,7 +32,7 @@ exports.createTahunAjaran = async (req, res) => {
             return res.status(403).json({ message: 'Access denied. Admins only.' });
         }
 
-        const { nama_tahun, semester, set_active } = req.body;
+        const { nama_tahun, semester, set_active, copy_from_id } = req.body;
         if (!nama_tahun || !semester) {
             return res.status(400).json({ message: 'Nama tahun dan semester wajib diisi.' });
         }
@@ -46,8 +46,20 @@ exports.createTahunAjaran = async (req, res) => {
             'INSERT INTO tahun_ajaran (nama_tahun, semester, is_active) VALUES (?, ?, ?)',
             [nama_tahun, semester, set_active ? 1 : 0]
         );
+        
+        const newId = result.insertId;
 
-        return res.status(201).json({ message: 'Tahun Ajaran berhasil ditambahkan.', id: result.insertId });
+        // Copy schedules from another academic year if requested
+        if (copy_from_id) {
+            await db.query(`
+                INSERT INTO jadwal_pelajaran (guru_id, tahun_ajaran_id, mata_pelajaran, kelas, hari, jam_mulai, jam_selesai)
+                SELECT guru_id, ?, mata_pelajaran, kelas, hari, jam_mulai, jam_selesai 
+                FROM jadwal_pelajaran 
+                WHERE tahun_ajaran_id = ?
+            `, [newId, copy_from_id]);
+        }
+
+        return res.status(201).json({ message: 'Tahun Ajaran berhasil ditambahkan.', id: newId });
     } catch (err) {
         console.error('Create tahun ajaran error:', err);
         return res.status(500).json({ message: 'Internal server error' });
@@ -62,7 +74,7 @@ exports.updateTahunAjaran = async (req, res) => {
         }
 
         const { id } = req.params;
-        const { nama_tahun, semester, set_active } = req.body;
+        const { nama_tahun, semester, set_active, copy_from_id } = req.body;
 
         if (!nama_tahun || !semester) {
             return res.status(400).json({ message: 'Nama tahun dan semester wajib diisi.' });
@@ -83,6 +95,22 @@ exports.updateTahunAjaran = async (req, res) => {
             'UPDATE tahun_ajaran SET nama_tahun = ?, semester = ?, is_active = ? WHERE id = ?',
             [nama_tahun, semester, set_active ? 1 : 0, id]
         );
+
+        // Copy schedules from another academic year if requested during edit
+        if (copy_from_id) {
+            // Cek apakah sudah ada jadwal di tahun ajaran ini
+            const [existing] = await db.query('SELECT id FROM jadwal_pelajaran WHERE tahun_ajaran_id = ? LIMIT 1', [id]);
+            
+            // Jika belum ada jadwal, maka copy. (Mencegah duplikasi data jika di-klik berulang kali)
+            if (existing.length === 0) {
+                await db.query(`
+                    INSERT INTO jadwal_pelajaran (guru_id, tahun_ajaran_id, mata_pelajaran, kelas, hari, jam_mulai, jam_selesai)
+                    SELECT guru_id, ?, mata_pelajaran, kelas, hari, jam_mulai, jam_selesai 
+                    FROM jadwal_pelajaran 
+                    WHERE tahun_ajaran_id = ?
+                `, [id, copy_from_id]);
+            }
+        }
 
         return res.json({ message: 'Tahun Ajaran berhasil diperbarui.' });
     } catch (err) {
@@ -133,28 +161,18 @@ exports.deleteTahunAjaran = async (req, res) => {
 
 
 
-        // Check if there are related records
-        const queries = [
-            db.query('SELECT id FROM jadwal_pelajaran WHERE tahun_ajaran_id = ? LIMIT 1', [id]),
-            db.query('SELECT id FROM nilai_siswa WHERE tahun_ajaran_id = ? LIMIT 1', [id]),
-            db.query('SELECT id FROM kehadiran_siswa WHERE tahun_ajaran_id = ? LIMIT 1', [id]),
-            db.query('SELECT id FROM spp_billing WHERE tahun_ajaran_id = ? LIMIT 1', [id]),
-            db.query('SELECT id FROM kedisiplinan WHERE tahun_ajaran_id = ? LIMIT 1', [id])
-        ];
+        // HAPUS SAKTI: Hapus semua data yang berkaitan dengan tahun ajaran ini.
+        // Lakukan secara berurutan untuk menghindari foreign key constraint error.
+        await db.query('DELETE FROM kehadiran_siswa WHERE tahun_ajaran_id = ?', [id]);
+        await db.query('DELETE FROM nilai_siswa WHERE tahun_ajaran_id = ?', [id]);
+        await db.query('DELETE FROM spp_billing WHERE tahun_ajaran_id = ?', [id]);
+        await db.query('DELETE FROM kedisiplinan WHERE tahun_ajaran_id = ?', [id]);
+        await db.query('DELETE FROM jadwal_pelajaran WHERE tahun_ajaran_id = ?', [id]);
 
-        const results = await Promise.all(queries);
-        
-        for (const [rows] of results) {
-            if (rows.length > 0) {
-                return res.status(400).json({ 
-                    message: 'Tahun Ajaran tidak dapat dihapus karena masih ada data (Jadwal/Nilai/Absensi/Keuangan/Kedisiplinan) yang terkait dengannya.' 
-                });
-            }
-        }
-
+        // Hapus tahun ajaran
         await db.query('DELETE FROM tahun_ajaran WHERE id = ?', [id]);
 
-        return res.json({ message: 'Tahun Ajaran berhasil dihapus.' });
+        return res.json({ message: 'Tahun Ajaran beserta SEMUA data terkait berhasil dihapus.' });
     } catch (err) {
         console.error('Delete tahun ajaran error:', err);
         return res.status(500).json({ message: 'Internal server error' });

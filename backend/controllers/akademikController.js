@@ -71,7 +71,7 @@ exports.createLog = async (req, res) => {
             return res.status(403).json({ message: 'Access denied. Admins or Guru only.' });
         }
 
-        const { siswa_id, jenis_kegiatan, deskripsi, tanggal, kehadiran, tahun_ajaran_id } = req.body;
+        const { siswa_id, jenis_kegiatan, deskripsi, tanggal, waktu, kehadiran, tahun_ajaran_id } = req.body;
         if (!siswa_id || !jenis_kegiatan || !tanggal || !kehadiran) {
             return res.status(400).json({ message: 'siswa ID, activity type, date, and attendance status are required.' });
         }
@@ -83,6 +83,13 @@ exports.createLog = async (req, res) => {
             return res.status(400).json({ message: 'Invalid attendance status.' });
         }
 
+        // Handle time (waktu) fallback
+        let timeToSave = waktu;
+        if (!timeToSave) {
+            const now = new Date();
+            timeToSave = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+        }
+
         // Handle file upload path
         let bukti_foto = null;
         if (req.file) {
@@ -90,8 +97,8 @@ exports.createLog = async (req, res) => {
         }
 
         const [result] = await db.query(
-            'INSERT INTO kehadiran_siswa (siswa_id, tahun_ajaran_id, jenis_kegiatan, deskripsi, tanggal, kehadiran, bukti_foto) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [siswa_id, tahun_ajaran_id || null, jenis_kegiatan, deskripsi || '', tanggal, kehadiran, bukti_foto]
+            'INSERT INTO kehadiran_siswa (siswa_id, tahun_ajaran_id, jenis_kegiatan, deskripsi, tanggal, waktu, kehadiran, bukti_foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [siswa_id, tahun_ajaran_id || null, jenis_kegiatan, deskripsi || '', tanggal, timeToSave, kehadiran, bukti_foto]
         );
 
         return res.status(201).json({ message: 'Academic record logged successfully', id: result.insertId });
@@ -110,14 +117,17 @@ exports.updateLog = async (req, res) => {
         }
 
         const { id } = req.params;
-        const { siswa_id, jenis_kegiatan, deskripsi, tanggal, kehadiran, tahun_ajaran_id } = req.body;
+        const { siswa_id, jenis_kegiatan, deskripsi, tanggal, waktu, kehadiran, tahun_ajaran_id } = req.body;
 
         if (!siswa_id || !jenis_kegiatan || !tanggal || !kehadiran) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
 
-        let query = 'UPDATE kehadiran_siswa SET siswa_id = ?, jenis_kegiatan = ?, deskripsi = ?, tanggal = ?, kehadiran = ?, tahun_ajaran_id = ?';
-        const params = [siswa_id, jenis_kegiatan, deskripsi || '', tanggal, kehadiran, tahun_ajaran_id || null];
+        const existing = await db.query('SELECT waktu FROM kehadiran_siswa WHERE id = ?', [id]);
+        let timeToUpdate = waktu || (existing[0] && existing[0].length > 0 ? existing[0][0].waktu : null);
+
+        let query = 'UPDATE kehadiran_siswa SET siswa_id = ?, jenis_kegiatan = ?, deskripsi = ?, tanggal = ?, waktu = ?, kehadiran = ?, tahun_ajaran_id = ?';
+        const params = [siswa_id, jenis_kegiatan, deskripsi || '', tanggal, timeToUpdate, kehadiran, tahun_ajaran_id || null];
 
         if (req.file) {
             query += ', bukti_foto = ?';

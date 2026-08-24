@@ -19,17 +19,17 @@ exports.getAllEkskul = async (req, res) => {
 
 // Create new ekskul
 exports.createEkskul = async (req, res) => {
-    const { nama_ekskul, pembina_id, deskripsi } = req.body;
+    const { nama_ekskul, pembina_id, deskripsi, hari, jam_mulai, jam_selesai } = req.body;
     try {
         if (!nama_ekskul) {
             return res.status(400).json({ message: 'Nama ekskul wajib diisi.' });
         }
 
         const query = `
-            INSERT INTO ekstrakurikuler (nama_ekskul, pembina_id, deskripsi)
-            VALUES (?, ?, ?)
+            INSERT INTO ekstrakurikuler (nama_ekskul, pembina_id, deskripsi, hari, jam_mulai, jam_selesai)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
-        const [result] = await db.query(query, [nama_ekskul, pembina_id || null, deskripsi || '']);
+        const [result] = await db.query(query, [nama_ekskul, pembina_id || null, deskripsi || '', hari || null, jam_mulai || null, jam_selesai || null]);
         
         res.status(201).json({ id: result.insertId, message: 'Ekstrakurikuler berhasil ditambahkan.' });
     } catch (err) {
@@ -41,7 +41,7 @@ exports.createEkskul = async (req, res) => {
 // Update ekskul
 exports.updateEkskul = async (req, res) => {
     const { id } = req.params;
-    const { nama_ekskul, pembina_id, deskripsi } = req.body;
+    const { nama_ekskul, pembina_id, deskripsi, hari, jam_mulai, jam_selesai } = req.body;
     
     try {
         if (!nama_ekskul) {
@@ -50,10 +50,10 @@ exports.updateEkskul = async (req, res) => {
 
         const query = `
             UPDATE ekstrakurikuler 
-            SET nama_ekskul = ?, pembina_id = ?, deskripsi = ?
+            SET nama_ekskul = ?, pembina_id = ?, deskripsi = ?, hari = ?, jam_mulai = ?, jam_selesai = ?
             WHERE id = ?
         `;
-        await db.query(query, [nama_ekskul, pembina_id || null, deskripsi || '', id]);
+        await db.query(query, [nama_ekskul, pembina_id || null, deskripsi || '', hari || null, jam_mulai || null, jam_selesai || null, id]);
         
         res.json({ message: 'Ekstrakurikuler berhasil diupdate.' });
     } catch (err) {

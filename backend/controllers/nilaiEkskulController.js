@@ -38,7 +38,7 @@ exports.saveNilaiEkskul = async (req, res) => {
             return res.status(400).json({ message: 'Data tidak lengkap (siswa, ekskul, tahun ajaran, dan predikat wajib diisi).' });
         }
 
-        const validPredikats = ['Sangat Baik', 'Baik', 'Cukup', 'Kurang'];
+        const validPredikats = ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'E'];
         if (!validPredikats.includes(predikat)) {
             return res.status(400).json({ message: `Nilai predikat '${predikat}' tidak valid.` });
         }
@@ -131,6 +131,59 @@ exports.addAnggotaEkskul = async (req, res) => {
         res.status(201).json({ id: result.insertId, message: 'Siswa berhasil ditambahkan ke ekskul.' });
     } catch (err) {
         console.error('Error in addAnggotaEkskul:', err);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+    }
+};
+
+// Get nilai ekskul semua siswa dalam satu kelas (untuk rekap wali kelas)
+exports.getNilaiEkskulByKelas = async (req, res) => {
+    try {
+        const { kelas, tahun_ajaran_id } = req.query;
+        if (!kelas || !tahun_ajaran_id) {
+            return res.status(400).json({ message: 'kelas and tahun_ajaran_id are required' });
+        }
+
+        const query = `
+            SELECT 
+                s.id as siswa_id,
+                s.nama_lengkap,
+                s.nis,
+                e.id as ekskul_id,
+                e.nama_ekskul,
+                ne.predikat,
+                ne.keterangan
+            FROM siswa s
+            LEFT JOIN nilai_ekskul ne ON ne.siswa_id = s.id AND ne.tahun_ajaran_id = ?
+            LEFT JOIN ekstrakurikuler e ON ne.ekskul_id = e.id
+            WHERE s.kelas = ?
+            ORDER BY s.nama_lengkap ASC, e.nama_ekskul ASC
+        `;
+        const [rows] = await db.query(query, [tahun_ajaran_id, kelas]);
+
+        // Group by siswa
+        const siswaMap = {};
+        rows.forEach(row => {
+            if (!siswaMap[row.siswa_id]) {
+                siswaMap[row.siswa_id] = {
+                    siswa_id: row.siswa_id,
+                    nama_lengkap: row.nama_lengkap,
+                    nis: row.nis,
+                    ekskul: []
+                };
+            }
+            if (row.ekskul_id) {
+                siswaMap[row.siswa_id].ekskul.push({
+                    ekskul_id: row.ekskul_id,
+                    nama_ekskul: row.nama_ekskul,
+                    predikat: row.predikat,
+                    keterangan: row.keterangan
+                });
+            }
+        });
+
+        res.json(Object.values(siswaMap));
+    } catch (err) {
+        console.error('Error in getNilaiEkskulByKelas:', err);
         res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
     }
 };

@@ -235,7 +235,7 @@ exports.getRekapKelas = async (req, res) => {
                 }
             });
 
-            row.total_nilai = parseFloat(sumTotal.toFixed(2));
+            row.total_nilai = Math.round(sumTotal);
             row.rata_rata = countMapel > 0 ? parseFloat((sumTotal / countMapel).toFixed(2)) : 0;
             return row;
         });
