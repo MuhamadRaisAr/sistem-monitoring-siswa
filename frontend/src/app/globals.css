@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f4f7f5;
+  --foreground: #0f172a;
+  
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-200: #a7f3d0;
+  --emerald-300: #6ee7b7;
+  --emerald-400: #34d399;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --emerald-800: #065f46;
+  --emerald-900: #064e3b;
+  --emerald-950: #022c22;
+  
+  --gold-50: #fefce8;
+  --gold-100: #fef9c3;
+  --gold-500: #eab308;
+  --gold-600: #ca8a04;
+  --gold-700: #a16207;
+  
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-border: rgba(16, 185, 129, 0.12);
+}
+
+.dark {
+  --background: #020c08;
+  --foreground: #f1f5f9;
+  --card-bg: rgba(11, 33, 26, 0.85);
+  --card-border: rgba(16, 185, 129, 0.22);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(234, 179, 8, 0.04) 0px, transparent 50%);
+}
+
+.dark body {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(4, 120, 87, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(161, 98, 7, 0.08) 0px, transparent 50%);
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+}
+
+.dark .glass-panel {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Global: make large containers/cards (tables) perfectly square (kotak) */
+.rounded-3xl { border-radius: 0px !important; }
+.rounded-2xl { border-radius: 0px !important; }
+.glass-panel { border-radius: 0px !important; }
+
+/* EXCEPTION: Any form/modal inside a fixed overlay should KEEP its rounded shape */
+.fixed .rounded-3xl, .fixed.rounded-3xl { border-radius: 1.5rem !important; }
+.fixed .rounded-2xl, .fixed.rounded-2xl { border-radius: 1rem !important; }
+.fixed .glass-panel, .fixed.glass-panel { border-radius: 1.5rem !important; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--emerald-500);
+}
+
+/* Modern card hover */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -8px rgba(16, 185, 129, 0.25);
+}
+
+/* Micro-animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+
+/* Light mode overrides for text color fixes */
+html:not(.dark) h1.text-white,
+html:not(.dark) h2.text-white,
+html:not(.dark) h3.text-white,
+html:not(.dark) h4.text-white,
+html:not(.dark) td.text-white,
+html:not(.dark) p.text-white,
+html:not(.dark) span.text-white:not(button *):not(a *):not(.bg-emerald-600):not(.bg-red-500):not(.bg-emerald-500) {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+/* Colored accent text contrast fixes in light mode */
+html:not(.dark) .text-emerald-400 {
+  color: #059669 !important; /* emerald-600 */
+}
+html:not(.dark) .text-amber-400 {
+  color: #d97706 !important; /* amber-600 */
+}
+html:not(.dark) .text-red-400 {
+  color: #dc2626 !important; /* red-600 */
+}
+html:not(.dark) .text-sky-400 {
+  color: #0284c7 !important; /* sky-600 */
+}
+
+/* Fix table hover and background states inside white card elements in light mode */
+html:not(.dark) tr.hover\:bg-white\/\[0\.02\]:hover,
+html:not(.dark) tr.hover\:bg-white\/\[0\.01\]:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+html:not(.dark) div.bg-white\/\[0\.01\] {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+}
+
+html:not(.dark) div.bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+html:not(.dark) div.border-white\/10 {
+  border-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Universal Inputs, selects, and textareas light/dark adaptation */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+input[type="email"],
+select,
+textarea {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+input[type="password"]::placeholder,
+input[type="email"]::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Dark mode inputs override */
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="password"],
+.dark input[type="email"],
+.dark select,
+.dark textarea {
+  background-color: rgba(2, 12, 8, 0.5) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(16, 185, 129, 0.15) !important;
+}
+
+.dark input[type="text"]::placeholder,
+.dark input[type="number"]::placeholder,
+.dark input[type="password"]::placeholder,
+.dark input[type="email"]::placeholder,
+.dark textarea::placeholder {
+  color: #475569 !important; /* slate-600 */
+}
+
+/* Global dropdown options styling for theme adaptive dropdowns */
+option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.dark option {
+  background-color: #020c08 !important;
+  color: #f1f5f9 !important;
+}
