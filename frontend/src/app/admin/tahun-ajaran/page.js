@@ -217,20 +217,20 @@ export default function AdminTahunAjaranPage() {
             )}
 
             {/* Table Box */}
-            <div className="glass-panel rounded-3xl p-4 sm:p-6 w-full min-w-0 overflow-hidden">
+            <div className="w-full min-w-0 animate-fade-in">
                 {loading ? (
                     <div className="flex h-40 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     </div>
                 ) : (
-                    <div className="w-full max-w-full overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-xl border border-slate-200 dark:border-emerald-500/10">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                    <div className="w-full min-w-0 overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                        <table className="w-full text-center text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
-                                    <th className="py-2 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 text-slate-800 dark:text-slate-300 font-extrabold align-middle static md:sticky md:left-0 md:z-30 bg-slate-50 dark:bg-[#061e16] shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)]">Tahun</th>
-                                    <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold align-middle bg-slate-50 dark:bg-[#061e16]">Semester</th>
-                                    <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold align-middle bg-slate-50 dark:bg-[#061e16]">Status Aktif</th>
-                                    <th className="py-2 px-2 border-b border-slate-300 dark:border-emerald-500/10 text-right text-slate-800 dark:text-slate-300 font-extrabold align-middle bg-slate-50 dark:bg-[#061e16]">Aksi</th>
+                                    <th className="py-2 px-3 w-[35%] border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase tracking-wider text-[10px] align-middle">Tahun</th>
+                                    <th className="py-2 px-3 w-[25%] border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase tracking-wider text-[10px] align-middle">Semester</th>
+                                    <th className="py-2 px-3 w-[25%] border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase tracking-wider text-[10px] align-middle">Status Aktif</th>
+                                    <th className="py-2 px-3 w-[15%] border-b border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase tracking-wider text-[10px] align-middle">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -242,12 +242,12 @@ export default function AdminTahunAjaranPage() {
                                     </tr>
                                 ) : (
                                     filteredTahunAjaran.map((item) => (
-                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group">
-                                            <td className="py-1.5 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white static md:sticky md:left-0 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors drop-shadow-md">
+                                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group cursor-pointer">
+                                            <td className="py-1.5 px-3 border-b border-r border-slate-300 dark:border-emerald-500/10 font-bold text-emerald-600 dark:text-emerald-400 text-center text-[11px] bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                 {item.nama_tahun || item.tahun}
                                             </td>
-                                            <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
-                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-lg text-[10px] font-bold ${
+                                            <td className="py-1.5 px-3 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
+                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                                     item.semester === 'Ganjil' 
                                                     ? 'bg-amber-100 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' 
                                                     : 'bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20'
@@ -255,31 +255,31 @@ export default function AdminTahunAjaranPage() {
                                                     {item.semester}
                                                 </span>
                                             </td>
-                                            <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
+                                            <td className="py-1.5 px-3 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                 {(item.is_active || item.status_aktif) === 1 ? (
-                                                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] bg-emerald-100 dark:bg-emerald-500/10 px-1.5 py-0.5 border border-emerald-200 dark:border-emerald-500/20 rounded-lg">
-                                                        <CheckCircle className="w-3 h-3" />
+                                                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-[9px] bg-emerald-100 dark:bg-emerald-500/10 px-1.5 py-0.5 border border-emerald-200 dark:border-emerald-500/20 rounded">
+                                                        <CheckCircle className="w-2.5 h-2.5" />
                                                         Aktif
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 border border-slate-200 dark:border-slate-700 rounded-lg">
-                                                        <XCircle className="w-3 h-3" />
+                                                    <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold text-[9px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 border border-slate-200 dark:border-slate-700 rounded">
+                                                        <XCircle className="w-2.5 h-2.5" />
                                                         Tidak Aktif
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="py-1.5 px-2 border-b border-slate-300 dark:border-emerald-500/10 text-right bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
-                                                <div className="flex justify-end gap-2">
+                                            <td className="py-1.5 px-3 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
+                                                <div className="flex justify-center gap-1.5">
                                                     <button
                                                         onClick={() => openEditModal(item)}
-                                                        className="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 transition-colors border border-emerald-200 dark:border-emerald-500/20 cursor-pointer"
+                                                        className="p-1 rounded bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 transition-colors border border-emerald-200 dark:border-emerald-500/20"
                                                         title="Edit"
                                                     >
                                                         <Edit2 className="h-3 w-3" />
                                                     </button>
                                                     <button
                                                         onClick={() => openDeleteModal(item)}
-                                                        className="p-1 rounded-lg bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors border border-red-200 dark:border-red-500/20 cursor-pointer"
+                                                        className="p-1 rounded bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors border border-red-200 dark:border-red-500/20"
                                                         title="Hapus"
                                                     >
                                                         <Trash2 className="h-3 w-3" />

@@ -235,7 +235,7 @@ export default function AdminEkstrakurikulerPage() {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white dark:bg-[#020c08] rounded-3xl w-full max-w-[400px] shadow-2xl overflow-hidden border border-slate-100 dark:border-emerald-500/20">
+                    <div className="bg-white dark:bg-[#020c08] rounded-3xl w-full max-w-[520px] shadow-2xl overflow-hidden border border-slate-100 dark:border-emerald-500/20">
                         <div className="flex justify-between items-center p-5 border-b border-slate-100 dark:border-emerald-500/10">
                             <h2 className="text-xl font-bold text-slate-800 dark:text-white">
                                 {modalMode === 'add' ? 'Tambah Ekskul' : 'Edit Ekskul'}
@@ -245,9 +245,9 @@ export default function AdminEkstrakurikulerPage() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-4 space-y-3">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nama Ekstrakurikuler *</label>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Ekstrakurikuler *</label>
                                 <input 
                                     type="text"
                                     required
@@ -260,7 +260,7 @@ export default function AdminEkstrakurikulerPage() {
                             
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="relative">
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Guru Pembina</label>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Guru Pembina</label>
                                     <div 
                                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                         className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 outline-none text-slate-800 dark:text-white cursor-pointer flex justify-between items-center"
@@ -301,7 +301,7 @@ export default function AdminEkstrakurikulerPage() {
                                 </div>
 
                                 <div className="relative">
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Hari</label>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Hari</label>
                                     <select
                                         value={formData.hari}
                                         onChange={(e) => setFormData({...formData, hari: e.target.value})}
@@ -322,7 +322,7 @@ export default function AdminEkstrakurikulerPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Jam Mulai</label>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai</label>
                                     <input 
                                         type="time"
                                         value={formData.jam_mulai}
@@ -331,7 +331,7 @@ export default function AdminEkstrakurikulerPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Jam Selesai</label>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai</label>
                                     <input 
                                         type="time"
                                         value={formData.jam_selesai}
@@ -342,17 +342,17 @@ export default function AdminEkstrakurikulerPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Deskripsi / Keterangan</label>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Keterangan</label>
                                 <textarea 
                                     value={formData.deskripsi}
                                     onChange={(e) => setFormData({...formData, deskripsi: e.target.value})}
-                                    rows={2}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white resize-none"
+                                    rows={1}
+                                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white resize-none text-sm"
                                     placeholder="Opsional..."
                                 ></textarea>
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-2">
                                 <button 
                                     type="submit" 
                                     disabled={submitting}

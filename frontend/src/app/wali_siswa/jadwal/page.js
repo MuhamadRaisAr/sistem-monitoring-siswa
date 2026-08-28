@@ -58,7 +58,16 @@ export default function WaliJadwalPage() {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                setJadwalList(Array.isArray(data) ? data : []);
+                const raw = Array.isArray(data) ? data : [];
+                // Deduplicate: same hari + jam_mulai + jam_selesai + mata_pelajaran
+                const seen = new Set();
+                const unique = raw.filter(j => {
+                    const key = `${j.hari}|${j.jam_mulai}|${j.jam_selesai}|${j.mata_pelajaran}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+                setJadwalList(unique);
             } catch (err) {
                 console.error('Error fetching jadwal:', err);
             } finally {

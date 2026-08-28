@@ -245,41 +245,47 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
                 <div className="bg-white dark:bg-[#041610] rounded-3xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-emerald-500/10 overflow-hidden">
                     
                     {/* Modal Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center p-5 border-b border-slate-100 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16] gap-4">
-                        <div className="flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-emerald-500" />
-                            <h3 className="font-bold text-lg text-slate-800 dark:text-white">
-                                Riwayat Raport: <span className="text-emerald-600">{student.nama_lengkap}</span>
-                            </h3>
+                    <div className="flex justify-between items-start sm:items-center p-4 sm:p-5 border-b border-slate-100 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16] gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <FileText className="h-5 w-5 text-emerald-500" />
+                                <h3 className="font-bold text-sm md:text-base text-slate-800 dark:text-white truncate">
+                                    Riwayat Raport: <span className="text-emerald-600">{student.nama_lengkap}</span>
+                                </h3>
+                            </div>
+                            
+                            <div className="w-full sm:w-auto shrink-0">
+                                <select
+                                    value={selectedTahunAjaranId}
+                                    onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
+                                    disabled={loadingTahunAjaran || loadingRaport}
+                                    className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#041610] py-2 px-3 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
+                                >
+                                    {loadingTahunAjaran ? (
+                                        <option>Memuat...</option>
+                                    ) : tahunAjaranList.length === 0 ? (
+                                        <option value="">Tidak ada data TA</option>
+                                    ) : (
+                                        tahunAjaranList.map(ta => (
+                                            <option key={ta.id} value={ta.id}>
+                                                {ta.nama_tahun} {ta.semester}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                            </div>
                         </div>
                         
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={selectedTahunAjaranId}
-                                onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                                disabled={loadingTahunAjaran || loadingRaport}
-                                className="rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#041610] py-2 px-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm text-ellipsis"
-                            >
-                                {loadingTahunAjaran ? (
-                                    <option>Memuat...</option>
-                                ) : tahunAjaranList.length === 0 ? (
-                                    <option value="">Tidak ada data TA</option>
-                                ) : (
-                                    tahunAjaranList.map(ta => (
-                                        <option key={ta.id} value={ta.id}>
-                                            {ta.nama_tahun} {ta.semester}
-                                        </option>
-                                    ))
-                                )}
-                            </select>
-                            
-                            <button 
-                                onClick={onClose}
-                                className="p-2 hover:bg-slate-200 dark:hover:bg-emerald-500/20 rounded-full transition-colors cursor-pointer"
-                            >
-                                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                            </button>
-                        </div>
+                        <button 
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onClose();
+                            }}
+                            className="p-2 hover:bg-slate-200 dark:hover:bg-emerald-500/20 rounded-full transition-colors cursor-pointer shrink-0 ml-1 self-start sm:self-center"
+                        >
+                            <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                        </button>
                     </div>
                     
                     {/* Modal Body with Preview */}

@@ -12,6 +12,7 @@ export default function CatatPelanggaranPage() {
 
     const { 
         tahunAjaranList, 
+        activeTahunAjaranList,
         activeTahunAjaran,
         selectedTahunAjaranId, 
         setSelectedTahunAjaranId,
@@ -236,7 +237,7 @@ export default function CatatPelanggaranPage() {
             </div>
 
             {/* Selectors */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
+            <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col gap-4">
                 <div className="flex flex-row gap-3 sm:gap-4 w-full">
                     {/* Tahun Ajaran */}
                     <div className="flex flex-col gap-1.5 w-[260px] sm:w-[220px]">
@@ -244,15 +245,15 @@ export default function CatatPelanggaranPage() {
                         <select 
                             value={selectedTahunAjaranId} 
                             onChange={e => setSelectedTahunAjaranId(e.target.value)}
-                            disabled={loadingTahunAjaran}
-                            className="w-full rounded-xl border border-emerald-100 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm disabled:opacity-50"
+                            disabled={loadingTahunAjaran || activeTahunAjaranList.length <= 1}
+                            className={`w-full rounded-xl border border-emerald-100 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm disabled:opacity-50 ${(activeTahunAjaranList?.length || 0) <= 1 ? 'appearance-none cursor-default bg-none' : 'cursor-pointer'}`}
                         >
                             {loadingTahunAjaran ? (
                                 <option>Memuat...</option>
-                            ) : tahunAjaranList.length === 0 ? (
+                            ) : activeTahunAjaranList.length === 0 ? (
                                 <option value="">Tidak ada data</option>
                             ) : (
-                                tahunAjaranList.map((ta) => (
+                                activeTahunAjaranList.map((ta) => (
                                     <option key={ta.id} value={ta.id}>
                                         {ta.nama_tahun} {ta.semester}
                                     </option>
@@ -298,16 +299,16 @@ export default function CatatPelanggaranPage() {
                         <p className="text-sm font-medium text-center px-4">Belum ada pelanggaran kedisiplinan tercatat hari ini.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-8">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                    <div>
+                        <table className="w-full table-fixed text-left text-xs border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                                    <th className="py-4 px-5 w-12 text-center border border-slate-200">No</th>
-                                    <th className="py-4 px-5 border border-slate-200">Tanggal</th>
-                                    <th className="py-4 px-5 border border-slate-200">Siswa</th>
-                                    <th className="py-4 px-5 border border-slate-200">Kelas</th>
-                                    <th className="py-4 px-5 border border-slate-200">Pelanggaran / Tindakan</th>
-                                    <th className="py-4 px-5 text-right border border-slate-200">Aksi</th>
+                                    <th className="py-3 px-3 w-10 text-center border border-slate-200">No</th>
+                                    <th className="py-3 px-3 w-36 border border-slate-200">Tanggal</th>
+                                    <th className="py-3 px-3 w-44 border border-slate-200">Siswa</th>
+                                    <th className="py-3 px-3 w-32 border border-slate-200">Kelas</th>
+                                    <th className="py-3 px-3 border border-slate-200">Pelanggaran / Tindakan</th>
+                                    <th className="py-3 px-3 w-20 text-center border border-slate-200">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm">
@@ -316,31 +317,30 @@ export default function CatatPelanggaranPage() {
                                         key={r.id}
                                         className="hover:bg-slate-50 transition-colors group"
                                     >
-                                        <td className="py-4 px-5 text-center text-slate-500 font-black text-xs border border-slate-200">
+                                        <td className="py-3 px-3 text-center align-middle text-slate-500 font-black text-xs border border-slate-200">
                                             {idx + 1}
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200">
-                                            <p className="font-semibold text-slate-800">
+                                        <td className="py-3 px-3 align-middle border border-slate-200">
+                                            <p className="font-semibold text-slate-800 text-xs whitespace-nowrap">
                                                 {new Date(r.tanggal_kejadian).toLocaleDateString('id-ID', {
                                                     day: 'numeric', month: 'long', year: 'numeric'
                                                 })}
                                             </p>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200">
-                                            <p className="font-bold text-slate-800">{r.nama_siswa}</p>
-                                            {/* NIS Removed for compact view */}
+                                        <td className="py-3 px-3 align-middle border border-slate-200">
+                                            <p className="font-bold text-slate-800 text-xs">{r.nama_siswa}</p>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200">
+                                        <td className="py-3 px-3 align-middle border border-slate-200">
                                             <span className="inline-flex rounded-lg bg-slate-100 text-slate-600 font-semibold px-2 py-1 text-xs">
                                                 {r.kelas || '-'}
                                             </span>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200">
-                                            <p className="text-slate-700 whitespace-normal min-w-[200px]">{r.nama_kegiatan}</p>
+                                        <td className="py-3 px-3 align-middle border border-slate-200">
+                                            <p className="text-slate-700 text-xs break-words whitespace-normal">{r.nama_kegiatan}</p>
                                         </td>
-                                        <td className="py-4 px-5 text-right border border-slate-200">
+                                        <td className="py-3 px-3 align-middle text-center border border-slate-200">
                                             {isCurrentYearActive && (
-                                                <div className="flex justify-end gap-2">
+                                                <div className="flex justify-center gap-2">
                                                     <button 
                                                         onClick={() => {
                                                             setEditRecord(r);
@@ -348,17 +348,17 @@ export default function CatatPelanggaranPage() {
                                                             setEditTanggalKejadian(getLocalYYYYMMDD(r.tanggal_kejadian));
                                                             setIsEditModalOpen(true);
                                                         }}
-                                                        className="p-2 rounded-xl text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+                                                        className="p-1.5 rounded-lg text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
                                                         title="Edit"
                                                     >
-                                                        <Edit className="h-5 w-5" />
+                                                        <Edit className="h-4 w-4" />
                                                     </button>
                                                     <button 
                                                         onClick={() => handleDeleteRecord(r.id)}
-                                                        className="p-2 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                                        className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                                                         title="Hapus"
                                                     >
-                                                        <Trash2 className="h-5 w-5" />
+                                                        <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             )}
@@ -504,6 +504,7 @@ export default function CatatPelanggaranPage() {
                                     type="date"
                                     required
                                     value={addTanggalKejadian}
+                                    max={getLocalYYYYMMDD()}
                                     onChange={(e) => setAddTanggalKejadian(e.target.value)}
                                     className="w-full rounded-xl border border-slate-200 py-2 px-3 text-sm focus:border-emerald-500 focus:outline-none"
                                 />

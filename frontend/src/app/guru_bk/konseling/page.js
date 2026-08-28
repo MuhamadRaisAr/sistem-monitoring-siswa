@@ -6,7 +6,7 @@ import { Search, Plus, Edit, Trash2, Calendar, FileText, X } from 'lucide-react'
 
 export default function GuruBkKonselingPage() {
     const { token, user } = useAuth();
-    const { tahunAjaranList, selectedTahunAjaranId, setSelectedTahunAjaranId, loadingTahunAjaran } = useTahunAjaran();
+    const { tahunAjaranList, activeTahunAjaranList, selectedTahunAjaranId, setSelectedTahunAjaranId, loadingTahunAjaran } = useTahunAjaran();
     
     const [records, setRecords] = useState([]);
     const [siswaList, setSiswaList] = useState([]);
@@ -179,15 +179,15 @@ export default function GuruBkKonselingPage() {
                             <select 
                                 value={selectedTahunAjaranId} 
                                 onChange={e => setSelectedTahunAjaranId(e.target.value)}
-                                disabled={loadingTahunAjaran}
-                                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm disabled:opacity-50"
+                                disabled={loadingTahunAjaran || activeTahunAjaranList.length <= 1}
+                                className={`w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm disabled:opacity-50 ${(activeTahunAjaranList?.length || 0) <= 1 ? 'appearance-none cursor-default bg-none' : 'cursor-pointer'}`}
                             >
                                 {loadingTahunAjaran ? (
                                     <option>Memuat...</option>
-                                ) : tahunAjaranList.length === 0 ? (
+                                ) : activeTahunAjaranList.length === 0 ? (
                                     <option value="">Tidak ada data</option>
                                 ) : (
-                                    tahunAjaranList.map((ta) => (
+                                    activeTahunAjaranList.map((ta) => (
                                         <option key={ta.id} value={ta.id}>
                                             {ta.nama_tahun} {ta.semester}
                                         </option>

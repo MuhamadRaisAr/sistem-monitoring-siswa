@@ -478,7 +478,7 @@ export default function AdminsiswaPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
-                        <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
+                        <table className="w-full text-left text-[10px] md:text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     {selectedIds.length > 0 && (

@@ -88,7 +88,7 @@ export default function BendaharaSiswaPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-emerald-500/10">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                        <table className="w-full text-left text-[10px] md:text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center w-10 static md:sticky md:left-0 md:z-30 bg-slate-50 dark:bg-[#061e16] text-slate-800 dark:text-slate-300 font-extrabold uppercase">No</th>

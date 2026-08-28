@@ -290,10 +290,10 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                     <table className="w-full border-collapse text-[13px]">
                         <thead>
                             <tr className="">
-                                <th className="border border-black py-2 px-1 w-10 text-center font-semibold">No</th>
-                                <th className="border border-black py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
-                                <th className="border border-black py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
-                                <th className="border border-black py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-10 text-center font-semibold">No</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -338,18 +338,18 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                                 if (finalGradesList.length === 0) {
                                     return (
                                         <tr>
-                                            <td colSpan="4" className="border border-black py-8 text-center italic ">Belum ada data mata pelajaran (jadwal kelas kosong).</td>
+                                            <td colSpan="4" className="border-[0.5px] border-slate-600 py-8 text-center italic ">Belum ada data mata pelajaran (jadwal kelas kosong).</td>
                                         </tr>
                                     );
                                 }
 
                                 return finalGradesList.map((item, index) => (
                                     <tr key={index}>
-                                        <td className="border border-black py-2 px-1 text-center align-top">{index + 1}</td>
-                                        <td className="border border-black py-2 px-2 align-top">{item.mata_pelajaran}</td>
-                                        <td className="border border-black py-2 px-1 text-center align-top">{item.nilai}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center align-top">{index + 1}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-2 px-2 align-top">{item.mata_pelajaran}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center align-top">{item.nilai}</td>
                                         <td 
-                                            className="border border-black py-2 px-3 text-justify align-top leading-tight outline-none focus: transition-colors"
+                                            className="border-[0.5px] border-slate-600 py-2 px-3 text-justify align-top leading-tight outline-none focus: transition-colors"
                                             contentEditable={true}
                                             suppressContentEditableWarning={true}
                                         >
@@ -366,25 +366,25 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                         <table className="w-full border-collapse text-[13px]">
                             <thead>
                                 <tr className="">
-                                    <th className="border border-black py-2 px-1 w-10 text-center font-semibold">No</th>
-                                    <th className="border border-black py-2 px-2 w-48 text-center font-semibold">Kegiatan Ekstrakurikuler</th>
-                                    <th className="border border-black py-2 px-2 w-16 text-center font-semibold">Predikat</th>
-                                    <th className="border border-black py-2 px-3 text-center font-semibold">Keterangan</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-1 w-10 text-center font-semibold">No</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-2 w-48 text-center font-semibold">Kegiatan Ekstrakurikuler</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-2 w-16 text-center font-semibold">Predikat</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-3 text-center font-semibold">Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {dataEkskul && dataEkskul.length > 0 ? (
                                     dataEkskul.map((eks, index) => (
                                         <tr key={index}>
-                                            <td className="border border-black py-1 px-1 text-center">{index + 1}</td>
-                                            <td className="border border-black py-1 px-2">{eks.nama_ekskul}</td>
-                                            <td className="border border-black py-1 px-2 text-center">{eks.predikat}</td>
-                                            <td className="border border-black py-1 px-3">{eks.keterangan || '-'}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-1 text-center">{index + 1}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-2">{eks.nama_ekskul}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-2 text-center">{eks.predikat}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-3">{eks.keterangan || '-'}</td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" className="border border-black py-4 text-center italic ">Belum ada data ekstrakurikuler</td>
+                                        <td colSpan="4" className="border-[0.5px] border-slate-600 py-4 text-center italic ">Belum ada data ekstrakurikuler</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -396,16 +396,16 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                         <table className="w-full border-collapse text-[13px]">
                             <tbody>
                                 <tr>
-                                    <td className="border border-black py-1.5 px-3 w-40">Sakit</td>
-                                    <td className="border border-black py-1.5 px-3 w-28">: {dataKehadiran?.sakit || 0} hari</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-40">Sakit</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-28">: {dataKehadiran?.sakit || 0} hari</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black py-1.5 px-3">Izin</td>
-                                    <td className="border border-black py-1.5 px-3">: {dataKehadiran?.izin || 0} hari</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Izin</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">: {dataKehadiran?.izin || 0} hari</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black py-1.5 px-3">Tanpa Keterangan</td>
-                                    <td className="border border-black py-1.5 px-3">: {dataKehadiran?.alpa || 0} hari</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Tanpa Keterangan</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">: {dataKehadiran?.alpa || 0} hari</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -417,7 +417,7 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                             <p className="font-semibold text-[13px]">Catatan Wali Kelas</p>
                         </div>
                         <div 
-                            className="w-full min-h-[60px] border border-black p-3 text-[13px] italic flex items-center outline-none focus: transition-colors"
+                            className="w-full min-h-[60px] border-[0.5px] border-slate-600 p-3 text-[13px] italic flex items-center outline-none focus: transition-colors"
                             contentEditable={true}
                             suppressContentEditableWarning={true}
                         >
@@ -504,9 +504,9 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                     <table className="w-full border-collapse text-[13px] mb-8">
                         <thead>
                             <tr className="">
-                                <th className="border border-black py-2 px-1 w-12 text-center font-semibold">No</th>
-                                <th className="border border-black py-2 px-2 text-center font-semibold">Muatan Pelajaran</th>
-                                <th className="border border-black py-2 px-1 w-32 text-center font-semibold">Nilai</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-12 text-center font-semibold">No</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-2 text-center font-semibold">Muatan Pelajaran</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-32 text-center font-semibold">Nilai</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -539,16 +539,16 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                                 if (finalGradesList.length === 0) {
                                     return (
                                         <tr>
-                                            <td colSpan="3" className="border border-black py-8 text-center italic ">Belum ada data mata pelajaran (jadwal kelas kosong).</td>
+                                            <td colSpan="3" className="border-[0.5px] border-slate-600 py-8 text-center italic ">Belum ada data mata pelajaran (jadwal kelas kosong).</td>
                                         </tr>
                                     );
                                 }
 
                                 return finalGradesList.map((item, index) => (
                                     <tr key={index}>
-                                        <td className="border border-black py-2 px-1 text-center">{index + 1}</td>
-                                        <td className="border border-black py-2 px-3">{item.mata_pelajaran}</td>
-                                        <td className="border border-black py-2 px-1 text-center">{item.nilai}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center">{index + 1}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-2 px-3">{item.mata_pelajaran}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center">{item.nilai}</td>
                                     </tr>
                                 ));
                             })()}
@@ -559,25 +559,25 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                     <table className="w-full border-collapse text-[13px] mb-8">
                         <thead>
                             <tr className="">
-                                <th className="border border-black py-2 px-1 w-12 text-center font-semibold">No</th>
-                                <th className="border border-black py-2 px-2 w-56 text-center font-semibold uppercase">Ekstrakurikuler</th>
-                                <th className="border border-black py-2 px-2 w-24 text-center font-semibold uppercase">Predikat</th>
-                                <th className="border border-black py-2 px-3 text-center font-semibold uppercase">Keterangan</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-12 text-center font-semibold">No</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-2 w-56 text-center font-semibold uppercase">Ekstrakurikuler</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-2 w-24 text-center font-semibold uppercase">Predikat</th>
+                                <th className="border-[0.5px] border-slate-600 py-2 px-3 text-center font-semibold uppercase">Keterangan</th>
                             </tr>
                         </thead>
                         <tbody>
                             {dataEkskul && dataEkskul.length > 0 ? (
                                 dataEkskul.map((eks, index) => (
                                     <tr key={index}>
-                                        <td className="border border-black py-1 px-1 text-center">{index + 1}</td>
-                                        <td className="border border-black py-1 px-2">{eks.nama_ekskul}</td>
-                                        <td className="border border-black py-1 px-2 text-center">{eks.predikat}</td>
-                                        <td className="border border-black py-1 px-3">{eks.keterangan || '-'}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-1 px-1 text-center">{index + 1}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-1 px-2">{eks.nama_ekskul}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-1 px-2 text-center">{eks.predikat}</td>
+                                        <td className="border-[0.5px] border-slate-600 py-1 px-3">{eks.keterangan || '-'}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="border border-black py-4 text-center italic ">Belum ada data ekstrakurikuler</td>
+                                    <td colSpan="4" className="border-[0.5px] border-slate-600 py-4 text-center italic ">Belum ada data ekstrakurikuler</td>
                                 </tr>
                             )}
                         </tbody>
@@ -588,27 +588,27 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                         <table className="w-full border-collapse text-[13px]">
                             <thead>
                                 <tr className="">
-                                    <th colSpan="4" className="border border-black py-2 px-2 text-center font-semibold uppercase">Ketidakhadiran</th>
+                                    <th colSpan="4" className="border-[0.5px] border-slate-600 py-2 px-2 text-center font-semibold uppercase">Ketidakhadiran</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td className="border border-black py-1.5 px-3 text-center w-12">1</td>
-                                    <td className="border border-black py-1.5 px-3 w-40">Sakit</td>
-                                    <td className="border border-black py-1.5 px-3 text-center w-16">{dataKehadiran?.sakit || 0}</td>
-                                    <td className="border border-black py-1.5 px-3 w-16">hari</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 text-center w-12">1</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-40">Sakit</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 text-center w-16">{dataKehadiran?.sakit || 0}</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-16">hari</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black py-1.5 px-3 text-center">2</td>
-                                    <td className="border border-black py-1.5 px-3">Izin</td>
-                                    <td className="border border-black py-1.5 px-3 text-center">{dataKehadiran?.izin || 0}</td>
-                                    <td className="border border-black py-1.5 px-3">hari</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 text-center">2</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Izin</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 text-center">{dataKehadiran?.izin || 0}</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">hari</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black py-1.5 px-3 text-center">3</td>
-                                    <td className="border border-black py-1.5 px-3">Tanpa Keterangan</td>
-                                    <td className="border border-black py-1.5 px-3 text-center">{dataKehadiran?.alpa || 0}</td>
-                                    <td className="border border-black py-1.5 px-3">hari</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 text-center">3</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Tanpa Keterangan</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 text-center">{dataKehadiran?.alpa || 0}</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">hari</td>
                                 </tr>
                             </tbody>
                         </table>

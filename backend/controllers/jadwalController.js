@@ -4,7 +4,7 @@ exports.getAllJadwal = async (req, res) => {
     try {
         const { kelas, tahun_ajaran_id, siswa_id } = req.query;
         let query = `
-            SELECT j.*, u.nama_lengkap as nama_guru 
+            SELECT DISTINCT j.*, u.nama_lengkap as nama_guru 
             FROM jadwal_pelajaran j
             LEFT JOIN users u ON j.guru_id = u.id
             WHERE 1=1
@@ -28,18 +28,19 @@ exports.getAllJadwal = async (req, res) => {
         let mappedEkskul = [];
         if (siswa_id) {
             let ekskulQuery = `
-                SELECT e.*, u.nama_lengkap as nama_guru 
+                SELECT DISTINCT e.*, u.nama_lengkap as nama_guru 
                 FROM ekstrakurikuler e
-                JOIN nilai_ekskul ne ON e.id = ne.ekskul_id
                 LEFT JOIN users u ON e.pembina_id = u.id
-                WHERE e.hari IS NOT NULL AND e.hari != '' AND ne.siswa_id = ?
+                WHERE e.hari IS NOT NULL AND e.hari != ''
+                AND EXISTS (
+                    SELECT 1 FROM nilai_ekskul ne 
+                    WHERE ne.ekskul_id = e.id 
+                    AND ne.siswa_id = ?
+                    ${tahun_ajaran_id ? 'AND ne.tahun_ajaran_id = ?' : ''}
+                )
             `;
             const ekskulParams = [siswa_id];
-            
-            if (tahun_ajaran_id) {
-                ekskulQuery += ` AND ne.tahun_ajaran_id = ?`;
-                ekskulParams.push(tahun_ajaran_id);
-            }
+            if (tahun_ajaran_id) ekskulParams.push(tahun_ajaran_id);
 
             // Fetch ekstrakurikuler specifically for this student
             const [ekskulRows] = await db.query(ekskulQuery, ekskulParams);

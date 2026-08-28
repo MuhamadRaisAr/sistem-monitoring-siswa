@@ -46,13 +46,6 @@ export default function WaliKedisiplinanPage() {
         fetchRecords();
     }, [token, selectedChild, selectedTahunAjaranId]);
 
-    if (!selectedChild) {
-        return (
-            <div className="glass-panel rounded-3xl p-8 text-center text-slate-500">
-                Pilih siswa terlebih dahulu di bagian atas.
-            </div>
-        );
-    }
 
     const availableMonths = React.useMemo(() => {
         const ta = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId);
@@ -89,6 +82,14 @@ export default function WaliKedisiplinanPage() {
     const violations = records.filter(r => r.kategori === 'pelanggaran' && (!selectedBulan || r.tanggal_kejadian.startsWith(selectedBulan)));
     const terkiniList = violations.filter(v => new Date(v.tanggal_kejadian).toDateString() === latestGlobalDate);
     
+    if (!selectedChild) {
+        return (
+            <div className="glass-panel rounded-3xl p-8 text-center text-slate-500">
+                Pilih siswa terlebih dahulu di bagian atas.
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 w-full min-w-0">
             {/* ── Header ───────────────────────────────────────────── */}
@@ -99,7 +100,7 @@ export default function WaliKedisiplinanPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-[#061e16] rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-emerald-500/20 shadow-sm flex flex-col gap-4 mb-6">
+            <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-col sm:flex-row gap-4 w-full items-start sm:items-center">
                     <div className="flex flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                         <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[220px]">
@@ -161,7 +162,7 @@ export default function WaliKedisiplinanPage() {
             </div>
 
             {/* ── Pelanggaran Layout ─────────────────────────────────── */}
-            <div className="glass-panel rounded-3xl overflow-hidden animate-fade-in w-full min-w-0 p-4 sm:p-6 bg-slate-50/50 dark:bg-white/[0.01]">
+            <div className="animate-fade-in w-full min-w-0">
                 {loading ? (
                     <div className="flex h-52 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
@@ -184,7 +185,7 @@ export default function WaliKedisiplinanPage() {
 
                                 key={r.id}
                                 onClick={() => setSelectedPelanggaran(r)}
-                                className="bg-white dark:bg-[#041610] rounded-2xl p-3 sm:p-4 border border-amber-500/50 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer flex items-center gap-3 sm:gap-4 group w-full"
+                                className="bg-white dark:bg-[#041610] rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex items-center gap-3 sm:gap-4 group w-full"
                             >
                                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-inner">
                                     <span className="text-base sm:text-lg font-black text-white">
@@ -200,7 +201,7 @@ export default function WaliKedisiplinanPage() {
                                             {r.nama_pelapor ? `oleh ${r.nama_pelapor}` : 'oleh -'}
                                         </p>
                                     </div>
-                                    <div className="min-w-0 border-l border-slate-100 dark:border-emerald-500/10 pl-2 sm:pl-4">
+                                    <div className="min-w-0 pl-2 sm:pl-4">
                                         <p className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
                                             {r.nama_kegiatan || 'Pelanggaran'}
                                         </p>
@@ -220,7 +221,7 @@ export default function WaliKedisiplinanPage() {
                             <div 
                                 key={r.id} 
                                 onClick={() => setSelectedPelanggaran(r)}
-                                className="bg-white dark:bg-[#041610] rounded-2xl p-3 sm:p-4 border border-slate-100 dark:border-emerald-500/10 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex items-center gap-3 sm:gap-4 group w-full"
+                                className="bg-white dark:bg-[#041610] rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex items-center gap-3 sm:gap-4 group w-full"
                             >
                                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-inner">
                                     <span className="text-base sm:text-lg font-black text-white">
@@ -236,7 +237,7 @@ export default function WaliKedisiplinanPage() {
                                             {r.nama_pelapor ? `oleh ${r.nama_pelapor}` : 'oleh -'}
                                         </p>
                                     </div>
-                                    <div className="min-w-0 border-l border-slate-100 dark:border-emerald-500/10 pl-2 sm:pl-4">
+                                    <div className="min-w-0 pl-2 sm:pl-4">
                                         <p className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
                                             {r.nama_kegiatan || 'Pelanggaran'}
                                         </p>

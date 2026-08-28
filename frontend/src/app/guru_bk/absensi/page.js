@@ -6,7 +6,7 @@ import { Calendar, Search, Users, Activity, Eye, X } from 'lucide-react';
 
 export default function GuruBkAbsensiPage() {
     const { token } = useAuth();
-    const { tahunAjaranList, selectedTahunAjaranId, setSelectedTahunAjaranId, loadingTahunAjaran } = useTahunAjaran();
+    const { tahunAjaranList, activeTahunAjaranList, selectedTahunAjaranId, setSelectedTahunAjaranId, loadingTahunAjaran } = useTahunAjaran();
     
     const [siswaList, setSiswaList] = useState([]);
     const [allLogs, setAllLogs] = useState([]);
@@ -145,9 +145,9 @@ export default function GuruBkAbsensiPage() {
             const valA = romanMap[a.kelas?.split(' ')[0]] || 99;
             const valB = romanMap[b.kelas?.split(' ')[0]] || 99;
             if (valA !== valB) return valA - valB;
-            return (a.nama || '').localeCompare(b.nama || '');
+            return a.nama.localeCompare(b.nama);
         });
-    }, [siswaList, allLogs, jadwalList, searchQuery, selectedKelas]);
+    }, [studentRecaps, searchQuery, selectedKelas]);
 
     const handleViewDetail = (studentId) => {
         setSelectedStudentId(studentId);
@@ -175,7 +175,7 @@ export default function GuruBkAbsensiPage() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
+            <div className="flex flex-col gap-4 mb-2">
                 <div className="flex flex-col sm:flex-row gap-4 w-full items-start sm:items-center">
                     <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full sm:w-auto">
                         <div className="flex flex-col gap-1.5 w-full sm:w-[260px]">
@@ -183,15 +183,15 @@ export default function GuruBkAbsensiPage() {
                             <select 
                                 value={selectedTahunAjaranId} 
                                 onChange={e => setSelectedTahunAjaranId(e.target.value)}
-                                disabled={loadingTahunAjaran}
-                                className="w-full rounded-xl border border-emerald-100 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm disabled:opacity-50"
+                                disabled={loadingTahunAjaran || activeTahunAjaranList.length <= 1}
+                                className={`w-full rounded-xl border border-emerald-100 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm disabled:opacity-50 ${(activeTahunAjaranList?.length || 0) <= 1 ? 'appearance-none cursor-default bg-none' : 'cursor-pointer'}`}
                             >
                                 {loadingTahunAjaran ? (
                                     <option>Memuat...</option>
-                                ) : tahunAjaranList.length === 0 ? (
+                                ) : activeTahunAjaranList.length === 0 ? (
                                     <option value="">Tidak ada data</option>
                                 ) : (
-                                    tahunAjaranList.map((ta) => (
+                                    activeTahunAjaranList.map((ta) => (
                                         <option key={ta.id} value={ta.id}>
                                             {ta.nama_tahun} {ta.semester}
                                         </option>
@@ -233,7 +233,7 @@ export default function GuruBkAbsensiPage() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white overflow-hidden">
                 {loading ? (
                     <div className="flex h-52 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
@@ -244,48 +244,51 @@ export default function GuruBkAbsensiPage() {
                         <p className="text-sm font-medium">Belum ada data siswa ditemukan.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-8">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                    <div className="overflow-x-auto pb-8 pt-2">
+                        <table className="w-full text-left text-[10px] sm:text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
-                                <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                                    <th className="py-4 px-5 w-16 text-center border border-slate-200">No</th>
-                                    <th className="py-4 px-5 border border-slate-200 w-[35%] text-center">Nama Siswa</th>
-                                    <th className="py-4 px-5 border border-slate-200 text-center">Hadir</th>
-                                    <th className="py-4 px-5 border border-slate-200 text-center">Sakit</th>
-                                    <th className="py-4 px-5 border border-slate-200 text-center">Izin</th>
-                                    <th className="py-4 px-5 border border-slate-200 text-center">Alpa</th>
-                                    <th className="py-4 px-5 border border-slate-200 text-center">Detail</th>
+                                <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                                    <th className="py-2.5 px-3 sm:px-4 w-12 text-center border-t border-b border-l border-r border-slate-200">No</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-left w-[200px] sm:w-[250px] max-w-[250px]">Nama Siswa</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-center w-20 sm:w-24">Kelas</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-center w-20 sm:w-24">Hadir</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-center w-20 sm:w-24">Sakit</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-center w-20 sm:w-24">Izin</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-center w-20 sm:w-24">Alpa</th>
+                                    <th className="py-2.5 px-3 sm:px-4 border-t border-b border-r border-slate-200 text-center w-28 sm:w-32">Detail</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-sm">
+                            <tbody>
                                 {filteredRecaps.map((r, idx) => (
                                     <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="py-4 px-5 text-center text-slate-500 font-black text-xs border border-slate-200">{idx + 1}</td>
-                                        <td className="py-4 px-5 border border-slate-200">
-                                            <p className="font-bold text-slate-800">{r.nama}</p>
-                                            <p className="text-xs text-slate-500 mt-0.5">Kelas: {r.kelas}</p>
+                                        <td className="py-2.5 px-3 sm:px-4 text-center text-slate-500 font-bold border-b border-l border-r border-slate-200">{idx + 1}</td>
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200">
+                                            <p className="font-bold text-slate-800 truncate max-w-[180px] sm:max-w-[230px]">{r.nama}</p>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200 text-center">
-                                            <span className="font-extrabold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">{r.hadir}</span>
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200 text-center">
+                                            <span className="font-bold text-slate-600">{r.kelas}</span>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200 text-center">
-                                            <span className="font-extrabold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">{r.sakit}</span>
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200 text-center">
+                                            <span className="font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">{r.hadir}</span>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200 text-center">
-                                            <span className="font-extrabold text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">{r.izin}</span>
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200 text-center">
+                                            <span className="font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">{r.sakit}</span>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200 text-center">
-                                            <span className={`font-extrabold px-3 py-1 rounded-lg border ${r.alpa > 0 ? 'text-red-600 bg-red-50 border-red-100' : 'text-slate-400 bg-slate-50 border-slate-100'}`}>
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200 text-center">
+                                            <span className="font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">{r.izin}</span>
+                                        </td>
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200 text-center">
+                                            <span className={`font-extrabold px-2 py-0.5 rounded-lg border ${r.alpa > 0 ? 'text-red-600 bg-red-50 border-red-100' : 'text-slate-400 bg-slate-50 border-slate-100'}`}>
                                                 {r.alpa}
                                             </span>
                                         </td>
-                                        <td className="py-4 px-5 border border-slate-200 text-center">
+                                        <td className="py-2.5 px-3 sm:px-4 border-b border-r border-slate-200 text-center">
                                             <button 
                                                 onClick={() => handleViewDetail(r.id)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold text-xs transition-colors"
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold text-[10px] sm:text-xs transition-colors"
                                             >
-                                                <Eye className="h-3.5 w-3.5" />
-                                                <span>Detail</span>
+                                                <Eye className="w-3.5 h-3.5" />
+                                                Detail
                                             </button>
                                         </td>
                                     </tr>
