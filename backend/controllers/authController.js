@@ -374,12 +374,15 @@ exports.updateUser = async (req, res) => {
         if (status_aktif && ['keluar', 'lulus', 'non-aktif'].includes(status_aktif.toLowerCase())) {
             // Remove from wali kelas just in case
             await db.query('UPDATE kelas SET wali_kelas_id = NULL WHERE wali_kelas_id = ?', [id]);
-            // Remove from jadwal (set guru_id to NULL)
-            await db.query('UPDATE jadwal_pelajaran SET guru_id = NULL WHERE guru_id = ?', [id]);
 
             const [taActive] = await db.query('SELECT id FROM tahun_ajaran WHERE is_active = 1');
             if (taActive.length > 0) {
-                await db.query('DELETE FROM wali_kelas_history WHERE guru_id = ? AND tahun_ajaran_id = ?', [id, taActive[0].id]);
+                const activeIds = taActive.map(t => t.id);
+                // Remove from jadwal (set guru_id to NULL) ONLY for active academic years to preserve history
+                await db.query('UPDATE jadwal_pelajaran SET guru_id = NULL WHERE guru_id = ? AND tahun_ajaran_id IN (?)', [id, activeIds]);
+                
+                // Remove from wali_kelas_history ONLY for active academic years
+                await db.query('DELETE FROM wali_kelas_history WHERE guru_id = ? AND tahun_ajaran_id IN (?)', [id, activeIds]);
             }
         }
 

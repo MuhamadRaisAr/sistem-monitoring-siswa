@@ -347,24 +347,8 @@ export default function AdminJadwalPage() {
             )}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight">Jadwal Pelajaran</h1>
-                    <p className="text-slate-400 text-sm">kelola jadwal pelajaran untuk guru dan siswa.</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    {isCurrentYearActive && selectedIds.length > 0 && (
-                        <button
-                            onClick={handleBulkDelete}
-                            className="flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-2.5 px-5 text-sm font-semibold text-white transition-colors shrink-0 w-full sm:w-auto"
-                        >
-                            <Trash2 className="h-5 w-5" />
-                            Hapus Terpilih ({selectedIds.length})
-                        </button>
-                    )}
-                    {isCurrentYearActive && (
-                        <button onClick={openAddModal} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 px-5 text-sm font-semibold text-white transition-colors shrink-0 w-full sm:w-auto">
-                            <Plus className="h-5 w-5" /> Tambah Jadwal
-                        </button>
-                    )}
+                    <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Jadwal Pelajaran</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">kelola jadwal pelajaran untuk guru dan siswa.</p>
                 </div>
             </div>
 
@@ -374,17 +358,17 @@ export default function AdminJadwalPage() {
                 </div>
             )}
 
-            <div className="glass-panel rounded-3xl p-6">
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <div className="relative w-[260px] md:w-72">
+            <div className="w-full mt-4">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto mb-4">
+                    <div className="relative w-full sm:w-72 shrink-0">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <Filter className="h-5 w-5 text-slate-500" />
+                            <Filter className="h-4 w-4 text-slate-400" />
                         </div>
                         <select
                             value={selectedTahunAjaranId}
                             onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
                             disabled={loadingTahunAjaran}
-                            className="block w-full rounded-xl border border-emerald-500/10 bg-[#020c08]/50 py-2.5 pl-10 pr-10 text-sm text-slate-100 focus:border-emerald-500/30 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 appearance-none cursor-pointer disabled:opacity-50"
+                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2 sm:py-2.5 pl-9 pr-10 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm appearance-none cursor-pointer disabled:opacity-50"
                         >
                             {loadingTahunAjaran ? (
                                 <option>Memuat...</option>
@@ -399,20 +383,37 @@ export default function AdminJadwalPage() {
                             )}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                            <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                     </div>
 
-                    <div className="relative w-full md:w-96">
+                    <div className="relative w-full sm:w-[400px]">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <Search className="h-5 w-5 text-slate-500" />
+                            <Search className="h-4 w-4 text-slate-400" />
                         </div>
                         <input type="text" placeholder="Cari hari, mata pelajaran, kelas, atau guru..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full rounded-xl border border-emerald-500/10 bg-[#020c08]/50 py-2.5 pl-10 pr-3 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-500/30 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2 sm:py-2.5 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
                         />
                     </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full mb-6">
+                    {isCurrentYearActive && selectedIds.length > 0 && (
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-2 sm:py-2.5 px-4 text-xs sm:text-sm font-semibold text-white transition-colors shrink-0 shadow-lg shadow-red-500/30 w-full sm:w-auto"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Hapus Terpilih ({selectedIds.length})
+                        </button>
+                    )}
+                    {isCurrentYearActive && (
+                        <button onClick={openAddModal} className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2 sm:py-2.5 px-4 text-xs sm:text-sm font-semibold text-white transition-colors shrink-0 shadow-lg shadow-emerald-500/30 w-full sm:w-auto">
+                            <Plus className="h-4 w-4" /> Tambah Jadwal
+                        </button>
+                    )}
                 </div>
 
                 {loading ? (
@@ -586,7 +587,14 @@ export default function AdminJadwalPage() {
                                     <label className="block text-xs font-semibold text-slate-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Guru Pengajar</label>
                                     <select value={guruId} onChange={e => setGuruId(e.target.value)} className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#020c08]/50 py-2.5 px-3 text-slate-800 dark:text-slate-100 focus:border-emerald-500 focus:outline-none text-sm">
                                         <option value="">Pilih Guru...</option>
-                                        {guruList.map(g => <option key={g.id} value={g.id}>{g.nama_lengkap}</option>)}
+                                        {guruList
+                                            .filter(g => (g.status_aktif || 'aktif') === 'aktif' || g.id.toString() === guruId.toString())
+                                            .map(g => (
+                                                <option key={g.id} value={g.id}>
+                                                    {g.nama_lengkap} {(g.status_aktif && g.status_aktif !== 'aktif') ? '(Non-aktif)' : ''}
+                                                </option>
+                                            ))
+                                        }
                                     </select>
                                 </div>
                             </div>

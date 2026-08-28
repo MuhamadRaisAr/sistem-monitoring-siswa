@@ -1,19 +1,31 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Search, GraduationCap, Users, Archive, CheckCircle, RefreshCcw, Eye, Download, X, FileText } from 'lucide-react';
 import CetakRaportAlumniModal from '@/components/CetakRaportAlumniModal';
+import { useSearchParams } from 'next/navigation';
 
 export default function AdminAlumniPage() {
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    
     const { token } = useAuth();
     const [siswaAlumni, setSiswaAlumni] = useState([]);
     const [guruAlumni, setGuruAlumni] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('siswa'); // 'siswa' or 'guru'
+    
+    useEffect(() => {
+        if (tabParam === 'siswa' || tabParam === 'guru') {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
+
     const [selectedSiswaIds, setSelectedSiswaIds] = useState([]);
     const [selectedGuruIds, setSelectedGuruIds] = useState([]);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [activeDetailTab, setActiveDetailTab] = useState('siswa');
     const [selectedDetail, setSelectedDetail] = useState(null);
     const [showRaportModal, setShowRaportModal] = useState(false);
 
@@ -226,42 +238,21 @@ export default function AdminAlumniPage() {
             )}
             
             <div className="flex flex-col gap-4 no-print">
-                <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
-                    <Archive className="h-6 w-6 text-emerald-500" />
-                    Database Alumni
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">menampilkan daftar alumni.</p>
-            </div>
+                <div>
+                    <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
+                        <Archive className="h-7 w-7 text-emerald-600" />
+                        {activeTab === 'siswa' ? 'Data Siswa Alumni' : 'Data Guru Non-aktif'}
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">
+                        {activeTab === 'siswa' ? 'Menampilkan daftar siswa alumni.' : 'Menampilkan daftar guru non-aktif.'}
+                    </p>
+                </div></div>
 
             {/* Controls (Tabs & Search) */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row w-full sm:w-auto">
-                    <button
-                        onClick={() => setActiveTab('siswa')}
-                        className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-sm font-bold transition-all shadow-sm w-full sm:w-auto ${
-                            activeTab === 'siswa' 
-                            ? 'bg-emerald-600 text-white shadow-emerald-500/20' 
-                            : 'bg-white dark:bg-[#020c08]/50 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/10'
-                        }`}
-                    >
-                        <Users className="h-4 w-4 shrink-0" />
-                        Siswa Alumni
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('guru')}
-                        className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-sm font-bold transition-all shadow-sm w-full sm:w-auto ${
-                            activeTab === 'guru' 
-                            ? 'bg-emerald-600 text-white shadow-emerald-500/20' 
-                            : 'bg-white dark:bg-[#020c08]/50 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/10'
-                        }`}
-                    >
-                        <GraduationCap className="h-4 w-4 shrink-0" />
-                        Guru Non-aktif
-                    </button>
-                </div>
+            <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-4">
                 
                 {/* Actions: Restore, Search & Download */}
-                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-col-reverse sm:flex-row items-center gap-2 w-full sm:w-auto">
                     
                     {/* Action Bar (Visible only when items are selected) */}
                     {activeTab === 'siswa' && selectedSiswaIds.length > 0 && (
@@ -297,6 +288,7 @@ export default function AdminAlumniPage() {
                                 className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2.5 pl-10 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-sm"
                             />
                         </div>
+                        {activeTab === 'siswa' && (
                         <button
                             onClick={handleDownloadCSV}
                             title="Unduh Data CSV"
@@ -304,6 +296,7 @@ export default function AdminAlumniPage() {
                         >
                             <Download className="w-5 h-5" />
                         </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -508,17 +501,17 @@ export default function AdminAlumniPage() {
             {/* Detail Modal */}
             {detailModalOpen && selectedDetail && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all duration-300">
-                    <div className="bg-white dark:bg-[#061e16] rounded-[24px] w-full max-w-[420px] shadow-2xl overflow-hidden border border-slate-200/60 dark:border-emerald-500/20 animate-fade-in-up">
+                    <div className="bg-white dark:bg-[#061e16] rounded-[24px] w-full max-w-sm sm:max-w-md shadow-2xl overflow-hidden border border-slate-200/60 dark:border-emerald-500/20 animate-fade-in-up">
                         
                         {/* Header with Gradient */}
                         <div className="relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-teal-400/5 to-transparent"></div>
                             
-                            <div className="px-6 pt-8 pb-5 relative z-10 flex flex-col items-center text-center">
-                                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-extrabold text-2xl shadow-md ring-2 ring-white dark:ring-[#061e16] mb-3">
+                            <div className="px-6 pt-6 pb-4 relative z-10 flex flex-col items-center text-center">
+                                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-extrabold text-xl shadow-md ring-2 ring-white dark:ring-[#061e16] mb-3">
                                     {selectedDetail.nama_lengkap.charAt(0)}
                                 </div>
-                                <h3 className="font-extrabold text-xl text-slate-800 dark:text-white leading-tight mb-2">
+                                <h3 className="font-extrabold text-lg text-slate-800 dark:text-white leading-tight mb-2">
                                     {selectedDetail.nama_lengkap}
                                 </h3>
                                 <div className="flex items-center gap-2">
@@ -533,49 +526,158 @@ export default function AdminAlumniPage() {
                         <div className="px-6 pb-6 pt-1 bg-slate-50/50 dark:bg-[#041610]">
                             <div className="bg-white dark:bg-[#061e16] rounded-xl border border-slate-100 dark:border-emerald-500/10 shadow-sm p-2 text-sm">
                                 {activeTab === 'siswa' ? (
-                                    <div className="divide-y divide-slate-100 dark:divide-emerald-500/5">
-                                        <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
-                                            <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
-                                                <span>NIS</span>
-                                                <span>:</span>
-                                            </span>
-                                            <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDetail.nis || '-'}</span>
+                                    <div className="flex flex-col max-h-[50vh]">
+                                        {/* Tabs */}
+                                        <div className="flex gap-6 px-6 pt-2 border-b border-slate-100 dark:border-emerald-500/10">
+                                            <button 
+                                                type="button"
+                                                onClick={() => setActiveDetailTab('siswa')}
+                                                className={`py-2 px-4 text-xs uppercase tracking-wider font-bold border-b-2 transition-colors ${activeDetailTab === 'siswa' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                            >
+                                                Biodata Siswa
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setActiveDetailTab('ortu')}
+                                                className={`py-2 px-4 text-xs uppercase tracking-wider font-bold border-b-2 transition-colors ${activeDetailTab === 'ortu' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                            >
+                                                Orang Tua & Wali
+                                            </button>
                                         </div>
-                                        <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
-                                            <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
-                                                <span>Kelas Terakhir</span>
-                                                <span>:</span>
-                                            </span>
-                                            <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDetail.kelas || '-'}</span>
-                                        </div>
-                                        <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
-                                            <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
-                                                <span>Nama Wali</span>
-                                                <span>:</span>
-                                            </span>
-                                            <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDetail.nama_wali || '-'}</span>
-                                        </div>
-                                        <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
-                                            <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
-                                                <span>No HP</span>
-                                                <span>:</span>
-                                            </span>
-                                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedDetail.no_hp || '-'}</span>
-                                        </div>
-                                        <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
-                                            <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
-                                                <span>Status Akhir</span>
-                                                <span>:</span>
-                                            </span>
-                                            <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase border
-                                                ${selectedDetail.status_aktif === 'lulus' ? 'bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' : 'bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20'}
-                                            `}>
-                                                {selectedDetail.status_aktif === 'keluar' ? 'Pindah' : selectedDetail.status_aktif}
-                                            </span>
+                                        
+                                        <div className="flex-1 overflow-y-auto overscroll-contain p-5">
+                                            {activeDetailTab === 'siswa' ? (
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">NIS (Wajib)</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.nis || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">NISN</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.nisn || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-3 gap-4">
+                                                        <div className="col-span-2">
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Nama Lengkap</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.nama_lengkap || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Kelas Terakhir</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.kelas || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-3 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Tempat Lahir</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.tempat_lahir || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Tgl Lahir</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.tanggal_lahir ? new Date(selectedDetail.tanggal_lahir).toLocaleDateString('id-ID') : '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">L/P</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.jenis_kelamin === 'L' ? 'Laki-laki' : selectedDetail.jenis_kelamin === 'P' ? 'Perempuan' : '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Agama</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.agama || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Sekolah Sebelumnya (SD/MI)</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.pendidikan_sebelumnya || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-3 gap-4">
+                                                        <div className="col-span-2">
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Alamat Lengkap Siswa</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium min-h-[34px]">{selectedDetail.alamat_siswa || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Status Keaktifan</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.status_aktif === 'keluar' ? 'Pindah' : (selectedDetail.status_aktif || '-')}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Nama Ayah</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.nama_ayah || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Pekerjaan Ayah</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.pekerjaan_ayah || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Nama Ibu</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.nama_ibu || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Pekerjaan Ibu</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.pekerjaan_ibu || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Kelurahan Ortu</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.kelurahan_ortu || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Kecamatan Ortu</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.kecamatan_ortu || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Kab/Kota Ortu</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.kabupaten_ortu || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Provinsi Ortu</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.provinsi_ortu || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Nama Wali</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.nama_wali || '-'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">No HP</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium">{selectedDetail.no_hp || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="col-span-1">
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Alamat Lengkap Wali</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium min-h-[34px]">{selectedDetail.alamat_wali || '-'}</div>
+                                                        </div>
+                                                        <div className="col-span-1">
+                                                            <label className="block text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Pekerjaan Wali</label>
+                                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2 px-3 text-slate-700 dark:text-slate-200 text-xs font-medium min-h-[34px]">{selectedDetail.pekerjaan_wali || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-slate-100 dark:divide-emerald-500/5">
+                                        <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
+                                            <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
+                                                <span>NIP</span>
+                                                <span>:</span>
+                                            </span>
+                                            <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDetail.nip || '-'}</span>
+                                        </div>
                                         <div className="flex gap-2 py-2 px-3 hover:bg-slate-50 dark:hover:bg-emerald-500/5 rounded-lg transition-colors items-center">
                                             <span className="text-slate-500 dark:text-slate-400 font-medium w-28 flex justify-between shrink-0">
                                                 <span>Jenis Kelamin</span>

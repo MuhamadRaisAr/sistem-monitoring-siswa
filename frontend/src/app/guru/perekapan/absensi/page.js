@@ -116,8 +116,11 @@ export default function RekapAbsensiPage() {
         const fetchClassLogs = async () => {
             setLoadingLogs(true);
             try {
-                const resLogs = await fetch(`${API_URL}/akademik?kelas=${encodeURIComponent(selectedKelas)}&tahun_ajaran_id=${selectedTahunAjaranId}`, { 
-                    headers: { 'Authorization': `Bearer ${token}` } 
+                // Tambahkan parameter cache-busting untuk mencegah browser/Next.js menyimpan response lama
+                const url = `${API_URL}/akademik?kelas=${encodeURIComponent(selectedKelas)}&tahun_ajaran_id=${selectedTahunAjaranId}&_t=${Date.now()}`;
+                const resLogs = await fetch(url, { 
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    cache: 'no-store'
                 });
                 const logsData = await resLogs.json();
                 setWaliLogs(Array.isArray(logsData) ? logsData : []);
@@ -227,7 +230,8 @@ export default function RekapAbsensiPage() {
     // Filter students by selected class
     const availableStudents = useMemo(() => {
         if (!selectedKelas) return [];
-        return siswaList.filter(s => s.kelas === selectedKelas);
+        // Gunakan logika yang sama dengan halaman input absensi untuk mengatasi kelas dengan sub-kelas (misal: VII A)
+        return siswaList.filter(s => s.kelas === selectedKelas || s.kelas?.startsWith(selectedKelas + ' '));
     }, [selectedKelas, siswaList]);
 
     const cellLongPress = useLongPress(
@@ -442,10 +446,10 @@ export default function RekapAbsensiPage() {
 
             {/* Selectors */}
             <div className="flex flex-col gap-4 animate-fade-in">
-                <div className="flex flex-col sm:flex-row items-end gap-3 sm:gap-4 w-full">
-                    {/* Tahun Ajaran */}
-                    <div className="flex flex-row w-full sm:w-auto gap-3 sm:gap-4">
-                        <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
+                        {/* Tahun Ajaran */}
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                             <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</label>
                             <select 
                                 value={selectedTahunAjaranId} 
@@ -471,7 +475,7 @@ export default function RekapAbsensiPage() {
                             <>
                         {/* Mata Pelajaran */}
                         {allMapelOptions.length > 1 && (
-                            <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
+                            <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                                 <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Mata Pelajaran:</label>
                                 <select
                                     value={selectedMapel}
@@ -488,7 +492,7 @@ export default function RekapAbsensiPage() {
                         
                         {/* Kelas */}
                         {filteredKelasOptions.length > 0 && (
-                            <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
+                            <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                                 <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</label>
                                 <select
                                     value={selectedKelas}
@@ -506,10 +510,11 @@ export default function RekapAbsensiPage() {
                         )}
                             </>
                         )}
+                    </div>
                         
                         {/* Search Bar */}
                         {myJadwal.length > 0 && (
-                        <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[350px] w-full mt-3 sm:mt-0">
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
                             <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Cari Siswa:</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -526,9 +531,6 @@ export default function RekapAbsensiPage() {
                     </div>
                     {/* Dropdown Bulan dihapus sesuai requirement format 6 Bulan */}
                 </div>
-            </div>
-
-
 
             {myJadwal.length === 0 && !loading && !loadingTahunAjaran ? (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center gap-4 text-center mt-6">

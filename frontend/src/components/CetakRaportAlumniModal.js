@@ -170,20 +170,29 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
             const wrapper = printContainer.firstElementChild;
             const element = wrapper ? (wrapper.querySelector('#raport-print-area') || wrapper.firstElementChild) : document.getElementById('raport-print-area');
             
-            // Override with strict print-like styles for html2pdf so it doesn't get cut off
+            // Override styles for html2pdf to achieve perfect margins and page breaks
             const originalCssText = element.style.cssText;
-            element.style.width = '800px';
-            element.style.margin = '0';
+            
+            // The inner div normally has w-[800px] and p-10 (40px padding on all sides).
+            // This means the actual content width is 800 - 40 - 40 = 720px.
+            // We strip the padding so we can use jsPDF margins instead (which apply to EVERY page, not just the first/last).
+            // To maintain the exact same layout (so tables wrap the same way and take the same number of pages),
+            // we set the width to 720px.
+            element.style.width = '720px';
             element.style.padding = '0'; 
-            element.style.border = 'none'; 
+            element.style.margin = '0';
+            element.style.border = 'none'; // Remove the pesky vertical line
             element.style.boxShadow = 'none';
             
             const opt = {
                 margin:       40, 
                 filename:     `Raport_${student?.nama_lengkap || 'Siswa'}.pdf`,
-                image:        { type: 'jpeg', quality: 1 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
-                jsPDF:        { unit: 'px', format: [880, 1245], orientation: 'portrait' }, 
+                image:        { type: 'jpeg', quality: 0.98 },
+                // Increase scale to 3 for much sharper lines when downsampled by PDF viewers
+                html2canvas:  { scale: 3, useCORS: true, letterRendering: true, windowWidth: 720 },
+                // PDF page width = 720 content + 40 left margin + 40 right margin = 800px.
+                // PDF page height = 800 * 1.4142 = 1131px.
+                jsPDF:        { unit: 'px', format: [800, 1131], orientation: 'portrait' }, 
                 pagebreak:    { mode: ['css', 'legacy'], avoid: 'tr' }
             };
             
@@ -344,6 +353,7 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
         </>
     );
 }
+
 
 
 

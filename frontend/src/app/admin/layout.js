@@ -216,7 +216,14 @@ export default function AdminLayout({ children }) {
                 { name: 'Kelola Pengumuman', href: '/admin/pengumuman', icon: Megaphone },
                 { name: 'Ekstrakurikuler', href: '/admin/ekstrakurikuler', icon: Activity },
                 { name: 'Mutasi & Kenaikan', href: '/admin/mutasi', icon: ArrowRightLeft },
-                { name: 'Data Alumni', href: '/admin/alumni', icon: Archive },
+                { 
+                    name: 'Data Non-Aktif', 
+                    icon: Archive,
+                    children: [
+                        { name: 'Siswa Alumni', href: '/admin/alumni?tab=siswa' },
+                        { name: 'Guru Non-aktif', href: '/admin/alumni?tab=guru' }
+                    ]
+                },
             ]
         },
         {

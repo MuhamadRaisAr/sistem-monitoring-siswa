@@ -13,7 +13,8 @@ export function useTahunAjaran() {
             try {
                 setLoadingTahunAjaran(true);
                 const res = await fetch('/api/tahun-ajaran', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    cache: 'no-store'
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -57,11 +58,18 @@ export function useTahunAjaran() {
                             if (catA.year !== catB.year) return catA.year - catB.year;
                         }
 
-                        // Rule 4: Semester fallback (Genap > Ganjil if descending, Ganjil > Genap if ascending)
+                        // Rule 4: Semester fallback based on real-time current semester
                         const semA = (a.semester || '').toLowerCase();
                         const semB = (b.semester || '').toLowerCase();
                         if (semA !== semB) {
-                            return semB.localeCompare(semA); // Just a simple fallback
+                            // Determine expected semester: Month 6-11 (July-Dec) -> Ganjil, else -> Genap
+                            const expectedSem = (currentMonth >= 6) ? 'ganjil' : 'genap';
+                            
+                            if (semA === expectedSem) return -1; // a is expected, put a first
+                            if (semB === expectedSem) return 1;  // b is expected, put b first
+                            
+                            // If neither match perfectly (or fallback), sort by string
+                            return semB.localeCompare(semA); 
                         }
 
                         return 0;
@@ -90,8 +98,11 @@ export function useTahunAjaran() {
         ? currentSelected 
         : null;
 
+    const activeTahunAjaranList = tahunAjaranList.filter(t => t.is_active === 1 || t.is_active === true);
+
     return {
         tahunAjaranList,
+        activeTahunAjaranList,
         activeTahunAjaran,
         selectedTahunAjaranId,
         setSelectedTahunAjaranId,

@@ -21,6 +21,7 @@ function InputNilaiContent() {
     
     const { 
         tahunAjaranList, 
+        activeTahunAjaranList,
         activeTahunAjaran,
         selectedTahunAjaranId, 
         setSelectedTahunAjaranId,
@@ -273,38 +274,44 @@ function InputNilaiContent() {
                 )}
             </div>
 
-                <div className="flex flex-col gap-4 animate-fade-in">
-                    <div className="flex flex-col sm:flex-row items-end gap-3 sm:gap-4 w-full">
-                        {/* Tahun Ajaran & Kelas Group */}
-                        <div className="flex flex-row w-full sm:w-auto gap-3 sm:gap-4">
-                            {/* Tahun Ajaran */}
-                            <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
-                                <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</label>
-                                <select 
-                                    value={selectedTahunAjaranId} 
-                                    onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                                    disabled={loadingTahunAjaran}
-                                    className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm text-ellipsis overflow-hidden disabled:opacity-50"
-                                >
-                                    {loadingTahunAjaran ? (
-                                        <option>Memuat...</option>
-                                    ) : tahunAjaranList.length === 0 ? (
-                                        <option value="">Tidak ada data</option>
+                    <div className="flex flex-col gap-4 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
+                            {/* Tahun Ajaran & Kelas Group */}
+                            <div className="grid grid-cols-2 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
+                                {/* Tahun Ajaran */}
+                                <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                    <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</label>
+                                    {activeTahunAjaranList && activeTahunAjaranList.length === 1 ? (
+                                        <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
+                                            {activeTahunAjaranList[0].nama_tahun} {activeTahunAjaranList[0].semester}
+                                        </div>
                                     ) : (
-                                        tahunAjaranList.map((ta) => (
-                                            <option key={ta.id} value={ta.id}>
-                                                {ta.nama_tahun} {ta.semester}
-                                            </option>
-                                        ))
+                                        <select 
+                                            value={selectedTahunAjaranId} 
+                                            onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
+                                            disabled={loadingTahunAjaran}
+                                            className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm text-ellipsis overflow-hidden disabled:opacity-50"
+                                        >
+                                            {loadingTahunAjaran ? (
+                                                <option>Memuat...</option>
+                                            ) : !activeTahunAjaranList || activeTahunAjaranList.length === 0 ? (
+                                                <option value="">Tidak ada tahun ajaran aktif</option>
+                                            ) : (
+                                                activeTahunAjaranList.map((ta) => (
+                                                    <option key={ta.id} value={ta.id}>
+                                                        {ta.nama_tahun} {ta.semester}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
                                     )}
-                                </select>
-                            </div>
-                            
-                            {/* Kelas */}
-                            {jadwalList.length > 0 && (
-                                <>
-                            {uniqueKelas.length > 1 ? (
-                                <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
+                                </div>
+                                
+                                {/* Kelas */}
+                                {jadwalList.length > 0 && (
+                                    <>
+                                {uniqueKelas.length > 1 ? (
+                                    <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                                     <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</label>
                                     <select 
                                         value={selectedKelas} 
@@ -315,8 +322,8 @@ function InputNilaiContent() {
                                         {uniqueKelas.map(k => <option key={k} value={k}>{k}</option>)}
                                     </select>
                                 </div>
-                            ) : uniqueKelas.length === 1 && (
-                                <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
+                                ) : uniqueKelas.length === 1 && (
+                                    <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                                     <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</label>
                                     <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
                                         <Users className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -328,9 +335,9 @@ function InputNilaiContent() {
                             )}
                         </div>
 
-                        {/* Search */}
-                        {jadwalList.length > 0 && (
-                            <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[350px] w-full mt-3 sm:mt-0">
+                            {/* Search */}
+                            {jadwalList.length > 0 && (
+                                <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
                                 <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Cari Siswa:</label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
@@ -383,18 +390,18 @@ function InputNilaiContent() {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-[#041610] rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm overflow-hidden animate-fade-in-up mt-6">
-                    <div className="overflow-x-auto p-4">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
-                            <thead>
-                                <tr className="bg-slate-50">
-                                    <th className="py-2 md:py-3 px-2 md:px-4 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider static md:sticky md:left-0 md:z-30 bg-slate-50 w-12 md:w-16 min-w-[48px] md:min-w-[64px]">No</th>
-                                    <th className="py-2 md:py-3 px-3 md:px-5 border-b border-r-[3px] border-slate-300 text-left text-slate-500 font-bold uppercase tracking-wider static md:sticky md:left-16 md:z-30 bg-slate-50 shadow-[4px_0_12px_rgba(0,0,0,0.03)] min-w-[200px] md:min-w-[250px]">Nama Siswa</th>
-                                    <th className="py-2 px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[80px]">Tugas</th>
-                                    <th className="py-2 px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[80px]">Praktik</th>
-                                    <th className="py-2 px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[80px]">UTS</th>
-                                    <th className="py-2 px-2 border-b border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[80px]">UAS</th>
-                                </tr>
+                <div className="bg-white dark:bg-[#041610] sm:rounded-2xl border-y sm:border sm:border-slate-200 dark:border-emerald-500/10 sm:shadow-sm overflow-hidden animate-fade-in-up mt-6 -mx-4 sm:mx-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs whitespace-nowrap min-w-full md:min-w-max border-separate border-spacing-0">
+                                <thead>
+                                    <tr className="bg-slate-50">
+                                        <th className="py-2 md:py-3 px-1 md:px-4 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider static md:sticky md:left-0 md:z-10 bg-slate-50 w-8 md:w-16 min-w-[32px] md:min-w-[64px] text-[10px] md:text-xs">No</th>
+                                        <th className="py-2 md:py-3 px-2 md:px-5 border-b border-r-[3px] border-slate-300 text-left text-slate-500 font-bold uppercase tracking-wider static md:sticky md:left-16 md:z-10 bg-slate-50 shadow-[4px_0_12px_rgba(0,0,0,0.03)] min-w-[120px] md:min-w-[250px] text-[10px] md:text-xs">Nama Siswa</th>
+                                        <th className="py-2 px-1 md:px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[50px] md:min-w-[80px] text-[9px] md:text-xs">Tugas</th>
+                                        <th className="py-2 px-1 md:px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[50px] md:min-w-[80px] text-[9px] md:text-xs">Praktik</th>
+                                        <th className="py-2 px-1 md:px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[50px] md:min-w-[80px] text-[9px] md:text-xs">UTS</th>
+                                        <th className="py-2 px-1 md:px-2 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider bg-slate-50 min-w-[50px] md:min-w-[80px] text-[9px] md:text-xs">UAS</th>
+                                    </tr>
                             </thead>
                             <tbody>
                                 {filteredDataNilai.length === 0 ? (
@@ -409,62 +416,50 @@ function InputNilaiContent() {
                                 ) : (
                                     filteredDataNilai.map((item, idx) => (
                                         <tr key={item.siswa_id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="py-1.5 md:py-2.5 px-2 md:px-4 w-12 md:w-16 min-w-[48px] md:min-w-[64px] border-b border-r border-slate-200 text-slate-500 font-medium text-center text-xs md:text-sm static md:sticky md:left-0 md:z-20 bg-white group-hover:bg-slate-50">
-                                            {idx + 1}
-                                        </td>
-                                        <td className="py-1.5 md:py-2.5 px-3 md:px-5 min-w-[200px] md:min-w-[250px] border-b border-r-[3px] border-slate-300 static md:sticky md:left-16 md:z-20 bg-white group-hover:bg-slate-50 drop-shadow-sm">
-                                            <p className="font-bold text-slate-800 text-xs md:text-sm">{item.nama_lengkap}</p>
-                                        </td>
-
-
-                                        <td className="py-1.5 md:py-2.5 px-2 border-b border-r border-slate-200">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="0.01"
-                                                value={item.Tugas}
-                                                onChange={(e) => handleInputChange(item.siswa_id, 'Tugas', e.target.value)}
-                                                disabled={!isCurrentYearActive}
-                                                className="w-full min-w-[80px] bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2 py-1.5 md:py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold disabled:opacity-50 text-xs md:text-sm shadow-sm"
-                                            />
-                                        </td>
-                                        <td className="py-1.5 md:py-2.5 px-2 border-b border-r border-slate-200">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="0.01"
-                                                value={item.Praktik}
-                                                onChange={(e) => handleInputChange(item.siswa_id, 'Praktik', e.target.value)}
-                                                disabled={!isCurrentYearActive}
-                                                className="w-full min-w-[80px] bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2 py-1.5 md:py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold disabled:opacity-50 text-xs md:text-sm shadow-sm"
-                                            />
-                                        </td>
-                                        <td className="py-1.5 md:py-2.5 px-2 border-b border-r border-slate-200">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="0.01"
-                                                value={item.UTS}
-                                                onChange={(e) => handleInputChange(item.siswa_id, 'UTS', e.target.value)}
-                                                disabled={!isCurrentYearActive}
-                                                className="w-full min-w-[80px] bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2 py-1.5 md:py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold disabled:opacity-50 text-xs md:text-sm shadow-sm"
-                                            />
-                                        </td>
-                                        <td className="py-1.5 md:py-2.5 px-2 border-b border-r border-slate-200">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="0.01"
-                                                value={item.UAS}
-                                                onChange={(e) => handleInputChange(item.siswa_id, 'UAS', e.target.value)}
-                                                disabled={!isCurrentYearActive}
-                                                className="w-full min-w-[80px] bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2 py-1.5 md:py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold disabled:opacity-50 text-xs md:text-sm shadow-sm"
-                                            />
-                                        </td>
+                                                    <td className="py-2.5 px-1 md:px-4 border-b border-r border-slate-200 text-slate-500 font-medium text-center text-[10px] md:text-sm static md:sticky md:left-0 md:z-[5] bg-white group-hover:bg-slate-50">{idx + 1}</td>
+                                                    <td className="py-2.5 px-2 md:px-5 border-b border-r-[3px] border-slate-300 static md:sticky md:left-16 md:z-[5] bg-white group-hover:bg-slate-50 drop-shadow-sm truncate min-w-[120px] md:min-w-[250px]">
+                                                        <p className="font-bold text-slate-800 text-[10px] md:text-sm">{item.nama_siswa || item.nama_lengkap}</p>
+                                                    </td>
+                                                    <td className="py-2.5 px-1 md:px-2 border-b border-r border-slate-200">
+                                                        <input 
+                                                            type="number" 
+                                                            min="0" max="100" 
+                                                            value={item.Tugas || ''} 
+                                                            onChange={(e) => handleInputChange(item.siswa_id, 'Tugas', e.target.value)}
+                                                            disabled={!isCurrentYearActive}
+                                                            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg px-1 md:px-3 py-1.5 md:py-2 text-center text-[10px] md:text-sm font-semibold text-slate-700 outline-none transition-all disabled:opacity-50"
+                                                        />
+                                                    </td>
+                                                    <td className="py-2.5 px-1 md:px-2 border-b border-r border-slate-200">
+                                                        <input 
+                                                            type="number" 
+                                                            min="0" max="100" 
+                                                            value={item.Praktik || ''} 
+                                                            onChange={(e) => handleInputChange(item.siswa_id, 'Praktik', e.target.value)}
+                                                            disabled={!isCurrentYearActive}
+                                                            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg px-1 md:px-3 py-1.5 md:py-2 text-center text-[10px] md:text-sm font-semibold text-slate-700 outline-none transition-all disabled:opacity-50"
+                                                        />
+                                                    </td>
+                                                    <td className="py-2.5 px-1 md:px-2 border-b border-r border-slate-200">
+                                                        <input 
+                                                            type="number" 
+                                                            min="0" max="100" 
+                                                            value={item.UTS || ''} 
+                                                            onChange={(e) => handleInputChange(item.siswa_id, 'UTS', e.target.value)}
+                                                            disabled={!isCurrentYearActive}
+                                                            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg px-1 md:px-3 py-1.5 md:py-2 text-center text-[10px] md:text-sm font-semibold text-slate-700 outline-none transition-all disabled:opacity-50"
+                                                        />
+                                                    </td>
+                                                    <td className="py-2.5 px-1 md:px-2 border-b border-r border-slate-200">
+                                                        <input 
+                                                            type="number" 
+                                                            min="0" max="100" 
+                                                            value={item.UAS || ''} 
+                                                            onChange={(e) => handleInputChange(item.siswa_id, 'UAS', e.target.value)}
+                                                            disabled={!isCurrentYearActive}
+                                                            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg px-1 md:px-3 py-1.5 md:py-2 text-center text-[10px] md:text-sm font-semibold text-slate-700 outline-none transition-all disabled:opacity-50"
+                                                        />
+                                                    </td>
                                     </tr>
                                 )))}
                             </tbody>

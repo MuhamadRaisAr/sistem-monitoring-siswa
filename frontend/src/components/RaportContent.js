@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { getMapelSortIndex } from '@/utils/mapelHelper';
     const RaportContent = ({ 
         studentObj, 
@@ -13,7 +13,7 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
         zoomScale = 1
     }) => (
         <div className={`w-full flex justify-center overflow-hidden print:overflow-visible ${isBulkPrint ? 'page-break-after-always' : ''}`}>
-            <div style={{ zoom: isBulkPrint ? 1 : zoomScale }} id={isBulkPrint ? undefined : "raport-print-area"} className={`bg-white text-black p-10 shadow-sm border  w-[800px] max-w-[800px] mx-auto print:border-none print:shadow-none print:w-full print:mx-0 print:p-0 ${isBulkPrint ? 'mb-12 print:mb-0' : ''}`}>
+            <div style={{ zoom: isBulkPrint ? 1 : zoomScale }} id={isBulkPrint ? undefined : "raport-print-area"} className={`raport-print-content bg-white text-black p-10 shadow-sm border  w-[800px] max-w-[800px] mx-auto print:border-none print:shadow-none print:w-full print:mx-0 print:p-0 ${isBulkPrint ? 'mb-12 print:mb-0' : ''}`}>
                 {/* Halaman Cover */}
                 <div className="flex flex-col items-center justify-between min-h-[850px] w-full bg-white text-black pb-12 pt-4 text-center" style={{ pageBreakAfter: 'always' }}>
                     <div className="mt-0">
@@ -261,7 +261,7 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                 </div>
 
                 {/* Halaman Keempat - Laporan Hasil Belajar */}
-                <div className="w-full bg-white text-black pt-16 px-8" style={{ pageBreakAfter: 'always' }}>
+                <div className="w-full bg-white text-black pt-16 px-8">
                     <div className="text-center mb-8">
                         <h1 className="text-[15px] font-bold uppercase tracking-wider">
                             LAPORAN HASIL BELAJAR<br/>(RAPOR)
@@ -413,7 +413,7 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
 
                     {/* Catatan Wali Kelas */}
                     <div className="mt-6" style={{ pageBreakInside: 'avoid' }}>
-                        <div className="flex justify-between items-end mb-1">
+                        <div className="flex justify-between items-end mb-3">
                             <p className="font-semibold text-[13px]">Catatan Wali Kelas</p>
                         </div>
                         <div 
@@ -434,9 +434,9 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                                     <p className="mb-14">Orang Tua/Wali,</p>
                                 </div>
                                 <div>
-                                    <p className="font-normal min-w-[150px] border-b border-black">
-                                        {studentObj?.nama_wali || '.............................................'}
-                                    </p>
+                                    <div className="font-normal min-w-[180px] border-b border-black pb-1 inline-block">
+                                        {studentObj?.nama_wali || <span className="invisible">___________________</span>}
+                                    </div>
                                     <p className="mt-1 invisible">NIP. ......................................</p>
                                 </div>
                             </div>
@@ -455,9 +455,9 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                                     <p className="mb-14">Wali Kelas,</p>
                                 </div>
                                 <div>
-                                    <p className="font-bold min-w-[150px] border-b border-black">
-                                        {studentObj?.nama_wali_kelas || '___________________________'}
-                                    </p>
+                                    <div className="font-bold min-w-[180px] border-b border-black pb-1 inline-block">
+                                        {studentObj?.nama_wali_kelas || <span className="invisible">___________________</span>}
+                                    </div>
                                     <p className="mt-1">NIP. ......................................</p>
                                 </div>
                             </div>
@@ -467,9 +467,9 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                             <div className="text-center flex flex-col items-center">
                                 <p>Mengetahui,</p>
                                 <p className="mb-14">Kepala Sekolah</p>
-                                <p className="font-bold min-w-[200px] border-b border-black">
-                                    ___________________________
-                                </p>
+                                <div className="font-bold min-w-[200px] border-b border-black pb-1 inline-block">
+                                    <span className="invisible">________________________</span>
+                                </div>
                                 <p className="mt-1 text-left w-full pl-2">NIP. ......................................</p>
                             </div>
                         </div>
@@ -618,6 +618,7 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
         </div>
     );
 export default RaportContent;
+
 
 
 

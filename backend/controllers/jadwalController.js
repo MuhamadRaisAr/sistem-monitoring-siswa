@@ -27,14 +27,22 @@ exports.getAllJadwal = async (req, res) => {
 
         let mappedEkskul = [];
         if (siswa_id) {
-            // Fetch ekstrakurikuler specifically for this student
-            const [ekskulRows] = await db.query(`
+            let ekskulQuery = `
                 SELECT e.*, u.nama_lengkap as nama_guru 
                 FROM ekstrakurikuler e
                 JOIN nilai_ekskul ne ON e.id = ne.ekskul_id
                 LEFT JOIN users u ON e.pembina_id = u.id
                 WHERE e.hari IS NOT NULL AND e.hari != '' AND ne.siswa_id = ?
-            `, [siswa_id]);
+            `;
+            const ekskulParams = [siswa_id];
+            
+            if (tahun_ajaran_id) {
+                ekskulQuery += ` AND ne.tahun_ajaran_id = ?`;
+                ekskulParams.push(tahun_ajaran_id);
+            }
+
+            // Fetch ekstrakurikuler specifically for this student
+            const [ekskulRows] = await db.query(ekskulQuery, ekskulParams);
 
             mappedEkskul = ekskulRows.map(e => ({
                 id: 'ekskul_' + e.id,

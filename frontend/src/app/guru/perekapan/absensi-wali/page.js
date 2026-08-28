@@ -371,9 +371,10 @@ export default function RekapAbsensiPage() {
 
             {/* Selectors */}
             <div className="flex flex-col gap-4 animate-fade-in">
-                <div className="flex flex-col sm:flex-row items-end gap-3 sm:gap-4 w-full">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
                     {/* Tahun Ajaran */}
-                    <div className="flex flex-col gap-1.5 w-full sm:flex-none sm:w-[220px] shrink-0">
+                    <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                         <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</label>
                         <select 
                             value={selectedTahunAjaranId} 
@@ -397,7 +398,7 @@ export default function RekapAbsensiPage() {
                     
                     {/* Kelas */}
                     {kelasOptions.length > 1 && (
-                        <div className="flex flex-col gap-1.5 w-full sm:flex-none sm:w-[220px] shrink-0">
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                             <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</label>
                             <select
                                 value={selectedKelas}
@@ -416,7 +417,7 @@ export default function RekapAbsensiPage() {
                     
                     {/* Bulan */}
                     {availableMonths.length > 0 && (
-                        <div className="flex flex-col gap-1.5 w-full sm:flex-none sm:w-[220px] shrink-0">
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
                             <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Bulan:</label>
                             <select
                                 value={selectedBulan}
@@ -436,8 +437,10 @@ export default function RekapAbsensiPage() {
                         </div>
                     )}
 
+                    </div>
+
                     {/* Search Bar */}
-                    <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[350px] w-full mt-3 sm:mt-0">
+                    <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
                         <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Cari Siswa:</label>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

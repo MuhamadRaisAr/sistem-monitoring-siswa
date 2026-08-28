@@ -345,7 +345,7 @@ export default function AdminUsersPage() {
                                                     </span>
                                                 </td>
                                                 <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-600 dark:text-slate-300 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
-                                                    {u.no_hp || <span className="text-slate-400 dark:text-slate-600 italic">Tidak ada</span>}
+                                                    {u.no_hp || "-"}
                                                 </td>
                                                 <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                     {new Date(u.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}

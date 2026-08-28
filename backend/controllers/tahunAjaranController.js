@@ -3,7 +3,13 @@ const db = require('../config/db');
 // Mendapatkan semua tahun ajaran
 exports.getAllTahunAjaran = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM tahun_ajaran ORDER BY id DESC');
+        const [rows] = await db.query(`
+            SELECT * FROM tahun_ajaran 
+            ORDER BY 
+                is_active DESC, 
+                nama_tahun DESC, 
+                CASE WHEN LOWER(semester) = 'genap' THEN 1 ELSE 0 END DESC
+        `);
         return res.json(rows);
     } catch (err) {
         console.error('Get all tahun ajaran error:', err);
@@ -14,11 +20,47 @@ exports.getAllTahunAjaran = async (req, res) => {
 // Mendapatkan tahun ajaran yang sedang aktif
 exports.getActiveTahunAjaran = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM tahun_ajaran WHERE is_active = 1 LIMIT 1');
+        const [rows] = await db.query('SELECT * FROM tahun_ajaran WHERE is_active = 1');
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Tidak ada tahun ajaran yang aktif.' });
         }
-        return res.json(rows[0]);
+
+        if (rows.length === 1) {
+            return res.json(rows[0]);
+        }
+
+        // Auto-resolve if multiple active: prioritize the one matching current real time
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // 1-12
+        
+        // Month 7-12 -> Ganjil, Month 1-6 -> Genap
+        const expectedSemester = (currentMonth >= 7) ? 'Ganjil' : 'Genap';
+        
+        // Expected nama_tahun (e.g. 2026/2027)
+        let expectedTahun = (currentMonth >= 7) 
+            ? `${currentYear}/${currentYear + 1}` 
+            : `${currentYear - 1}/${currentYear}`;
+
+        let bestMatch = rows.find(r => 
+            r.nama_tahun === expectedTahun && 
+            r.semester.toLowerCase() === expectedSemester.toLowerCase()
+        );
+        
+        if (!bestMatch) {
+            // Fallback: sort descending and pick the newest active
+            rows.sort((a, b) => {
+                if (a.nama_tahun !== b.nama_tahun) {
+                    return a.nama_tahun > b.nama_tahun ? -1 : 1;
+                }
+                const weightA = a.semester.toLowerCase() === 'genap' ? 1 : 0;
+                const weightB = b.semester.toLowerCase() === 'genap' ? 1 : 0;
+                return weightB - weightA;
+            });
+            bestMatch = rows[0];
+        }
+
+        return res.json(bestMatch);
     } catch (err) {
         console.error('Get active tahun ajaran error:', err);
         return res.status(500).json({ message: 'Internal server error' });

@@ -99,9 +99,9 @@ export default function RekapNilaiAdmin() {
                 </div>
                 
                 {/* Selectors */}
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <div className="w-full sm:w-auto sm:min-w-[180px]">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Tahun Ajaran</label>
+                <div className="flex flex-row gap-3 w-full md:w-auto">
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1 truncate">Tahun Ajaran</label>
                         <select
                             value={selectedTahunAjaranId}
                             onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
@@ -121,8 +121,8 @@ export default function RekapNilaiAdmin() {
                             )}
                         </select>
                     </div>
-                    <div className="w-full sm:w-auto sm:min-w-[160px]">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Kelas</label>
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1 truncate">Kelas</label>
                         <select
                             value={selectedKelas}
                             onChange={(e) => setSelectedKelas(e.target.value)}
@@ -176,8 +176,8 @@ export default function RekapNilaiAdmin() {
                             </div>
                         </div>
                         
-                        <div className="overflow-x-auto custom-scrollbar">
-                            <table className="w-full text-left text-xs border-separate border-spacing-0 table-fixed">
+                        <div className="overflow-x-auto custom-scrollbar pb-2">
+                            <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-max md:min-w-full md:table-fixed">
                                 <thead className="bg-slate-50 dark:bg-[#061e16] text-slate-800 dark:text-slate-350 font-extrabold border-b border-slate-200 dark:border-emerald-500/10">
                                     <tr>
                                         <th className="py-2 px-1 md:px-2 w-[30px] md:w-[40px] text-center text-[10px] md:text-xs bg-slate-50 dark:bg-[#061e16] border-r border-slate-200 dark:border-emerald-500/10">No</th>
@@ -185,16 +185,16 @@ export default function RekapNilaiAdmin() {
                                         
                                         {/* Kolom Mapel Dinamis */}
                                         {mapels.map((mp, idx) => (
-                                            <th key={idx} className="py-2 px-0 text-center text-[8px] md:text-[9px] border-r border-slate-200 dark:border-emerald-500/10 overflow-hidden" title={mp}>
-                                                <div className="flex flex-col items-center gap-1 cursor-help truncate px-0.5">
+                                            <th key={idx} className="py-2 px-2 md:px-0 min-w-[50px] md:min-w-0 text-center text-[10px] md:text-xs border-r border-slate-200 dark:border-emerald-500/10 overflow-hidden" title={mp}>
+                                                <div className="flex flex-col items-center gap-1 cursor-help truncate px-1 md:px-0.5">
                                                     <span className="text-emerald-600 dark:text-emerald-400 font-bold" title={getAbbreviatedMapel(mp)}>{getAbbreviatedMapel(mp)}</span>
                                                 </div>
                                             </th>
                                         ))}
                                         
-                                        <th className="py-2 px-1 w-[35px] md:w-[45px] text-center text-[9px] md:text-[10px] border-l-[3px] border-slate-300 dark:border-emerald-500/30 border-r border-slate-200 dark:border-emerald-500/10">Total</th>
-                                        <th className="py-2 px-1 w-[40px] md:w-[50px] text-center text-[9px] md:text-[10px] border-r border-slate-200 dark:border-emerald-500/10">Rata</th>
-                                        <th className="py-2 px-1 w-[35px] md:w-[45px] text-center text-[9px] md:text-[10px]">Rank</th>
+                                        <th className="py-2 px-2 md:px-1 w-[50px] md:w-[45px] text-center text-[10px] md:text-xs border-l-[3px] border-slate-300 dark:border-emerald-500/30 border-r border-slate-200 dark:border-emerald-500/10">Total</th>
+                                        <th className="py-2 px-2 md:px-1 w-[50px] md:w-[50px] text-center text-[10px] md:text-xs border-r border-slate-200 dark:border-emerald-500/10">Rata</th>
+                                        <th className="py-2 px-2 md:px-1 w-[50px] md:w-[45px] text-center text-[10px] md:text-xs">Rank</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-emerald-500/10">
@@ -212,7 +212,7 @@ export default function RekapNilaiAdmin() {
                                                 const nilaiAkhir = student.mapel_nilai[mp]?.akhir || '';
                                                 const isNilaiValid = nilaiAkhir && nilaiAkhir !== '-';
                                                 return (
-                                                    <td key={mIdx} className="py-1.5 px-0 text-center text-[10px] md:text-xs font-semibold text-slate-600 dark:text-slate-400 border-b border-r border-slate-200 dark:border-emerald-500/10 overflow-hidden truncate">
+                                                    <td key={mIdx} className="py-2 md:py-1.5 px-2 md:px-0 text-center text-[11px] md:text-xs font-semibold text-slate-600 dark:text-slate-400 border-b border-r border-slate-200 dark:border-emerald-500/10 overflow-hidden truncate">
                                                         {isNilaiValid ? (
                                                             <span className={parseFloat(nilaiAkhir) < 70 ? "text-red-500" : ""}>{nilaiAkhir}</span>
                                                         ) : ''}
@@ -220,18 +220,14 @@ export default function RekapNilaiAdmin() {
                                                 );
                                             })}
                                             
-                                            <td className="py-1.5 px-0 w-[35px] md:w-[45px] text-center text-[10px] md:text-[11px] font-black text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-800/20 border-b border-l-[3px] border-slate-300 dark:border-emerald-500/30 border-r border-slate-200 dark:border-emerald-500/10 truncate">{student.total_nilai && student.total_nilai !== '-' ? student.total_nilai : ''}</td>
-                                            <td className="py-1.5 px-0 w-[40px] md:w-[50px] text-center text-[10px] md:text-[11px] font-black text-emerald-600 dark:text-emerald-500 bg-emerald-50/30 dark:bg-emerald-500/10 border-b border-r border-slate-200 dark:border-emerald-500/10 truncate">{student.rata_rata && student.rata_rata !== '-' ? student.rata_rata : ''}</td>
-                                            <td className="py-1.5 px-0 w-[35px] md:w-[45px] text-center text-[10px] md:text-[11px] border-b border-slate-200 dark:border-emerald-500/10">
-                                                {student.peringkat && student.peringkat !== '-' ? (
-                                                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full font-bold text-[10px] ${
-                                                        student.peringkat <= 3 
-                                                            ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400' 
-                                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                                                    }`}>
-                                                        {student.peringkat}
+                                            <td className="py-2 md:py-1.5 px-2 md:px-0 text-center text-[11px] md:text-xs font-extrabold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-[#061e16] group-hover:bg-slate-200 dark:group-hover:bg-[#0c2e22] border-b border-l-[3px] border-slate-300 dark:border-emerald-500/30 border-r border-slate-200 dark:border-emerald-500/10 transition-colors">{student.total_nilai && student.total_nilai !== '-' ? student.total_nilai : ''}</td>
+                                            <td className="py-2 md:py-1.5 px-2 md:px-0 text-center text-[11px] md:text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#061e16] group-hover:bg-slate-200 dark:group-hover:bg-[#0c2e22] border-b border-r border-slate-200 dark:border-emerald-500/10 transition-colors">{student.rata_rata && student.rata_rata !== '-' ? student.rata_rata : ''}</td>
+                                            <td className="py-2 md:py-1.5 px-2 md:px-0 text-center border-b border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16] group-hover:bg-slate-200 dark:group-hover:bg-[#0c2e22] transition-colors">
+                                                <div className="flex justify-center items-center">
+                                                    <span className={`inline-flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-full text-[10px] md:text-xs font-extrabold ${student.peringkat && student.peringkat <= 3 ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-200 text-slate-500 dark:bg-slate-700/50 dark:text-slate-400'}`}>
+                                                        {student.peringkat || ''}
                                                     </span>
-                                                ) : ''}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

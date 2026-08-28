@@ -52,7 +52,6 @@ function GuruInputAbsensiContent() {
     useEffect(() => {
         setDraftKehadiran({});
         setSelectedKelas('');
-        setToday(todayStr());
     }, [selectedMapel]);
 
     // Save selections whenever they change
@@ -69,6 +68,7 @@ function GuruInputAbsensiContent() {
     }, [selectedKelas]);
     const { 
         tahunAjaranList, 
+        activeTahunAjaranList,
         activeTahunAjaran,
         selectedTahunAjaranId, 
         setSelectedTahunAjaranId,
@@ -78,7 +78,6 @@ function GuruInputAbsensiContent() {
     const isCurrentYearActive = activeTahunAjaran?.id?.toString() === selectedTahunAjaranId;
     const [mapelList, setMapelList] = useState([]);
     const [rawJadwal, setRawJadwal] = useState([]);
-    const [absensiPage, setAbsensiPage] = useState(1);
     
     // State untuk mode input
     const [draftKehadiran, setDraftKehadiran] = useState({});
@@ -128,6 +127,22 @@ function GuruInputAbsensiContent() {
         setDraftKehadiran(initialDraft);
     }, [selectedMapel, allLogs.today, selectedKelas, siswaList]);
 
+    // Auto-update date when tahun ajaran changes
+    useEffect(() => {
+        if (!selectedTahunAjaranId || tahunAjaranList.length === 0) return;
+        const selected = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId);
+        if (selected) {
+            if (selected.is_active === 1 || selected.is_active === true) {
+                setToday(todayStr());
+            } else {
+                const match = (selected.nama_tahun || '').match(/^(\d{4})/);
+                if (match) {
+                    const startYear = match[1];
+                    setToday(`${startYear}-08-01`); // Set default ke awal Agustus di tahun ajaran tsb
+                }
+            }
+        }
+    }, [selectedTahunAjaranId, tahunAjaranList]);
 
     const fetchsiswa = async () => {
         try {
@@ -294,9 +309,6 @@ function GuruInputAbsensiContent() {
     }, [siswaList, searchName, selectedKelas]);
 
     const absensiRows = filteredsiswa.map(siswa => ({ siswa }));
-    useEffect(() => { setAbsensiPage(1); }, [searchName, selectedKelas]);
-    const absensiTotalPages = Math.max(1, Math.ceil(absensiRows.length / PAGE_SIZE));
-    const pagedAbsensi      = absensiRows.slice((absensiPage - 1) * PAGE_SIZE, absensiPage * PAGE_SIZE);
 
     const getDayName = (dateStr) => {
         if (!dateStr) return null;
@@ -324,99 +336,107 @@ function GuruInputAbsensiContent() {
                 <div className="mb-4">
                     <h1 className="text-2xl font-extrabold text-[#0a2351] tracking-tight mb-1">Input Absensi Harian</h1>
                     {selectedMapel && (
-                        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-slate-500 text-sm md:text-base">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-slate-500 text-sm md:text-base mt-2">
                             <span>Mata Pelajaran: <span className="font-bold text-[#0a2351]">{selectedMapel}</span></span>
                             <span className="hidden sm:inline text-slate-300">|</span>
-                            <span className="w-full sm:w-auto">
-                                Jadwal: <span className="font-bold text-[#0a2351]">
-                                    {(() => {
-                                        const schedules = rawJadwal.filter(j => j.mata_pelajaran === selectedMapel && (!selectedKelas || j.kelas === selectedKelas));
-                                        const uniqueDays = Array.from(new Set(schedules.map(s => s.hari).filter(Boolean)));
-                                        return uniqueDays.length > 0 ? uniqueDays.join(', ') : '-';
-                                    })()}
+                            <span className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                                <span>
+                                    Jadwal: <span className="font-bold text-[#0a2351]">
+                                        {(() => {
+                                            const schedules = rawJadwal.filter(j => j.mata_pelajaran === selectedMapel && (!selectedKelas || j.kelas === selectedKelas));
+                                            const uniqueDays = Array.from(new Set(schedules.map(s => s.hari).filter(Boolean)));
+                                            return uniqueDays.length > 0 ? uniqueDays.join(', ') : '-';
+                                        })()}
+                                    </span>
                                 </span>
-                                {selectedKelas && (
-                                    <>
-                                        <span className="mx-1.5 text-slate-300">·</span>
-                                        Kelas <span className="font-bold text-[#0a2351]">{selectedKelas.replace(/\s*\([^)]*\)/g, '')}</span>
-                                    </>
-                                )}
+                                
+                                <input 
+                                    type="date"
+                                    value={today}
+                                    max={todayStr()}
+                                    onChange={(e) => setToday(e.target.value)}
+                                    className="rounded-lg border border-slate-200 bg-white py-1 px-2.5 text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none cursor-pointer shadow-sm"
+                                    title="Pilih Tanggal Absensi"
+                                />
                             </span>
                         </div>
                     )}
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 w-full animate-fade-in">
-                    <div className="flex flex-col gap-1.5 lg:col-span-3">
-                        <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Tahun Ajaran:</label>
-                        <select 
-                            value={selectedTahunAjaranId} 
-                            onChange={e => setSelectedTahunAjaranId(e.target.value)}
-                            disabled={loadingTahunAjaran}
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none cursor-pointer shadow-sm text-ellipsis overflow-hidden disabled:opacity-50"
-                        >
-                            {loadingTahunAjaran ? (
-                                <option>Memuat...</option>
-                            ) : tahunAjaranList.length === 0 ? (
-                                <option value="">Tidak ada data</option>
-                            ) : (
-                                tahunAjaranList.map((ta) => (
-                                    <option key={ta.id} value={ta.id}>
-                                        {ta.nama_tahun} {ta.semester}
-                                    </option>
-                                ))
-                            )}
-                        </select>
-                    </div>
-
-                    {rawJadwal.length > 0 && (
-                        <>
-
-                    {uniqueKelas.length > 1 ? (
-                        <div className="flex flex-col gap-1.5 lg:col-span-3">
-                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Kelas:</label>
-                            <select
-                                value={selectedKelas}
-                                onChange={(e) => setSelectedKelas(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
-                            >
-                                <option value="">-- Pilih Kelas --</option>
-                                {uniqueKelas.map(k => (
-                                    <option key={k} value={k}>{k}</option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : uniqueKelas.length === 1 && (
-                        <div className="flex flex-col gap-1.5 lg:col-span-3">
-                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Kelas:</label>
-                            <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                                <Users className="h-4 w-4 shrink-0 text-emerald-600" />
-                                <span className="truncate">{uniqueKelas[0]}</span>
+                <div className="flex flex-col gap-4 animate-fade-in">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
+                        {/* Tahun Ajaran & Kelas Group */}
+                        <div className="grid grid-cols-2 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
+                            {/* Tahun Ajaran */}
+                            <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Tahun Ajaran:</label>
+                                {activeTahunAjaranList && activeTahunAjaranList.length === 1 ? (
+                                    <div className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 flex items-center whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
+                                        {activeTahunAjaranList[0].nama_tahun} {activeTahunAjaranList[0].semester}
+                                    </div>
+                                ) : (
+                                    <select
+                                        value={selectedTahunAjaranId}
+                                        onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
+                                    >
+                                        {loadingTahunAjaran ? (
+                                            <option>Memuat...</option>
+                                        ) : !activeTahunAjaranList || activeTahunAjaranList.length === 0 ? (
+                                            <option value="">Tidak ada tahun ajaran aktif</option>
+                                        ) : (
+                                            activeTahunAjaranList.map((ta) => (
+                                                <option key={ta.id} value={ta.id}>
+                                                    {ta.nama_tahun} {ta.semester}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                )}
                             </div>
-                        </div>
-                    )}
 
-                    <div className="flex flex-col gap-1.5 lg:col-span-2">
-                        <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Tanggal:</label>
-                        <input 
-                            type="date"
-                            value={today}
-                            max={todayStr()}
-                            onChange={(e) => setToday(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none cursor-pointer shadow-sm"
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5 lg:col-span-4">
-                        <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Cari Siswa:</label>
-                        <div className="relative w-full">
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                            <input type="text" placeholder="Cari nama..." value={searchName} onChange={e => setSearchName(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-[13px] sm:text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none shadow-sm" />
+                            {/* Kelas */}
+                            {rawJadwal.length > 0 && (
+                                <>
+                                    {uniqueKelas.length > 1 ? (
+                                        <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Kelas:</label>
+                                            <select
+                                                value={selectedKelas}
+                                                onChange={(e) => setSelectedKelas(e.target.value)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
+                                            >
+                                                <option value="">-- Pilih Kelas --</option>
+                                                {uniqueKelas.map(k => (
+                                                    <option key={k} value={k}>{k}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : uniqueKelas.length === 1 && (
+                                        <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Kelas:</label>
+                                            <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                                                <Users className="h-4 w-4 shrink-0 text-emerald-600" />
+                                                <span className="truncate">{uniqueKelas[0]}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
+
+                        {/* Search */}
+                        {rawJadwal.length > 0 && (
+                            <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
+                                <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">Cari Siswa:</label>
+                                <div className="relative w-full">
+                                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                                    <input type="text" placeholder="Cari nama..." value={searchName} onChange={e => setSearchName(e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-[13px] sm:text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none shadow-sm" />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                        </>
-                    )}
                 </div>
 
                 {!isCurrentYearActive && !loadingTahunAjaran && selectedTahunAjaranId && rawJadwal.length > 0 && (
@@ -442,10 +462,10 @@ function GuruInputAbsensiContent() {
                     <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
                         <thead>
                             <tr className="bg-slate-50">
-                                <th className="py-3 px-3 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider text-xs static md:sticky md:left-0 md:z-30 bg-slate-50 w-12">No</th>
-                                <th className="py-3 px-4 border-b border-r-[3px] border-slate-300 text-left text-slate-500 font-bold uppercase tracking-wider text-xs static md:sticky md:left-12 md:z-30 bg-slate-50 shadow-[4px_0_12px_rgba(0,0,0,0.03)] min-w-[180px]">Nama Siswa</th>
-                                <th className="py-3 px-3 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider text-xs bg-slate-50 w-28">Kelas</th>
-                                <th className="py-3 px-3 border-b border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider text-xs bg-slate-50 min-w-[360px]">Status Kehadiran</th>
+                                <th className="py-2 px-2 md:py-3 md:px-3 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider text-[10px] md:text-xs static md:sticky md:left-0 md:z-10 bg-slate-50 w-8 md:w-12">No</th>
+                                <th className="py-2 px-2 md:py-3 md:px-4 border-b border-r-[3px] border-slate-300 text-left text-slate-500 font-bold uppercase tracking-wider text-[10px] md:text-xs static md:sticky md:left-12 md:z-10 bg-slate-50 shadow-[4px_0_12px_rgba(0,0,0,0.03)] min-w-[140px] md:min-w-[180px]">Nama Siswa</th>
+                                <th className="py-2 px-2 md:py-3 md:px-3 border-b border-r border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider text-[10px] md:text-xs bg-slate-50 w-20 md:w-28">Kelas</th>
+                                <th className="py-2 px-2 md:py-3 md:px-3 border-b border-slate-200 text-center text-slate-500 font-bold uppercase tracking-wider text-[10px] md:text-xs bg-slate-50 min-w-[280px] md:min-w-[360px]">Status Kehadiran</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -485,22 +505,22 @@ function GuruInputAbsensiContent() {
                                     </td>
                                 </tr>
                             ) : (
-                                pagedAbsensi.map(({ siswa }, idx) => {
+                                absensiRows.map(({ siswa }, idx) => {
                                     const currentStatus = draftKehadiran[siswa.id];
-                                    const globalIndex = (absensiPage - 1) * PAGE_SIZE + idx + 1;
+                                    const globalIndex = idx + 1;
 
                                     return (
                                             <tr key={siswa.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="py-2.5 px-3 border-b border-r border-slate-200 text-slate-500 font-medium text-center text-sm static md:sticky md:left-0 md:z-20 bg-white group-hover:bg-slate-50">{globalIndex}</td>
-                                                <td className="py-2.5 px-4 border-b border-r-[3px] border-slate-300 static md:sticky md:left-12 md:z-20 bg-white group-hover:bg-slate-50 drop-shadow-sm">
-                                                    <p className="font-bold text-slate-800 text-sm">{siswa.nama_lengkap}</p>
+                                                <td className="py-1.5 px-2 md:py-2.5 md:px-3 border-b border-r border-slate-200 text-slate-500 font-medium text-center text-xs md:text-sm static md:sticky md:left-0 md:z-[5] bg-white group-hover:bg-slate-50">{globalIndex}</td>
+                                                <td className="py-1.5 px-2 md:py-2.5 md:px-4 border-b border-r-[3px] border-slate-300 static md:sticky md:left-12 md:z-[5] bg-white group-hover:bg-slate-50 drop-shadow-sm">
+                                                    <p className="font-bold text-slate-800 text-xs md:text-sm truncate max-w-[140px] md:max-w-none">{siswa.nama_lengkap}</p>
                                                 </td>
-                                                <td className="py-2.5 px-3 border-b border-r border-slate-200 text-slate-600 text-center font-bold text-sm">Kelas {siswa.kelas}</td>
-                                                <td className="py-2.5 px-3 border-b border-slate-200">
+                                                <td className="py-1.5 px-2 md:py-2.5 md:px-3 border-b border-r border-slate-200 text-slate-600 text-center font-bold text-xs md:text-sm">Kelas {siswa.kelas}</td>
+                                                <td className="py-1.5 px-2 md:py-2.5 md:px-3 border-b border-slate-200">
                                                     {!isCorrectDay ? (
-                                                        <p className="text-center text-sm italic text-slate-400">Silahkan pilih hari sesuai jadwal</p>
+                                                        <p className="text-center text-xs md:text-sm italic text-slate-400">Silahkan pilih hari sesuai jadwal</p>
                                                     ) : (
-                                                    <div className="flex justify-center gap-2">
+                                                    <div className="flex justify-center gap-1.5 md:gap-2">
                                                         {KEHADIRAN_OPTIONS.map(opt => {
                                                             const isActive = currentStatus === opt.key;
                                                             const btnStyle = isActive ? opt.activeBg : opt.inactiveBg;
@@ -509,7 +529,7 @@ function GuruInputAbsensiContent() {
                                                                     key={opt.key}
                                                                     onClick={() => handleSelectDraft(siswa.id, opt.key)}
                                                                     disabled={isInputLocked}
-                                                                    className={`w-[72px] py-1.5 text-xs font-bold rounded-lg border transition-all shadow-sm ${isInputLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'} ${btnStyle}`}
+                                                                    className={`w-[54px] md:w-[72px] py-1 md:py-1.5 text-[10px] md:text-xs font-bold rounded-md md:rounded-lg border transition-all shadow-sm ${isInputLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'} ${btnStyle}`}
                                                                 >
                                                                     {opt.label}
                                                                 </button>
@@ -525,29 +545,6 @@ function GuruInputAbsensiContent() {
                                 </tbody>
                             </table>
                         </div>
-
-                        {/* Pagination */}
-                        {!loading && selectedMapel && !(uniqueKelas.length > 1 && !selectedKelas) && absensiTotalPages > 1 && (
-                            <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50">
-                                <button
-                                    onClick={() => setAbsensiPage(p => Math.max(1, p - 1))}
-                                    disabled={absensiPage === 1}
-                                    className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 bg-white rounded-lg transition-colors cursor-pointer"
-                                >
-                                    Sebelumnya
-                                </button>
-                                <span className="text-xs text-slate-500">
-                                    Halaman <span className="font-bold text-slate-700">{absensiPage}</span> dari <span className="font-bold text-slate-700">{absensiTotalPages}</span>
-                                </span>
-                                <button
-                                    onClick={() => setAbsensiPage(p => Math.min(absensiTotalPages, p + 1))}
-                                    disabled={absensiPage === absensiTotalPages}
-                                    className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 bg-white rounded-lg transition-colors cursor-pointer"
-                                >
-                                    Selanjutnya
-                                </button>
-                            </div>
-                        )}
 
                         {/* Footer: Save Button */}
                         {!loading && selectedMapel && !(uniqueKelas.length > 1 && !selectedKelas) && filteredsiswa.length > 0 && (

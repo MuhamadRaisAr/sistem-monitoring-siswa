@@ -295,8 +295,8 @@ export default function AdminGuruPage() {
             )}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight">Data Guru</h1>
-                    <p className="text-slate-400 text-sm">Kelola akun guru SMP Ma'had Darul Ikhlas.</p>
+                    <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Data Guru</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Kelola akun guru SMP Ma'had Darul Ikhlas.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <div className="relative w-full sm:w-64">
@@ -308,36 +308,39 @@ export default function AdminGuruPage() {
                             placeholder="Cari guru (Nama/No.HP/Kelas)..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2 sm:py-2.5 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2 sm:py-2.5 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
                         />
                     </div>
-                    {selectedIds.length > 0 && (
+                    
+                    <div className="flex flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        {selectedIds.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-white transition-colors shrink-0 shadow-lg shadow-red-500/30"
+                            >
+                                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                Hapus Terpilih ({selectedIds.length})
+                            </button>
+                        )}
                         <button
-                            onClick={handleBulkDelete}
-                            className="flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-2 sm:py-2.5 px-4 text-sm font-semibold text-white transition-colors shrink-0 w-full sm:w-auto shadow-lg shadow-red-500/30"
+                            onClick={openAddModal}
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 shrink-0 text-xs sm:text-sm"
                         >
-                            <Trash2 className="h-4 w-4" />
-                            Hapus Terpilih ({selectedIds.length})
+                            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            Tambah Guru
                         </button>
-                    )}
-                    <button
-                        onClick={openAddModal}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 shrink-0 w-full sm:w-auto text-sm"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Tambah Guru
-                    </button>
+                    </div>
                 </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-4 sm:p-6">
+            <div className="w-full mt-4">
                 {loading ? (
                     <div className="flex h-40 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-xl border border-slate-200 dark:border-emerald-500/10">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                    <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                        <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     {selectedIds.length > 0 && (

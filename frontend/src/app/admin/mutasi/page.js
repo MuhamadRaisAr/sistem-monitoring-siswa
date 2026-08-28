@@ -163,15 +163,15 @@ export default function MutasiSiswaPage() {
             <div className="w-full flex flex-col gap-6">
                 
                 {/* Control Bar */}
-                <div className="flex flex-col lg:flex-row lg:items-end gap-4">
+                <div className="flex flex-row items-end gap-3 sm:gap-4 w-full">
                     
                     {/* Filter Kelas Asal */}
-                    <div className="flex-1 min-w-[200px]">
-                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Pilih Kelas Asal</label>
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-[11px] sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2 truncate">Pilih Kelas Asal</label>
                         <select 
                             value={kelasAsal}
                             onChange={handleKelasAsalChange}
-                            className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white shadow-sm"
+                            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white shadow-sm"
                         >
                             <option value="">-- Pilih Kelas --</option>
                             {kelasList.map(k => (
@@ -181,12 +181,12 @@ export default function MutasiSiswaPage() {
                     </div>
 
                     {/* Divider */}
-                    <div className="hidden lg:block w-px h-12 bg-slate-300 dark:bg-emerald-500/20 mx-2 mb-2"></div>
+                    <div className="hidden sm:block w-px h-12 bg-slate-300 dark:bg-emerald-500/20 mx-2 mb-2"></div>
 
                     {/* Action Controls */}
-                    <div className="flex-[2]">
-                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                            <RefreshCw className="h-4 w-4 text-emerald-500" /> Aksi Massal
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-[11px] sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-1.5 truncate">
+                            <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-500 shrink-0" /> Aksi Massal
                         </label>
                         <select 
                             value={aksiMassal}
@@ -196,7 +196,7 @@ export default function MutasiSiswaPage() {
                                     setIsSelectionMode(true);
                                 }
                             }}
-                            className="w-full sm:w-auto min-w-[250px] px-3 py-2 text-sm rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white shadow-sm"
+                            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-xl bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white shadow-sm"
                         >
                             <option value="">-- Pilih Aksi / Tujuan --</option>
                             {kelasList.filter(k => {
@@ -211,8 +211,8 @@ export default function MutasiSiswaPage() {
                 </div>
 
                 {/* Table Siswa */}
-                <div className="flex-1 overflow-x-auto w-full">
-                    <table className="w-full text-left text-xs whitespace-nowrap">
+                <div className="flex-1 overflow-x-auto w-full bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                    <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                         <thead>
                             <tr className="bg-slate-50 dark:bg-[#061e16] border-y-2 border-slate-200 dark:border-emerald-500/20">
                                 {isSelectionMode && (

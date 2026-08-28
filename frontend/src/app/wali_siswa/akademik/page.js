@@ -185,6 +185,9 @@ export default function WaliAkademikPage() {
             logsByDateMapel[ds][log.jenis_kegiatan] = log;
         });
 
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
         for (let i = 1; i <= numDays; i++) {
             const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
             const dObj = new Date(dateStr);
@@ -198,8 +201,8 @@ export default function WaliAkademikPage() {
 
             const dateLogsMap = logsByDateMapel[dateStr] || {};
 
-            // If no logs at all for this date, consider it a holiday or non-school day
-            if (Object.keys(dateLogsMap).length === 0) {
+            // If no logs at all for this date, consider it a holiday or non-school day (ONLY IF PAST DATE)
+            if (Object.keys(dateLogsMap).length === 0 && dateStr < todayStr) {
                 map[dateStr] = { isSunday: false, isHoliday: true, items: [] };
                 continue;
             }
@@ -238,7 +241,13 @@ export default function WaliAkademikPage() {
     }, [selectedBulan, jadwal, logs]);
 
 
-    const sortedDates = useMemo(() => Object.keys(dateScheduleMap).sort(), [dateScheduleMap]);
+    const sortedDates = useMemo(() => {
+        const d = new Date();
+        const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return Object.keys(dateScheduleMap)
+            .filter(date => date <= todayStr)
+            .sort();
+    }, [dateScheduleMap]);
 
 
     if (!selectedChild) {

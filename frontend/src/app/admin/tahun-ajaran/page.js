@@ -21,6 +21,8 @@ export default function AdminTahunAjaranPage() {
     const [tahun, setTahun] = useState('');
     const [semester, setSemester] = useState('Ganjil');
     const [statusAktif, setStatusAktif] = useState(0);
+    const [isCopyJadwal, setIsCopyJadwal] = useState(false);
+    const [copyFromId, setCopyFromId] = useState('');
 
     const API_URL = '/api/tahun-ajaran';
 
@@ -52,6 +54,8 @@ export default function AdminTahunAjaranPage() {
         setTahun('');
         setSemester('Ganjil');
         setStatusAktif(0);
+        setIsCopyJadwal(false);
+        setCopyFromId('');
         setFormError('');
         setPageSuccess('');
         setModalOpen(true);
@@ -62,6 +66,8 @@ export default function AdminTahunAjaranPage() {
         setTahun(item.nama_tahun || item.tahun || '');
         setSemester(item.semester || 'Ganjil');
         setStatusAktif(item.is_active || item.status_aktif || 0);
+        setIsCopyJadwal(false);
+        setCopyFromId(''); // Reset when opening edit, user explicitly selects if they want to copy during edit
         setFormError('');
         setPageSuccess('');
         setModalOpen(true);
@@ -82,7 +88,8 @@ export default function AdminTahunAjaranPage() {
         const payload = {
             nama_tahun: tahun,
             semester,
-            set_active: statusAktif
+            set_active: statusAktif,
+            copy_from_id: isCopyJadwal && copyFromId ? parseInt(copyFromId) : null
         };
 
         const url = selectedItem ? `${API_URL}/${selectedItem.id}` : API_URL;
@@ -168,6 +175,8 @@ export default function AdminTahunAjaranPage() {
         const smt = (item.semester || '').toLowerCase();
         return namaTahun.includes(query) || smt.includes(query);
     });
+
+    const availableTahunAjaran = tahunAjaran.filter(ta => ta.id !== selectedItem?.id);
 
     return (
         <div className="space-y-6 w-full min-w-0">
@@ -343,7 +352,57 @@ export default function AdminTahunAjaranPage() {
                                 </label>
                             </div>
 
-                            <div className="pt-4 flex justify-end gap-3">
+                            <div className="border-t border-slate-100 dark:border-emerald-500/10 pt-4 mt-2">
+                                <label className="flex items-center gap-2 cursor-pointer mb-3">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isCopyJadwal} 
+                                        onChange={(e) => {
+                                            setIsCopyJadwal(e.target.checked);
+                                            if (!e.target.checked) {
+                                                setCopyFromId('');
+                                            } else if (availableTahunAjaran.length === 1) {
+                                                setCopyFromId(availableTahunAjaran[0].id.toString());
+                                            }
+                                        }}
+                                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+                                    />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Copy jadwal pelajaran dari tahun ajaran lain (Opsional)</span>
+                                </label>
+
+                                {isCopyJadwal && availableTahunAjaran.length > 0 && (
+                                    <div className="pl-6 animate-fade-in">
+                                        <label className="block text-xs font-semibold text-slate-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
+                                            {availableTahunAjaran.length === 1 ? 'Tahun Ajaran yang Disalin' : 'Pilih Tahun Ajaran'}
+                                        </label>
+                                        
+                                        {availableTahunAjaran.length === 1 ? (
+                                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2.5 px-3 text-slate-800 dark:text-slate-100 text-sm font-semibold">
+                                                {availableTahunAjaran[0].nama_tahun} Semester {availableTahunAjaran[0].semester}
+                                            </div>
+                                        ) : (
+                                            <select
+                                                value={copyFromId}
+                                                onChange={(e) => setCopyFromId(e.target.value)}
+                                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#020c08]/50 py-2.5 px-3 text-slate-800 dark:text-slate-100 focus:border-emerald-500 focus:outline-none text-sm cursor-pointer"
+                                                required={isCopyJadwal}
+                                            >
+                                                <option value="" disabled>-- Pilih Tahun Ajaran --</option>
+                                                {availableTahunAjaran.map(ta => (
+                                                    <option key={ta.id} value={ta.id}>
+                                                        {ta.nama_tahun} Semester {ta.semester}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        <p className="text-[10px] text-slate-500 mt-1.5">
+                                            Fitur ini akan menyalin seluruh jadwal pelajaran dari tahun ajaran yang dipilih ke tahun ajaran ini.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 dark:border-emerald-500/10 mt-6">
                                 <button
                                     type="button"
                                     onClick={() => setModalOpen(false)}

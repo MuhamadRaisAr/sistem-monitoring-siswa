@@ -67,9 +67,9 @@ export default function GuruBkSiswaPage() {
             </div>
 
             {/* Search and Table Box */}
-            <div className="glass-panel rounded-3xl p-6 bg-white dark:bg-[#020c08]/50 border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+            <div className="w-full mt-4">
                 {/* Search Bar */}
-                <div className="relative max-w-md mb-6">
+                <div className="relative max-w-md mb-4">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Search className="h-5 w-5 text-slate-400" />
                     </div>
@@ -78,7 +78,7 @@ export default function GuruBkSiswaPage() {
                         placeholder="Cari siswa berdasarkan Nama, NIS, Kelas..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08] py-2.5 pl-10 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08] py-2.5 pl-10 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors shadow-sm"
                     />
                 </div>
 
@@ -87,8 +87,8 @@ export default function GuruBkSiswaPage() {
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-emerald-500/10">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                    <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                        <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center w-10 static md:sticky md:left-0 md:z-30 bg-slate-50 dark:bg-[#061e16] text-slate-800 dark:text-slate-300 font-extrabold uppercase">No</th>

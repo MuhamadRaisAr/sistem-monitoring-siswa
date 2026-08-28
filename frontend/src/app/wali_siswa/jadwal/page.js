@@ -54,7 +54,7 @@ export default function WaliJadwalPage() {
             setLoading(true);
             try {
                 const kelas = encodeURIComponent(selectedChild.kelas);
-                const res = await fetch(`${API_URL}/jadwal?kelas=${kelas}&tahun_ajaran_id=${selectedTahunAjaranId || ''}`, {
+                const res = await fetch(`${API_URL}/jadwal?kelas=${kelas}&tahun_ajaran_id=${selectedTahunAjaranId || ''}&siswa_id=${selectedChild.id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();

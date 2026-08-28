@@ -1,0 +1,1 @@
+const db = require('./backend/config/db'); db.query('SELECT ka.*, s.kelas FROM kehadiran_siswa ka JOIN siswa s ON ka.siswa_id = s.id WHERE (s.kelas = \'VII (Tujuh)\' OR s.kelas LIKE \'VII (Tujuh) (%\') AND ka.jenis_kegiatan = \'Bahasa Sunda\'').then(([res]) => { console.log(res.length); console.log(res[0]); process.exit(0); }).catch(console.error);

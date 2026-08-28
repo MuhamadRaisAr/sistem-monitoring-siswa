@@ -219,74 +219,77 @@ export default function RekapNilaiMapelPage() {
 
 
 
-                <div className="flex flex-col gap-4 animate-fade-in">
-                    <div className="flex flex-col sm:flex-row items-end gap-3 sm:gap-4 w-full">
-                        {/* Tahun Ajaran */}
-                        <div className="flex flex-row w-full sm:w-auto gap-3 sm:gap-4">
-                            <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
-                            <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</span>
-                            <select
-                                value={selectedTahunAjaranId}
-                                onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                                disabled={loadingTahunAjaran}
-                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm text-ellipsis overflow-hidden disabled:opacity-50"
-                            >
-                                {loadingTahunAjaran ? (
-                                    <option>Memuat...</option>
-                                ) : tahunAjaranList.length === 0 ? (
-                                    <option value="">Tidak ada data</option>
-                                ) : (
-                                    tahunAjaranList.map(ta => (
-                                        <option key={ta.id} value={ta.id}>
-                                            {ta.nama_tahun} {ta.semester}
-                                        </option>
-                                    ))
-                                )}
-                            </select>
-                        </div>
-        
-                        {rawJadwal.length > 0 && (
-                            <>
-                                {/* Mata Pelajaran */}
-                                {allMapelOptions.length > 1 && (
-                                    <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
-                                        <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Mata Pelajaran:</span>
-                                        <select
-                                            value={selectedMapel}
-                                            onChange={(e) => { setSelectedMapel(e.target.value); setSelectedKelas(''); }}
-                                            className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
-                                        >
-                                            <option value="">-- Pilih Mapel --</option>
-                                            {allMapelOptions.map(m => (
-                                                <option key={m} value={m}>{getAbbreviatedMapel(m)}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                        </div>
-
-                        {/* Kelas & Search Bar */}
-                        {/* Kelas & Search Bar */}
-                        {rawJadwal.length > 0 && (
-                            <>
-                                <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[200px]">
-                                    <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</span>
+                    <div className="flex flex-col gap-4 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
+                            <div className="grid grid-cols-2 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
+                                {/* Tahun Ajaran */}
+                                <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                    <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</span>
                                     <select
-                                        value={selectedKelas}
-                                        onChange={(e) => setSelectedKelas(e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
+                                        value={selectedTahunAjaranId}
+                                        onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
+                                        disabled={loadingTahunAjaran}
+                                        className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm text-ellipsis overflow-hidden disabled:opacity-50"
                                     >
-                                        <option value="">-- Kelas --</option>
-                                        {kelasOptions.map((k, idx) => (
-                                            <option key={idx} value={k}>{k}</option>
-                                        ))}
+                                        {loadingTahunAjaran ? (
+                                            <option>Memuat...</option>
+                                        ) : tahunAjaranList.length === 0 ? (
+                                            <option value="">Tidak ada data</option>
+                                        ) : (
+                                            tahunAjaranList.map(ta => (
+                                                <option key={ta.id} value={ta.id}>
+                                                    {ta.nama_tahun} {ta.semester}
+                                                </option>
+                                            ))
+                                        )}
                                     </select>
                                 </div>
-
-                                {/* Search Bar */}
-                                <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[350px] w-full mt-3 sm:mt-0">
+                
+                                {rawJadwal.length > 0 && (
+                                    <>
+                                        {/* Mata Pelajaran */}
+                                        {allMapelOptions.length > 1 && (
+                                            <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                                <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Mata Pelajaran:</span>
+                                                <select
+                                                    value={selectedMapel}
+                                                    onChange={(e) => { setSelectedMapel(e.target.value); setSelectedKelas(''); }}
+                                                    className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
+                                                >
+                                                    <option value="">-- Pilih Mapel --</option>
+                                                    {allMapelOptions.map(m => (
+                                                        <option key={m} value={m}>{getAbbreviatedMapel(m)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                                {/* Kelas */}
+                                {rawJadwal.length > 0 && (
+                                    <>
+                                        {kelasOptions.length > 0 && (
+                                            <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                                                <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</span>
+                                                <select
+                                                    value={selectedKelas}
+                                                    onChange={(e) => setSelectedKelas(e.target.value)}
+                                                    className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
+                                                >
+                                                    <option value="">-- Kelas --</option>
+                                                    {kelasOptions.map((k, idx) => (
+                                                        <option key={idx} value={k}>{k}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                            
+                            {/* Search Bar */}
+                            {rawJadwal.length > 0 && (
+                                <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
                                     <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Cari Siswa:</span>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -299,10 +302,9 @@ export default function RekapNilaiMapelPage() {
                                         />
                                     </div>
                                 </div>
-                            </>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
 
             {/* Main Content Area */}
             <div className="relative mt-6">
@@ -347,8 +349,8 @@ export default function RekapNilaiMapelPage() {
                                     </p>
                                 </div>
                             ) : (
-                                <div className="w-full">
-                                    <table className="w-full text-left text-xs border-separate border-spacing-0">
+                                <div className="w-full overflow-x-auto">
+                                    <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-max">
                                         <thead className="bg-slate-50 dark:bg-[#061e16]">
                                             <tr>
                                                 <th className="py-2 md:py-3 px-2 md:px-4 text-center text-slate-800 dark:text-slate-300 font-extrabold border-b border-r border-slate-300 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16]">No</th>

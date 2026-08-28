@@ -172,7 +172,7 @@ export default function AdminKelasPage() {
                 </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-6">
+            <div className="w-full mt-4">
 
 
                 {loading ? (

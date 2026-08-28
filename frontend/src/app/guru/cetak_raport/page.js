@@ -1046,7 +1046,7 @@ export default function CetakRaportGuru() {
                         <div className="flex flex-col gap-1 p-2">
                             {filteredStudents.map((student, idx) => (
                                 <div key={student.id} className="flex items-center justify-between py-2.5 md:py-3.5 px-4 md:px-5 rounded-xl hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group">
-                                    <p className="font-extrabold text-sm sm:text-base md:text-lg text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                    <p className="font-extrabold text-xs sm:text-sm md:text-base text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                         {student.nama_lengkap}
                                     </p>
                                     <button 

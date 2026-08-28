@@ -438,44 +438,47 @@ export default function AdminsiswaPage() {
                             placeholder="Cari siswa (Nama/NIS/Kelas)..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2 sm:py-2.5 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08]/50 py-2 sm:py-2.5 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
                         />
                     </div>
-                    {selectedIds.length > 0 && (
+                    
+                    <div className="flex flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        {selectedIds.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-white transition-colors shrink-0 shadow-lg shadow-red-500/30"
+                            >
+                                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                Hapus ({selectedIds.length})
+                            </button>
+                        )}
                         <button
-                            onClick={handleBulkDelete}
-                            className="flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 py-2 sm:py-2.5 px-4 text-sm font-semibold text-white transition-colors shrink-0 w-full sm:w-auto shadow-lg shadow-red-500/30"
+                            onClick={handleDownloadSiswa}
+                            className="flex items-center justify-center rounded-xl p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#061e16] dark:hover:bg-emerald-500/20 text-slate-600 dark:text-emerald-400 transition-colors shrink-0 shadow-sm border border-slate-200 dark:border-emerald-500/20"
+                            title="Unduh Template Excel"
                         >
-                            <Trash2 className="h-4 w-4" />
-                            Hapus ({selectedIds.length})
+                            <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
-                    )}
-                    <button
-                        onClick={handleDownloadSiswa}
-                        className="flex items-center justify-center rounded-xl p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#061e16] dark:hover:bg-emerald-500/20 text-slate-600 dark:text-emerald-400 transition-colors shrink-0"
-                        title="Unduh Template Excel"
-                    >
-                        <Download className="h-5 w-5" />
-                    </button>
-                    <button
-                        onClick={openAddModal}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 shrink-0 w-full sm:w-auto text-sm"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Tambah Siswa
-                    </button>
+                        <button
+                            onClick={openAddModal}
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 shrink-0 text-xs sm:text-sm"
+                        >
+                            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            Tambah Siswa
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Search and Table Box */}
-            <div className="glass-panel rounded-3xl p-6">
+            <div className="w-full mt-4">
                 {loading ? (
                     <div className="flex h-40 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-xl border border-slate-200 dark:border-emerald-500/10">
-                        <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                    <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                        <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     {selectedIds.length > 0 && (

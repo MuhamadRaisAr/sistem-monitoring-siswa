@@ -81,10 +81,10 @@ export default function TunggakanPage() {
             </div>
 
             {/* Main Content Panel */}
-            <div className="glass-panel rounded-3xl p-6 space-y-6">
+            <div className="w-full mt-4 space-y-6">
                 
                 {/* Search & Filter Options */}
-                <div className="flex flex-wrap gap-4 items-center justify-start border-b border-emerald-500/10 pb-4">
+                <div className="flex flex-wrap gap-4 items-center justify-start pb-2">
                     <div className="flex flex-col sm:flex-row gap-3 w-full">
                         <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
                             <select
@@ -148,28 +148,28 @@ export default function TunggakanPage() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <div className="overflow-x-auto pb-4">
-                            <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0 border border-slate-200 dark:border-slate-700/50">
+                        <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                            <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                                 <thead>
-                                    <tr className="border-b border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/20">
-                                        <th className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50">Siswa</th>
-                                        <th className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">Jenis Tagihan</th>
-                                        <th className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">Nominal</th>
-                                        <th className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">Tanggal Bayar</th>
-                                        <th className="py-4 px-4 text-center border-x border-slate-200 dark:border-slate-700/50">Aksi Konfirmasi</th>
+                                    <tr className="bg-slate-50 dark:bg-[#061e16]">
+                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Siswa</th>
+                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Jenis Tagihan</th>
+                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Nominal</th>
+                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Tanggal Bayar</th>
+                                        <th className="py-3 px-4 text-center border-b border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Aksi Konfirmasi</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
+                                <tbody>
                                     {filteredTunggakan.map((b) => (
                                         <tr 
                                             key={b.id} 
-                                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                                            className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group"
                                         >
-                                            <td className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50">
+                                            <td className="py-3 px-4 border-b border-slate-300 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 <span className="font-bold text-slate-800 dark:text-white block">{b.nama_siswa}</span>
                                                 <span className="text-[11px] text-slate-500 dark:text-slate-400">Kelas {b.kelas}</span>
                                             </td>
-                                            <td className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">
+                                            <td className="py-3 px-4 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 <div className="font-semibold text-slate-700 dark:text-slate-200">
                                                     {b.nama_tagihan || 'Tagihan'}
                                                 </div>
@@ -177,7 +177,7 @@ export default function TunggakanPage() {
                                                     {`${getMonthName(b.bulan)} ${b.tahun}`}
                                                 </div>
                                             </td>
-                                            <td className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">
+                                            <td className="py-3 px-4 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 <div className="font-bold text-emerald-600 dark:text-emerald-400">
                                                     {formatRupiah(b.nominal)}
                                                 </div>
@@ -185,10 +185,10 @@ export default function TunggakanPage() {
                                                     Dibuat: {b.created_at ? new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
                                                 </div>
                                             </td>
-                                            <td className="py-4 px-4 text-slate-500 dark:text-slate-400 text-xs font-medium border-x border-slate-200 dark:border-slate-700/50 text-center">
+                                            <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs font-medium border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 <span className="text-slate-400 dark:text-slate-600">-</span>
                                             </td>
-                                            <td className="py-4 px-4 text-center border-x border-slate-200 dark:border-slate-700/50">
+                                            <td className="py-3 px-4 text-center border-b border-slate-300 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 <div className="flex justify-center">
                                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
                                                         Belum Dibayar
