@@ -98,41 +98,46 @@ export default function RekapNilaiKelasPage() {
             </div>
 
             {/* Selectors */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center w-full">
-                <div className="w-full sm:w-[280px] flex flex-col gap-1">
-                    <span className="text-xs text-slate-500 font-bold dark:text-slate-400">Tahun Ajaran:</span>
-                    <select
-                        value={selectedTahunAjaranId}
-                        onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                        disabled={loadingTahunAjaran}
-                        className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer truncate"
-                    >
-                        {loadingTahunAjaran ? (
-                            <option>Memuat...</option>
-                        ) : tahunAjaranList.length === 0 ? (
-                            <option value="">Tidak ada data</option>
-                        ) : (
-                            tahunAjaranList.map(ta => (
-                                <option key={ta.id} value={ta.id}>
-                                    {ta.nama_tahun} {ta.semester}
-                                </option>
-                            ))
-                        )}
-                    </select>
-                </div>
+            <div className="flex flex-col gap-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
+                    <div className="grid grid-cols-1 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
+                        {/* Tahun Ajaran */}
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[200px]">
+                            <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</span>
+                            <select
+                                value={selectedTahunAjaranId}
+                                onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
+                                disabled={loadingTahunAjaran}
+                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer text-ellipsis overflow-hidden shadow-sm disabled:opacity-50"
+                            >
+                                {loadingTahunAjaran ? (
+                                    <option>Memuat...</option>
+                                ) : tahunAjaranList.length === 0 ? (
+                                    <option value="">Tidak ada data</option>
+                                ) : (
+                                    tahunAjaranList.map(ta => (
+                                        <option key={ta.id} value={ta.id}>
+                                            {ta.nama_tahun} {ta.semester}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
+                    </div>
 
-                {/* Search Bar */}
-                <div className="flex flex-col gap-1.5 w-full sm:flex-1 sm:w-auto mt-1 sm:mt-0">
-                    <span className="text-xs text-slate-500 font-bold dark:text-slate-400">Cari Siswa:</span>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Ketik nama atau NIS..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-[#061e16] pl-10 pr-3 sm:pr-4 py-2.5 text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 truncate"
-                        />
+                    {/* Search Bar */}
+                    <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
+                        <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Cari Siswa:</span>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Ketik nama atau NIS..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] pl-10 pr-3 sm:pr-4 py-2.5 text-[12px] sm:text-sm text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 truncate shadow-sm"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

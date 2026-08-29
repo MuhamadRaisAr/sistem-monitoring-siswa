@@ -193,8 +193,8 @@ export default function BendaharaLayout({ children }) {
                 { name: 'Data Siswa', href: '/bendahara/siswa', icon: Users },
                 { name: 'Tagihan Aktif', href: '/bendahara/keuangan', icon: CircleDollarSign },
                 { name: 'Menunggu Validasi', href: '/bendahara/keuangan/validasi', icon: ClipboardCheck },
-                { name: 'Riwayat Pembayaran', href: '/bendahara/keuangan/riwayat', icon: History },
                 { name: 'Data Tunggakan', href: '/bendahara/keuangan/tunggakan', icon: ClipboardList },
+                { name: 'Riwayat Pembayaran', href: '/bendahara/keuangan/riwayat', icon: History },
             ]
         }
     ];

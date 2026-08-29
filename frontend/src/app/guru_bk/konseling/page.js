@@ -47,7 +47,7 @@ export default function GuruBkKonselingPage() {
             
             const [dataBk, dataSiswa] = await Promise.all([resBk.json(), resSiswa.json()]);
             setRecords(Array.isArray(dataBk) ? dataBk : []);
-            setSiswaList(Array.isArray(dataSiswa) ? dataSiswa : []);
+            setSiswaList(Array.isArray(dataSiswa) ? dataSiswa.filter(s => s.status_aktif === 'aktif') : []);
         } catch (err) {
             console.error('Error fetching data:', err);
         } finally {
@@ -161,17 +161,10 @@ export default function GuruBkKonselingPage() {
                     <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Catatan Konseling</h1>
                     <p className="text-slate-500 text-sm mt-1">Kelola riwayat bimbingan dan konseling siswa.</p>
                 </div>
-                <button 
-                    onClick={() => handleOpenModal()}
-                    className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
-                >
-                    <Plus className="h-5 w-5" />
-                    <span>Tambah Catatan</span>
-                </button>
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row gap-4 w-full items-start sm:items-center">
                     <div className="flex flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                         <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[220px]">
@@ -226,6 +219,17 @@ export default function GuruBkKonselingPage() {
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Add Button */}
+                <div className="w-full mt-2">
+                    <button 
+                        onClick={() => handleOpenModal()}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 h-[42px]"
+                    >
+                        <Plus className="h-5 w-5" />
+                        <span>Tambah Catatan</span>
+                    </button>
                 </div>
             </div>
 

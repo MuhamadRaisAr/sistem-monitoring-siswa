@@ -49,7 +49,9 @@ export default function AdminKedisiplinanPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            if (Array.isArray(data)) setSiswaList(data);
+            if (Array.isArray(data)) {
+                setSiswaList(data.filter(s => s.status_aktif === 'aktif'));
+            }
         } catch (err) { console.error(err); }
     };
 

@@ -191,8 +191,8 @@ export default function guru_bkLayout({ children }) {
                 { name: 'Dashboard', href: '/guru_bk/dashboard', icon: LayoutDashboard },
                 { name: 'Data Siswa', href: '/guru_bk/siswa', icon: Users },
                 { name: 'Rekap Absensi', href: '/guru_bk/absensi', icon: Calendar },
-                { name: 'Catatan Pelanggaran', href: '/guru_bk/kedisiplinan', icon: Shield },
                 { name: 'Catatan Konseling', href: '/guru_bk/konseling', icon: FileText },
+                { name: 'Catatan Pelanggaran', href: '/guru_bk/kedisiplinan', icon: Shield },
                 { name: 'Rekap Pelanggaran', href: '/guru_bk/kedisiplinan/rekap', icon: ShieldAlert },
             ]
         }

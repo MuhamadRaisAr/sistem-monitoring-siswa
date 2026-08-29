@@ -211,8 +211,9 @@ export default function AdminTahunAjaranPage() {
 
             {/* Page Success Notification */}
             {pageSuccess && (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl text-emerald-600 dark:text-emerald-400 text-sm font-semibold flex items-center gap-2 animate-fade-in shadow-sm">
-                    <CheckCircle className="h-5 w-5" /> {pageSuccess}
+                <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 bg-white text-slate-700 rounded-xl shadow-xl animate-fade-in flex items-center gap-3 font-semibold border border-slate-200 w-max max-w-[90vw]">
+                    <CheckCircle className="h-5 w-5 text-slate-500 shrink-0" />
+                    <span className="whitespace-nowrap">{pageSuccess}</span>
                 </div>
             )}
 

@@ -355,7 +355,7 @@ function GuruInputAbsensiContent() {
                                     value={today}
                                     max={todayStr()}
                                     onChange={(e) => setToday(e.target.value)}
-                                    className="rounded-lg border border-slate-200 bg-white py-1 px-2.5 text-xs font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none cursor-pointer shadow-sm"
+                                    className="rounded-xl border border-slate-200 bg-white py-1.5 px-3 text-sm font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none cursor-pointer shadow-sm"
                                     title="Pilih Tanggal Absensi"
                                 />
                             </span>

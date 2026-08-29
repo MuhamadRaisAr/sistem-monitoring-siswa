@@ -224,20 +224,10 @@ export default function CatatPelanggaranPage() {
                     <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Catat Pelanggaran</h1>
                     <p className="text-slate-500 text-sm mt-1">Kelola dan tambah catatan riwayat pelanggaran siswa.</p>
                 </div>
-                
-                {isCurrentYearActive && (
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-md shrink-0 cursor-pointer"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Tambah Catatan
-                    </button>
-                )}
             </div>
 
             {/* Selectors */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
                 <div className="flex flex-row gap-3 sm:gap-4 w-full">
                     {/* Tahun Ajaran */}
                     <div className="flex flex-col gap-1.5 w-[260px] sm:w-[220px]">
@@ -279,6 +269,19 @@ export default function CatatPelanggaranPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Add Button */}
+                {isCurrentYearActive && (
+                    <div className="w-full mt-2">
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-md shrink-0 cursor-pointer h-[42px]"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Tambah Catatan
+                        </button>
+                    </div>
+                )}
             </div>
 
             {!isCurrentYearActive && !loadingTahunAjaran && selectedTahunAjaranId && (

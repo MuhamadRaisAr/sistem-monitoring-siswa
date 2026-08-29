@@ -18,7 +18,6 @@ export default function TunggakanPage() {
         try {
             setLoading(true);
             let query = `${API_URL}/keuangan?status_bayar=belum_lunas&`;
-            if (selectedTahunAjaranId) query += `tahun_ajaran_id=${selectedTahunAjaranId}&`;
             if (filterKelas) query += `kelas=${filterKelas}&`;
             
             const res = await fetch(query, {
@@ -54,10 +53,10 @@ export default function TunggakanPage() {
     };
 
     useEffect(() => {
-        if (token && selectedTahunAjaranId) {
+        if (token) {
             fetchTunggakan();
         }
-    }, [token, selectedTahunAjaranId, filterKelas]);
+    }, [token, filterKelas]);
 
     const filteredTunggakan = tunggakanList.filter(item => {
         const searchLower = searchQuery.toLowerCase();
@@ -65,6 +64,21 @@ export default function TunggakanPage() {
             (item.nama_siswa || '').toLowerCase().includes(searchLower) ||
             (item.nis || '').toLowerCase().includes(searchLower);
         return matchSearch;
+    });
+
+    // Group by TA
+    const groupedTunggakan = filteredTunggakan.reduce((acc, bill) => {
+        const taId = bill.tahun_ajaran_id || 'unknown';
+        if (!acc[taId]) acc[taId] = [];
+        acc[taId].push(bill);
+        return acc;
+    }, {});
+    
+    // Sort TA (descending)
+    const sortedTaIds = Object.keys(groupedTunggakan).sort((a, b) => {
+        if (a === 'unknown') return 1;
+        if (b === 'unknown') return -1;
+        return parseInt(b) - parseInt(a);
     });
 
     return (
@@ -86,26 +100,7 @@ export default function TunggakanPage() {
                 {/* Search & Filter Options */}
                 <div className="flex flex-wrap gap-4 items-center justify-start pb-2">
                     <div className="flex flex-col sm:flex-row gap-3 w-full">
-                        <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-                            <select
-                                value={selectedTahunAjaranId}
-                                onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                                disabled={loadingTahunAjaran}
-                                className="w-full sm:min-w-[180px] rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#020c08]/50 py-2.5 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm cursor-pointer disabled:opacity-50"
-                            >
-                                {loadingTahunAjaran ? (
-                                    <option>Memuat...</option>
-                                ) : tahunAjaranList.length === 0 ? (
-                                    <option value="">Tidak ada data</option>
-                                ) : (
-                                    tahunAjaranList.map((ta) => (
-                                        <option key={ta.id} value={ta.id}>
-                                            {ta.nama_tahun} {ta.semester}
-                                        </option>
-                                    ))
-                                )}
-                            </select>
-
+                        <div className="grid grid-cols-1 gap-3 w-full sm:w-auto">
                             <select
                                 value={filterKelas}
                                 onChange={(e) => setFilterKelas(e.target.value)}
@@ -147,59 +142,95 @@ export default function TunggakanPage() {
                         Tidak ada catatan tunggakan ditemukan untuk pencarian ini.
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
-                            <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
-                                <thead>
-                                    <tr className="bg-slate-50 dark:bg-[#061e16]">
-                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Siswa</th>
-                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Jenis Tagihan</th>
-                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Nominal</th>
-                                        <th className="py-3 px-4 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Tanggal Bayar</th>
-                                        <th className="py-3 px-4 text-center border-b border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Aksi Konfirmasi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredTunggakan.map((b) => (
-                                        <tr 
-                                            key={b.id} 
-                                            className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group"
-                                        >
-                                            <td className="py-3 px-4 border-b border-slate-300 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
-                                                <span className="font-bold text-slate-800 dark:text-white block">{b.nama_siswa}</span>
-                                                <span className="text-[11px] text-slate-500 dark:text-slate-400">Kelas {b.kelas}</span>
-                                            </td>
-                                            <td className="py-3 px-4 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
-                                                <div className="font-semibold text-slate-700 dark:text-slate-200">
-                                                    {b.nama_tagihan || 'Tagihan'}
+                    <div className="space-y-8">
+                        {sortedTaIds.map((taId) => {
+                            const groupBills = groupedTunggakan[taId];
+                            const ta = tahunAjaranList.find(t => t.id.toString() === taId.toString());
+                            const taName = ta ? `${ta.nama_tahun} ${ta.semester}` : 'Tahun Ajaran Umum';
+                            
+                            // Group by bulan
+                            const billsByBulan = groupBills.reduce((acc, bill) => {
+                                const bId = bill.bulan || 0;
+                                if (!acc[bId]) acc[bId] = [];
+                                acc[bId].push(bill);
+                                return acc;
+                            }, {});
+                            
+                            // Sort bulan descending
+                            const sortedBulanIds = Object.keys(billsByBulan).sort((a, b) => parseInt(b) - parseInt(a));
+
+                            return (
+                                <div key={taId} className="space-y-6">
+                                    <div className="px-1 flex items-center justify-between">
+                                        <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm">Tahun Ajaran: {taName}</h3>
+                                    </div>
+                                    <div className="space-y-6">
+                                        {sortedBulanIds.map(bulanId => {
+                                            const monthBills = billsByBulan[bulanId];
+                                            return (
+                                                <div key={bulanId} className="bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/20 overflow-hidden shadow-sm">
+                                                    <div className="bg-slate-50 dark:bg-slate-800/30 px-4 py-2.5 border-b border-slate-200 dark:border-emerald-500/10 text-center">
+                                                        <h4 className="font-bold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-widest">BULAN {getMonthName(bulanId)}</h4>
+                                                    </div>
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
+                                                            <thead>
+                                                                <tr className="bg-slate-50 dark:bg-[#061e16]">
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Siswa</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Jenis Tagihan</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Nominal</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Tanggal Bayar</th>
+                                                                    <th className="py-3 px-4 text-center border-b border-slate-200 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold uppercase bg-slate-50 dark:bg-[#061e16]">Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {monthBills.map((b) => (
+                                                                    <tr 
+                                                                        key={b.id} 
+                                                                        className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group"
+                                                                    >
+                                                                        <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                            <span className="font-bold text-slate-800 dark:text-white block">{b.nama_siswa}</span>
+                                                                            <span className="text-[11px] text-slate-500 dark:text-slate-400">Kelas {b.kelas}</span>
+                                                                        </td>
+                                                                        <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                            <div className="font-semibold text-slate-700 dark:text-slate-200">
+                                                                                {b.nama_tagihan || 'Tagihan'}
+                                                                            </div>
+                                                                            <div className="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+                                                                                {`${getMonthName(b.bulan)} ${b.tahun}`}
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                            <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                                                                                {formatRupiah(b.nominal)}
+                                                                            </div>
+                                                                            <div className="text-[10px] text-slate-500 mt-0.5">
+                                                                                Dibuat: {b.created_at ? new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs font-medium border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                            <span className="text-slate-400 dark:text-slate-600">-</span>
+                                                                        </td>
+                                                                        <td className="py-3 px-4 text-center border-b border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                            <div className="flex justify-center">
+                                                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                                                                                    Belum Dibayar
+                                                                                </span>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
-                                                <div className="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-0.5">
-                                                    {`${getMonthName(b.bulan)} ${b.tahun}`}
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
-                                                <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                                                    {formatRupiah(b.nominal)}
-                                                </div>
-                                                <div className="text-[10px] text-slate-500 mt-0.5">
-                                                    Dibuat: {b.created_at ? new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs font-medium border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
-                                                <span className="text-slate-400 dark:text-slate-600">-</span>
-                                            </td>
-                                            <td className="py-3 px-4 text-center border-b border-slate-300 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
-                                                <div className="flex justify-center">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
-                                                        Belum Dibayar
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
                         <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-200 dark:border-emerald-500/10 gap-2">
                             <span className="text-sm font-semibold text-slate-500">
                                 Total Tagihan Menunggak: <span className="text-slate-700 dark:text-slate-200">{filteredTunggakan.length} Tagihan</span>

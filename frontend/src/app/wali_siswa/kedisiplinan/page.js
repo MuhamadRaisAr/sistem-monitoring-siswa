@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useChild } from '@/context/ChildContext';
-import { ShieldAlert, Plus, Check, X, Calendar, AlertTriangle, Shield, CheckCircle2, Clock, Trash2, Award } from 'lucide-react';
+import { ShieldAlert, Plus, Check, X, Calendar, AlertTriangle, Shield, CheckCircle2, Clock, Trash2, Award, Search } from 'lucide-react';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
 
 export default function WaliKedisiplinanPage() {
@@ -22,6 +22,7 @@ export default function WaliKedisiplinanPage() {
     const [selectedPelanggaran, setSelectedPelanggaran] = useState(null);
     const [activeTab, setActiveTab] = useState('terkini');
     const [selectedBulan, setSelectedBulan] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const API_URL = '/api';
 
@@ -79,7 +80,14 @@ export default function WaliKedisiplinanPage() {
     const allViolations = records.filter(r => r.kategori === 'pelanggaran');
     const latestGlobalDate = allViolations.length > 0 ? new Date(allViolations[0].tanggal_kejadian).toDateString() : null;
 
-    const violations = records.filter(r => r.kategori === 'pelanggaran' && (!selectedBulan || r.tanggal_kejadian.startsWith(selectedBulan)));
+    const violations = records.filter(r => {
+        const matchKategori = r.kategori === 'pelanggaran';
+        const matchBulan = !selectedBulan || r.tanggal_kejadian.startsWith(selectedBulan);
+        const matchSearch = !searchQuery || 
+                            (r.nama_kegiatan && r.nama_kegiatan.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (r.nama_pelapor && r.nama_pelapor.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchKategori && matchBulan && matchSearch;
+    });
     const terkiniList = violations.filter(v => new Date(v.tanggal_kejadian).toDateString() === latestGlobalDate);
     
     if (!selectedChild) {
@@ -139,6 +147,22 @@ export default function WaliKedisiplinanPage() {
                                     return <option key={m} value={m}>{monthName}</option>;
                                 })}
                             </select>
+                        </div>
+                    </div>
+                    
+                    {/* Pencarian */}
+                    <div className="w-full sm:w-auto sm:ml-auto self-end sm:self-center">
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-emerald-500" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cari pelanggaran..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full sm:w-[240px] pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#041610] text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm placeholder:text-slate-400 placeholder:font-normal"
+                            />
                         </div>
                     </div>
                 </div>

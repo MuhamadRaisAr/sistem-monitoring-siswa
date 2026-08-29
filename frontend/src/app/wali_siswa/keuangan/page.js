@@ -28,10 +28,10 @@ export default function WaliKeuanganPage() {
     const API_URL = '/api';
 
     const fetchBills = async () => {
-        if (!selectedChild || !selectedTahunAjaranId) return;
+        if (!selectedChild) return;
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/keuangan?siswa_id=${selectedChild.id}&tahun_ajaran_id=${selectedTahunAjaranId}`, {
+            const res = await fetch(`${API_URL}/keuangan?siswa_id=${selectedChild.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -44,9 +44,9 @@ export default function WaliKeuanganPage() {
     };
 
     useEffect(() => {
-        if (!token || !selectedChild || !selectedTahunAjaranId) return;
+        if (!token || !selectedChild) return;
         fetchBills();
-    }, [token, selectedChild, selectedTahunAjaranId]);
+    }, [token, selectedChild]);
 
     const handleUpload = async (id, file) => {
         if (!file) return;
@@ -103,24 +103,6 @@ export default function WaliKeuanganPage() {
                         <p className="text-slate-400 text-sm">Lihat rekapitulasi pembayaran tagihan.</p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <select
-                            value={selectedTahunAjaranId}
-                            onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                            disabled={loadingTahunAjaran}
-                            className="w-full sm:w-auto rounded-xl border border-emerald-500/20 bg-emerald-500/10 py-2.5 px-3 text-sm font-semibold text-white focus:border-emerald-500 focus:outline-none cursor-pointer disabled:opacity-50"
-                        >
-                            {loadingTahunAjaran ? (
-                                <option>Memuat...</option>
-                            ) : tahunAjaranList.length === 0 ? (
-                                <option value="">Tidak ada data</option>
-                            ) : (
-                                tahunAjaranList.map((ta) => (
-                                    <option key={ta.id} value={ta.id}>
-                                        {ta.nama_tahun} {ta.semester}
-                                    </option>
-                                ))
-                            )}
-                        </select>
                         <button
                             onClick={() => router.push('/wali_siswa/keuangan/cetak')}
                             className="inline-flex items-center justify-center w-full sm:w-auto gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-5 text-sm font-bold transition-all shadow-lg shadow-emerald-900/20 shrink-0 cursor-pointer"

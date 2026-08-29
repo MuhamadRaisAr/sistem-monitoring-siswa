@@ -107,38 +107,38 @@ export default function GuruJadwalPage() {
                 </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-6 bg-white dark:bg-[#041610] border border-slate-200 dark:border-emerald-500/10 shadow-sm">
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                    <div className="w-full sm:w-64 shrink-0">
-                        <select
-                            value={selectedTahunAjaranId}
-                            onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                            disabled={loadingTahunAjaran}
-                            className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2.5 px-3 text-sm text-slate-800 dark:text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                            {loadingTahunAjaran ? (
-                                <option>Memuat Tahun Ajaran...</option>
-                            ) : tahunAjaranList.length === 0 ? (
-                                <option value="">Tidak ada data</option>
-                            ) : (
-                                tahunAjaranList.map((ta) => (
-                                    <option key={ta.id} value={ta.id}>
-                                        {ta.nama_tahun} {ta.semester}
-                                    </option>
-                                ))
-                            )}
-                        </select>
-                    </div>
-
-                    <div className="relative flex-1 max-w-md">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <Search className="h-5 w-5 text-slate-400" />
-                        </div>
-                        <input type="text" placeholder="Cari hari, mata pelajaran, atau kelas..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#020c08]/50 py-2.5 pl-10 pr-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all"
-                        />
-                    </div>
+            {/* Controls (Tanpa bingkai) */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6 w-full">
+                <div className="w-full sm:w-[220px] shrink-0">
+                    <select
+                        value={selectedTahunAjaranId}
+                        onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
+                        disabled={loadingTahunAjaran}
+                        className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] py-2 px-3 text-[12px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                    >
+                        {loadingTahunAjaran ? (
+                            <option>Memuat Tahun Ajaran...</option>
+                        ) : tahunAjaranList.length === 0 ? (
+                            <option value="">Tidak ada data</option>
+                        ) : (
+                            tahunAjaranList.map((ta) => (
+                                <option key={ta.id} value={ta.id}>
+                                    {ta.nama_tahun} {ta.semester}
+                                </option>
+                            ))
+                        )}
+                    </select>
                 </div>
+
+                <div className="relative flex-1 w-full sm:max-w-md">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <Search className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <input type="text" placeholder="Cari hari, mata pelajaran, atau kelas..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                        className="block w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] py-2 pl-9 pr-3 text-[12px] sm:text-sm font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-all shadow-sm"
+                    />
+                </div>
+            </div>
 
                 {loading ? (
                     <div className="flex h-40 items-center justify-center">
@@ -151,34 +151,34 @@ export default function GuruJadwalPage() {
                 ) : (
                     <div className="space-y-6 w-full">
                         {Object.keys(HARI_ORDER).filter(hari => groupedJadwal[hari]).map((hari) => (
-                            <div key={hari} className="glass-panel rounded-3xl overflow-hidden w-full border border-slate-200 dark:border-emerald-500/10 shadow-sm">
-                                <div className="bg-slate-50/80 dark:bg-emerald-900/10 border-b border-slate-200 dark:border-emerald-500/10 px-5 py-3.5 flex items-center gap-3">
-                                    <span className={`inline-block text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg ${HARI_BADGE[hari] || 'bg-slate-100 text-slate-500'}`}>
+                            <div key={hari} className="bg-white dark:bg-[#020c08]/50 rounded-xl overflow-hidden w-full border border-slate-200 dark:border-emerald-500/10 shadow-sm">
+                                <div className="bg-slate-50 dark:bg-[#061e16] border-b border-slate-200 dark:border-emerald-500/10 px-4 py-2.5 flex items-center gap-3">
+                                    <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md ${HARI_BADGE[hari] || 'bg-slate-100 text-slate-500'}`}>
                                         {hari}
                                     </span>
                                 </div>
-                                <div className="w-full bg-white dark:bg-[#020c08]/50">
+                                <div className="w-full bg-white dark:bg-[#041610]">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="bg-slate-50/30 dark:bg-emerald-500/5 text-slate-500 dark:text-emerald-400 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest">
-                                                <th className="py-2 sm:py-3 px-2 sm:px-5 border-b border-r border-slate-200 dark:border-emerald-500/10 w-1/4">Jam</th>
-                                                <th className="py-2 sm:py-3 px-2 sm:px-5 border-b border-r border-slate-200 dark:border-emerald-500/10 w-1/3">Kelas</th>
-                                                <th className="py-2 sm:py-3 px-2 sm:px-5 border-b border-slate-200 dark:border-emerald-500/10">Mapel</th>
+                                            <tr className="bg-white dark:bg-[#041610] text-slate-500 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-widest border-b border-slate-200 dark:border-emerald-500/10">
+                                                <th className="py-2 px-3 border-r border-slate-200 dark:border-emerald-500/10 w-[20%] text-center">Jam</th>
+                                                <th className="py-2 px-3 border-r border-slate-200 dark:border-emerald-500/10 w-[40%]">Kelas</th>
+                                                <th className="py-2 px-3">Mapel</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-emerald-500/10 text-sm">
+                                        <tbody className="text-[11px]">
                                             {groupedJadwal[hari].map((j, idx) => (
-                                                <tr key={j.id || idx} className="hover:bg-slate-50/50 dark:hover:bg-emerald-500/5 transition-colors">
+                                                <tr key={j.id || idx} className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group cursor-pointer border-b border-slate-200 dark:border-emerald-500/10 last:border-0">
                                                     {/* Jam */}
-                                                    <td className="py-2 sm:py-3 px-2 sm:px-5 border-r border-slate-200 dark:border-emerald-500/10 font-bold text-slate-700 dark:text-slate-300 font-mono align-middle text-xs sm:text-sm whitespace-nowrap">
+                                                    <td className="py-1.5 px-3 border-r border-slate-200 dark:border-emerald-500/10 font-bold text-slate-700 dark:text-slate-300 font-mono align-middle text-center whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                         {j.jam_mulai?.slice(0, 5)} – {j.jam_selesai?.slice(0, 5)}
                                                     </td>
                                                     {/* Kelas */}
-                                                    <td className="py-2 sm:py-3 px-2 sm:px-5 border-r border-slate-200 dark:border-emerald-500/10 text-slate-700 dark:text-slate-300 font-medium align-middle break-words text-xs sm:text-sm">
+                                                    <td className="py-1.5 px-3 border-r border-slate-200 dark:border-emerald-500/10 text-slate-700 dark:text-slate-300 font-bold align-middle break-words bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                         Kelas {decodeURIComponent(j.kelas)}
                                                     </td>
                                                     {/* Mapel */}
-                                                    <td className={`py-2 sm:py-3 px-2 sm:px-5 font-bold align-middle break-words text-xs sm:text-sm ${getSubjectColor(j.mata_pelajaran)}`}>
+                                                    <td className={`py-1.5 px-3 font-bold align-middle break-words bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors ${getSubjectColor(j.mata_pelajaran)}`}>
                                                         {getAbbreviatedMapel(j.mata_pelajaran)}
                                                     </td>
                                                 </tr>
@@ -190,7 +190,6 @@ export default function GuruJadwalPage() {
                         ))}
                     </div>
                 )}
-            </div>
         </div>
     );
 }

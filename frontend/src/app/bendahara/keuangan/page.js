@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
-import { CircleDollarSign, Plus, Check, Undo2, X, Eye, Trash2, CheckCircle } from 'lucide-react';
+import { CircleDollarSign, Plus, Check, Undo2, X, Eye, Trash2, CheckCircle, Search } from 'lucide-react';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
 
 export default function BendaharaKeuanganPage() {
@@ -13,10 +13,26 @@ export default function BendaharaKeuanganPage() {
     const [siswaList, setsiswaList] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const filteredBills = bills.filter(b => 
-        (b.nama_siswa?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
-        (b.nis?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-    );
+    const filteredBills = bills.filter(b => {
+        const searchLower = searchQuery.toLowerCase();
+        const matchSearch = 
+            (b.nama_siswa || '').toLowerCase().includes(searchLower) ||
+            (b.nis || '').toLowerCase().includes(searchLower);
+        return matchSearch;
+    });
+
+    const groupedBills = filteredBills.reduce((acc, bill) => {
+        const taId = bill.tahun_ajaran_id || 'unknown';
+        if (!acc[taId]) acc[taId] = [];
+        acc[taId].push(bill);
+        return acc;
+    }, {});
+    
+    const sortedTaIds = Object.keys(groupedBills).sort((a, b) => {
+        if (a === 'unknown') return 1;
+        if (b === 'unknown') return -1;
+        return parseInt(b) - parseInt(a);
+    });
 
     const [buktiModalOpen, setBuktiModalOpen] = useState(false);
     const [selectedBuktiUrl, setSelectedBuktiUrl] = useState('');
@@ -26,6 +42,7 @@ export default function BendaharaKeuanganPage() {
     const { 
         tahunAjaranList, 
         activeTahunAjaran,
+        activeTahunAjaranList,
         selectedTahunAjaranId, 
         setSelectedTahunAjaranId,
         loadingTahunAjaran
@@ -67,14 +84,17 @@ export default function BendaharaKeuanganPage() {
         }
     };
 
-    const [filterKelas, setFilterKelas] = useState(() => typeof window !== 'undefined' ? (sessionStorage.getItem('keu_filterKelas') || '') : '');
-    const [filterStatus, setFilterStatus] = useState(() => {
-        if (pathname.includes('/validasi')) return 'menunggu_verifikasi';
-        if (pathname.includes('/riwayat')) return 'lunas';
-        return 'belum_lunas';
-    });
+    const [filterKelas, setFilterKelas] = useState('');
+    const [filterStatus, setFilterStatus] = useState('belum_lunas');
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        setIsClient(true);
+        const saved = sessionStorage.getItem('keu_filterKelas');
+        if (saved && saved !== 'null' && saved !== 'undefined') {
+            setFilterKelas(saved);
+        }
+        
         if (pathname.includes('/validasi')) setFilterStatus('menunggu_verifikasi');
         else if (pathname.includes('/riwayat')) setFilterStatus('lunas');
         else if (pathname.endsWith('/keuangan')) setFilterStatus('belum_lunas');
@@ -97,6 +117,36 @@ export default function BendaharaKeuanganPage() {
     const [generating, setGenerating] = useState(false);
     const [genSuccess, setGenSuccess] = useState('');
     const [genError, setGenError] = useState('');
+
+    const availableYears = React.useMemo(() => {
+        let yearsSet = new Set();
+        
+        if (activeTahunAjaranList && activeTahunAjaranList.length > 0) {
+            activeTahunAjaranList.forEach(ta => {
+                if (ta.nama_tahun) {
+                    const parts = ta.nama_tahun.split('/');
+                    parts.forEach(p => {
+                        if (p) yearsSet.add(p);
+                    });
+                }
+            });
+        }
+        
+        // Fallback jika tidak ada tahun ajaran aktif
+        if (yearsSet.size === 0) {
+            yearsSet.add(new Date().getFullYear().toString());
+            yearsSet.add((new Date().getFullYear() + 1).toString());
+        }
+
+        // Urutkan tahun agar rapi (ascending)
+        return Array.from(yearsSet).sort((a, b) => parseInt(a) - parseInt(b));
+    }, [activeTahunAjaranList]);
+
+    useEffect(() => {
+        if (availableYears.length > 0 && !availableYears.includes(genTahun)) {
+            setGenTahun(availableYears[0]);
+        }
+    }, [availableYears, genTahun]);
 
     const [showCheckboxes, setShowCheckboxes] = useState(false);
     const pressTimer = React.useRef(null);
@@ -121,7 +171,9 @@ export default function BendaharaKeuanganPage() {
             let query = `${API_URL}/keuangan?`;
             if (filterKelas) query += `kelas=${filterKelas}&`;
             if (filterStatus) query += `status_bayar=${filterStatus}&`;
-            if (selectedTahunAjaranId) query += `tahun_ajaran_id=${selectedTahunAjaranId}&`;
+            if (selectedTahunAjaranId && pathname.endsWith('/keuangan')) {
+                query += `tahun_ajaran_id=${selectedTahunAjaranId}&`;
+            }
 
             const res = await fetch(query, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -156,7 +208,7 @@ export default function BendaharaKeuanganPage() {
     }, [token, selectedTahunAjaranId]);
 
     useEffect(() => {
-        if (token) {
+        if (token && selectedTahunAjaranId) {
             fetchBills();
         }
     }, [token, filterKelas, filterStatus, selectedTahunAjaranId]);
@@ -309,33 +361,17 @@ export default function BendaharaKeuanganPage() {
             <div className="glass-panel rounded-3xl p-6 space-y-6">
                 
                 {/* Search & Filter Options */}
-                <div className="flex flex-wrap gap-4 items-center justify-start border-b border-emerald-500/10 pb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full border-b border-emerald-500/10 pb-5">
+                    <div className="grid grid-cols-1 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
 
-                    <div className="flex flex-col sm:flex-row gap-3 w-full">
-                        <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-                            <select
-                                value={selectedTahunAjaranId}
-                                onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                                disabled={loadingTahunAjaran}
-                                className="w-full sm:min-w-[180px] rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#020c08]/50 py-2.5 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm cursor-pointer disabled:opacity-50"
-                            >
-                                {loadingTahunAjaran ? (
-                                    <option>Memuat...</option>
-                                ) : tahunAjaranList.length === 0 ? (
-                                    <option value="">Tidak ada data</option>
-                                ) : (
-                                    tahunAjaranList.map((ta) => (
-                                        <option key={ta.id} value={ta.id}>
-                                            {ta.nama_tahun} {ta.semester}
-                                        </option>
-                                    ))
-                                )}
-                            </select>
 
+                        {/* Kelas */}
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[160px]">
+                            <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Kelas:</span>
                             <select
                                 value={filterKelas}
                                 onChange={(e) => setFilterKelas(e.target.value)}
-                                className="w-full sm:min-w-[140px] rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#020c08]/50 py-2.5 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm cursor-pointer"
+                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer text-ellipsis overflow-hidden shadow-sm"
                             >
                                 <option value="">Semua Kelas</option>
                                 <option value="VII">Kelas VII</option>
@@ -343,16 +379,19 @@ export default function BendaharaKeuanganPage() {
                                 <option value="IX">Kelas IX</option>
                             </select>
                         </div>
+                    </div>
 
-                        {/* Dropdown status dihilangkan karena diganti Tab */}
-
-                        <div className="relative w-full sm:flex-1">
+                    {/* Search Bar */}
+                    <div className="flex flex-col gap-1.5 w-full sm:w-[350px] mt-3 sm:mt-0">
+                        <span className="text-[10px] sm:text-xs text-slate-500 font-bold dark:text-slate-400 uppercase tracking-wider truncate">Cari Siswa:</span>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Cari Nama / NIS Siswa..."
+                                placeholder="Ketik nama atau NIS..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#020c08]/50 py-2.5 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm placeholder:text-slate-400"
+                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] pl-10 pr-3 sm:pr-4 py-2.5 text-[12px] sm:text-sm text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 truncate shadow-sm"
                             />
                         </div>
                     </div>
@@ -363,176 +402,237 @@ export default function BendaharaKeuanganPage() {
                     <div className="flex h-40 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     </div>
-                ) : bills.length === 0 ? (
+                ) : Object.keys(groupedBills).length === 0 ? (
                     <div className="text-center py-12 text-slate-500 text-sm">
                         Tidak ada catatan tagihan ditemukan untuk kriteria filter ini.
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        <div className="overflow-x-auto pb-4">
-                            <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0 border border-slate-200 dark:border-slate-700/50">
-                                <thead>
-                                    <tr className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/20">
-                                        {isCurrentYearActive && showCheckboxes && (
-                                            <th className="py-4 px-4 w-10 text-center border-x border-b border-slate-200 dark:border-slate-700/50">
-                                                <input 
-                                                    type="checkbox" 
-                                                    className="rounded border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500 cursor-pointer"
-                                                    checked={filteredBills.length > 0 && selectedBills.length === filteredBills.length}
-                                                    onChange={handleSelectAllBills}
-                                                />
-                                            </th>
-                                        )}
-                                        <th className="py-4 px-4 border-x border-b border-slate-200 dark:border-slate-700/50">Siswa</th>
-                                        <th className="py-4 px-4 border-x border-b border-slate-200 dark:border-slate-700/50 text-center">Jenis Tagihan</th>
-                                        <th className="py-4 px-4 border-x border-b border-slate-200 dark:border-slate-700/50 text-center">Nominal</th>
-                                    <th className="py-4 px-4 border-x border-b border-slate-200 dark:border-slate-700/50 text-center">Tanggal Bayar</th>
-                                    <th className="py-4 px-4 text-center border-x border-b border-slate-200 dark:border-slate-700/50">Aksi Konfirmasi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
-                                {filteredBills.map((b) => (
-                                    <tr 
-                                        key={b.id} 
-                                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors select-none"
-                                        onMouseDown={handlePressStart}
-                                        onMouseUp={handlePressEnd}
-                                        onMouseLeave={handlePressEnd}
-                                        onTouchStart={handlePressStart}
-                                        onTouchEnd={handlePressEnd}
-                                        onContextMenu={(e) => {
-                                            e.preventDefault();
-                                            setShowCheckboxes(true);
-                                        }}
-                                    >
-                                        {isCurrentYearActive && showCheckboxes && (
-                                            <td className="py-4 px-4 text-center border-x border-slate-200 dark:border-slate-700/50">
-                                                <input 
-                                                    type="checkbox" 
-                                                    className="rounded border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500 cursor-pointer"
-                                                    checked={selectedBills.includes(b.id)}
-                                                    onChange={() => handleSelectBill(b.id)}
-                                                />
-                                            </td>
-                                        )}
-                                        <td className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50">
-                                            <span className="font-bold text-slate-800 dark:text-white block">{b.nama_siswa}</span>
-                                            <span className="text-[11px] text-slate-500 dark:text-slate-400">Kelas {b.kelas}</span>
-                                        </td>
-                                        <td className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">
-                                            <div className="font-semibold text-slate-700 dark:text-slate-200">
-                                                {b.nama_tagihan || 'Tagihan'}
-                                            </div>
-                                            <div className="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-0.5">
-                                                {`${getMonthName(b.bulan)} ${b.tahun}`}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4 border-x border-slate-200 dark:border-slate-700/50 text-center">
-                                            <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                                                {formatRupiah(b.nominal)}
-                                            </div>
-                                            <div className="text-[10px] text-slate-500 mt-0.5">
-                                                Dibuat: {b.created_at ? new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4 text-slate-500 dark:text-slate-400 text-xs font-medium border-x border-slate-200 dark:border-slate-700/50 text-center">
-                                            {b.tanggal_bayar ? (
-                                                <div className="flex flex-col items-center justify-center leading-tight">
-                                                    <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                                        {new Date(b.tanggal_bayar).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })}
-                                                    </span>
-                                                    <span className="text-[10px] text-slate-400 mt-0.5">
-                                                        {new Date(b.tanggal_bayar).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(/\./g, ':')} WIB
-                                                    </span>
+                    <div className="space-y-8">
+                        {sortedTaIds.map((taId) => {
+                            const groupBills = groupedBills[taId];
+                            const ta = tahunAjaranList.find(t => t.id.toString() === taId.toString());
+                            const taName = ta ? `${ta.nama_tahun} ${ta.semester}` : 'Tahun Ajaran Umum';
+                            
+                            // Group by bulan
+                            const billsByBulan = groupBills.reduce((acc, bill) => {
+                                const bId = bill.bulan || 0;
+                                if (!acc[bId]) acc[bId] = [];
+                                acc[bId].push(bill);
+                                return acc;
+                            }, {});
+                            
+                            // Sort bulan descending (terbaru di atas)
+                            const sortedBulanIds = Object.keys(billsByBulan).sort((a, b) => parseInt(b) - parseInt(a));
+
+                            return (
+                                <div key={taId} className="space-y-6">
+                                    {!pathname.endsWith('/keuangan') && (
+                                        <div className="px-1 flex items-center justify-between">
+                                            <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm">Tahun Ajaran: {taName}</h3>
+                                        </div>
+                                    )}
+                                    <div className="space-y-6">
+                                        {sortedBulanIds.map(bulanId => {
+                                            const monthBills = billsByBulan[bulanId];
+                                            return (
+                                                <div key={bulanId} className="bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/20 overflow-hidden shadow-sm">
+                                                    <div className="bg-slate-50 dark:bg-slate-800/30 px-4 py-2.5 border-b border-slate-200 dark:border-emerald-500/10 text-center">
+                                                        <h4 className="font-bold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-widest">BULAN {getMonthName(bulanId)}</h4>
+                                                    </div>
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-left text-xs border-separate border-spacing-0">
+                                                            <thead>
+                                                                <tr className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-50/80 dark:bg-[#061e16]">
+                                                                    {isCurrentYearActive && showCheckboxes && (
+                                                                        <th className="py-3 px-3 w-10 text-center border-b border-slate-200 dark:border-emerald-500/10">
+                                                                            <input 
+                                                                                type="checkbox" 
+                                                                                className="rounded border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                                                                                checked={monthBills.length > 0 && monthBills.every(b => selectedBills.includes(b.id))}
+                                                                                onChange={(e) => {
+                                                                                    if (e.target.checked) {
+                                                                                        const newSelected = [...selectedBills, ...monthBills.map(b => b.id).filter(id => !selectedBills.includes(id))];
+                                                                                        setSelectedBills(newSelected);
+                                                                                    } else {
+                                                                                        setSelectedBills(selectedBills.filter(id => !monthBills.map(b => b.id).includes(id)));
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        </th>
+                                                                    )}
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10">Nama Siswa</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center">Kelas</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center">Jenis Tagihan</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center">Nominal</th>
+                                                                    <th className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center">Tanggal Bayar</th>
+                                                                    <th className="py-3 px-4 text-center border-b border-slate-200 dark:border-emerald-500/10">Aksi Konfirmasi</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
+                                                                {monthBills.map((b) => (
+                                                            <tr 
+                                                                key={b.id} 
+                                                                className="hover:bg-slate-50/50 dark:hover:bg-[#082a1f] transition-colors select-none group"
+                                                                onMouseDown={handlePressStart}
+                                                                onMouseUp={handlePressEnd}
+                                                                onMouseLeave={handlePressEnd}
+                                                                onTouchStart={handlePressStart}
+                                                                onTouchEnd={handlePressEnd}
+                                                                onContextMenu={(e) => {
+                                                                    e.preventDefault();
+                                                                    setShowCheckboxes(true);
+                                                                }}
+                                                            >
+                                                                {isCurrentYearActive && showCheckboxes && (
+                                                                    <td className="py-3 px-3 text-center border-b border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                        <input 
+                                                                            type="checkbox" 
+                                                                            className="rounded border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                                                                            checked={selectedBills.includes(b.id)}
+                                                                            onChange={() => handleSelectBill(b.id)}
+                                                                        />
+                                                                    </td>
+                                                                )}
+                                                                <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    <span className="font-bold text-slate-800 dark:text-white block">{b.nama_siswa}</span>
+                                                                </td>
+                                                                <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    <span className="inline-block px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md text-[11px] font-semibold">
+                                                                        {b.kelas}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    <div className="font-semibold text-slate-700 dark:text-slate-200">
+                                                                        {b.nama_tagihan || 'Tagihan'}
+                                                                    </div>
+                                                                    <div className="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+                                                                        {`${getMonthName(b.bulan)} ${b.tahun}`}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-3 px-4 border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                                                                        {formatRupiah(b.nominal)}
+                                                                    </div>
+                                                                    <div className="text-[10px] text-slate-500 mt-0.5">
+                                                                        Dibuat: {b.created_at ? new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs font-medium border-b border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    {b.tanggal_bayar ? (
+                                                                        <div className="flex flex-col items-center justify-center leading-tight">
+                                                                            <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                                                                {new Date(b.tanggal_bayar).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' })}
+                                                                            </span>
+                                                                            <span className="text-[10px] text-slate-400 mt-0.5">
+                                                                                {new Date(b.tanggal_bayar).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(/\./g, ':')} WIB
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-slate-400 dark:text-slate-600">-</span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="py-3 px-4 text-center border-b border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    {b.status_bayar === 'menunggu_verifikasi' ? (
+                                                                        <div className="flex justify-center gap-2">
+                                                                            {b.bukti_bayar && (
+                                                                                <button
+                                                                                    onClick={() => { setSelectedBuktiUrl(b.bukti_bayar); setBuktiModalOpen(true); }}
+                                                                                    className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 py-1.5 px-3 transition-all"
+                                                                                >
+                                                                                    <Eye className="h-3.5 w-3.5" /> Lihat Bukti
+                                                                                </button>
+                                                                            )}
+                                                                            {(activeTahunAjaran?.id?.toString() === b.tahun_ajaran_id?.toString()) && (
+                                                                                <button
+                                                                                    onClick={() => handlePayBill(b.id, 'lunas')}
+                                                                                    className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-3 shadow-md transition-all"
+                                                                                >
+                                                                                    <Check className="h-3.5 w-3.5" /> Setujui
+                                                                                </button>
+                                                                            )}
+                                                                            {(activeTahunAjaran?.id?.toString() === b.tahun_ajaran_id?.toString()) && (
+                                                                                <button
+                                                                                    onClick={() => handlePayBill(b.id, 'belum_lunas')}
+                                                                                    className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-500/25 py-1.5 px-2.5 transition-all"
+                                                                                    title="Tolak Pembayaran"
+                                                                                >
+                                                                                    <X className="h-3.5 w-3.5" /> Tolak
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    ) : b.status_bayar === 'belum_lunas' ? (
+                                                                        <div className="flex justify-center gap-2">
+                                                                            {(activeTahunAjaran?.id?.toString() === b.tahun_ajaran_id?.toString()) && (
+                                                                                <button
+                                                                                    onClick={() => handlePayBill(b.id, 'lunas')}
+                                                                                    className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-3 shadow-md transition-all"
+                                                                                >
+                                                                                    <Check className="h-3.5 w-3.5" /> Konfirmasi Bayar
+                                                                                </button>
+                                                                            )}
+                                                                            {(activeTahunAjaran?.id?.toString() === b.tahun_ajaran_id?.toString()) && (
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        if (confirm('Yakin ingin menghapus tagihan ini?')) {
+                                                                                            try {
+                                                                                                const res = await fetch(`${API_URL}/keuangan/${b.id}`, {
+                                                                                                    method: 'DELETE',
+                                                                                                    headers: { Authorization: `Bearer ${token}` }
+                                                                                                });
+                                                                                                if (res.ok) {
+                                                                                                    fetchBills();
+                                                                                                } else {
+                                                                                                    const data = await res.json();
+                                                                                                    alert(data.message || 'Gagal menghapus tagihan');
+                                                                                                }
+                                                                                            } catch(e) {
+                                                                                                alert('Terjadi kesalahan jaringan');
+                                                                                            }
+                                                                                        }
+                                                                                    }}
+                                                                                    className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-red-600 hover:bg-red-500 text-white py-1.5 px-3 shadow-md transition-all"
+                                                                                    title="Hapus Tagihan"
+                                                                                >
+                                                                                    <Trash2 className="h-3.5 w-3.5" /> Hapus
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    ) : (
+                                                                        (activeTahunAjaran?.id?.toString() === b.tahun_ajaran_id?.toString()) ? (
+                                                                            <button
+                                                                                onClick={() => handlePayBill(b.id, 'belum_lunas')}
+                                                                                className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-500/25 py-1.5 px-2.5 transition-all"
+                                                                                title="Batalkan pembayaran"
+                                                                            >
+                                                                                <Undo2 className="h-3.5 w-3.5" /> Batal Bayar
+                                                                            </button>
+                                                                        ) : (
+                                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                                                                                b.status_bayar === 'lunas' 
+                                                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                                                                    : b.status_bayar === 'ditolak'
+                                                                                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                                                                                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                                                            }`}>
+                                                                                {b.status_bayar === 'lunas' ? 'Lunas' : 
+                                                                                 b.status_bayar === 'ditolak' ? 'Ditolak' : 'Belum Diketahui'}
+                                                                            </span>
+                                                                        )
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <span className="text-slate-400 dark:text-slate-600">-</span>
-                                            )}
-                                        </td>
-                                        <td className="py-4 px-4 text-center border-x border-slate-200 dark:border-slate-700/50">
-                                            {b.status_bayar === 'menunggu_verifikasi' ? (
-                                                <div className="flex justify-end gap-2">
-                                                    {b.bukti_bayar && (
-                                                        <button
-                                                            onClick={() => { setSelectedBuktiUrl(b.bukti_bayar); setBuktiModalOpen(true); }}
-                                                            className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 py-1.5 px-3 transition-all"
-                                                        >
-                                                            <Eye className="h-3.5 w-3.5" /> Lihat Bukti
-                                                        </button>
-                                                    )}
-                                                    {isCurrentYearActive && (
-                                                        <button
-                                                            onClick={() => handlePayBill(b.id, 'lunas')}
-                                                            className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-3 shadow-md transition-all"
-                                                        >
-                                                            <Check className="h-3.5 w-3.5" /> Setujui
-                                                        </button>
-                                                    )}
-                                                    {isCurrentYearActive && (
-                                                        <button
-                                                            onClick={() => handlePayBill(b.id, 'belum_lunas')}
-                                                            className="inline-flex items-center gap-1 text-[11px] font-bold rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-500/25 py-1.5 px-2.5 transition-all"
-                                                            title="Tolak Pembayaran"
-                                                        >
-                                                            <X className="h-3.5 w-3.5" /> Tolak
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ) : b.status_bayar === 'belum_lunas' ? (
-                                                <div className="flex justify-end gap-2">
-                                                    {isCurrentYearActive && (
-                                                        <button
-                                                            onClick={() => handlePayBill(b.id, 'lunas')}
-                                                            className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-3 shadow-md transition-all ml-auto"
-                                                        >
-                                                            <Check className="h-3.5 w-3.5" /> Konfirmasi Bayar
-                                                        </button>
-                                                    )}
-                                                    {isCurrentYearActive && (
-                                                        <button
-                                                            onClick={async () => {
-                                                                if (confirm('Yakin ingin menghapus tagihan ini?')) {
-                                                                    try {
-                                                                        const res = await fetch(`${API_URL}/keuangan/${b.id}`, {
-                                                                            method: 'DELETE',
-                                                                            headers: { Authorization: `Bearer ${token}` }
-                                                                        });
-                                                                        if (res.ok) {
-                                                                            fetchBills();
-                                                                        } else {
-                                                                            const data = await res.json();
-                                                                            alert(data.message || 'Gagal menghapus tagihan');
-                                                                        }
-                                                                    } catch(e) {
-                                                                        alert('Terjadi kesalahan jaringan');
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-red-600 hover:bg-red-500 text-white py-1.5 px-3 shadow-md transition-all"
-                                                            title="Hapus Tagihan"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" /> Hapus
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                isCurrentYearActive && (
-                                                    <button
-                                                        onClick={() => handlePayBill(b.id, 'belum_lunas')}
-                                                        className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-500/25 py-1.5 px-2.5 transition-all ml-auto"
-                                                        title="Batalkan pembayaran"
-                                                    >
-                                                        <Undo2 className="h-3.5 w-3.5" /> Batal Bayar
-                                                    </button>
-                                                )
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                </div>
                 )}
             </div>
 
@@ -625,8 +725,9 @@ export default function BendaharaKeuanganPage() {
                                         onChange={(e) => setGenTahun(e.target.value)}
                                         className="w-full rounded-xl border border-emerald-500/10 bg-[#020c08]/50 py-2.5 px-3 text-slate-100 focus:border-emerald-500 focus:outline-none text-sm"
                                     >
-                                        <option value="2026">2026</option>
-                                        <option value="2027">2027</option>
+                                        {availableYears.map(yr => (
+                                            <option key={yr} value={yr}>{yr}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

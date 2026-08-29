@@ -30,7 +30,7 @@ export default function GuruBkAbsensiPage() {
             ]);
             
             const [dataSiswa, dataLogs, dataJadwal] = await Promise.all([resSiswa.json(), resLogs.json(), resJadwal.json()]);
-            setSiswaList(Array.isArray(dataSiswa) ? dataSiswa : []);
+            setSiswaList(Array.isArray(dataSiswa) ? dataSiswa.filter(s => s.status_aktif === 'aktif') : []);
             setAllLogs(Array.isArray(dataLogs) ? dataLogs : []);
             setJadwalList(Array.isArray(dataJadwal) ? dataJadwal : []);
         } catch (err) {
