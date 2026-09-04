@@ -163,10 +163,11 @@ export default function GuruBkKonselingPage() {
                 </div>
             </div>
 
-            {/* Filters */}
+            {/* Selectors and Actions */}
             <div className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row gap-4 w-full items-start sm:items-center">
-                    <div className="flex flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 w-full lg:items-end">
+                    {/* Filters */}
+                    <div className="flex flex-row gap-3 sm:gap-4">
                         <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[220px]">
                             <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tahun Ajaran:</label>
                             <select 
@@ -204,32 +205,32 @@ export default function GuruBkKonselingPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-1.5 w-full sm:w-[320px] sm:ml-auto">
-                        <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Cari Siswa / Topik:</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-emerald-500" />
+                    {/* Search and Add Button */}
+                    <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 w-full lg:w-auto lg:ml-auto items-end">
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[320px]">
+                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Cari Siswa / Topik:</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-emerald-500" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Ketik nama atau topik..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm placeholder:text-slate-400 placeholder:font-normal"
+                                />
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Ketik nama atau topik..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm placeholder:text-slate-400 placeholder:font-normal"
-                            />
                         </div>
-                    </div>
-                </div>
 
-                {/* Add Button */}
-                <div className="w-full mt-2">
-                    <button 
-                        onClick={() => handleOpenModal()}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 h-[42px]"
-                    >
-                        <Plus className="h-5 w-5" />
-                        <span>Tambah Catatan</span>
-                    </button>
+                        <button 
+                            onClick={() => handleOpenModal()}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-95 shrink-0 h-[42px]"
+                        >
+                            <Plus className="h-5 w-5" />
+                            <span>Tambah Catatan</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

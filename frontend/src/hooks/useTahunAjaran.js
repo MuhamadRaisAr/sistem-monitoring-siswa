@@ -4,8 +4,15 @@ import { useAuth } from '@/context/AuthContext';
 export function useTahunAjaran() {
     const { token } = useAuth();
     const [tahunAjaranList, setTahunAjaranList] = useState([]);
-    const [selectedTahunAjaranId, setSelectedTahunAjaranId] = useState('');
+    const [selectedTahunAjaranIdState, setSelectedTahunAjaranIdState] = useState('');
     const [loadingTahunAjaran, setLoadingTahunAjaran] = useState(true);
+
+    const setSelectedTahunAjaranId = (id) => {
+        setSelectedTahunAjaranIdState(id);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('selectedTahunAjaranId', id);
+        }
+    };
 
     useEffect(() => {
         const fetchTahunAjaran = async () => {
@@ -78,7 +85,14 @@ export function useTahunAjaran() {
                     setTahunAjaranList(sorted);
                     // Select the first one in the sorted list (which is the most prioritized)
                     if (sorted.length > 0) {
-                        setSelectedTahunAjaranId(sorted[0].id.toString());
+                        let defaultId = sorted[0].id.toString();
+                        if (typeof window !== 'undefined') {
+                            const savedId = localStorage.getItem('selectedTahunAjaranId');
+                            if (savedId && sorted.some(t => t.id.toString() === savedId)) {
+                                defaultId = savedId;
+                            }
+                        }
+                        setSelectedTahunAjaranIdState(defaultId);
                     }
                 }
             } catch (err) {
@@ -93,7 +107,7 @@ export function useTahunAjaran() {
 
     // To maintain compatibility with components using activeTahunAjaran,
     // we return the selected tahun ajaran IF it is active.
-    const currentSelected = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId);
+    const currentSelected = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranIdState);
     const activeTahunAjaran = (currentSelected && (currentSelected.is_active === 1 || currentSelected.is_active === true)) 
         ? currentSelected 
         : null;
@@ -104,7 +118,7 @@ export function useTahunAjaran() {
         tahunAjaranList,
         activeTahunAjaranList,
         activeTahunAjaran,
-        selectedTahunAjaranId,
+        selectedTahunAjaranId: selectedTahunAjaranIdState,
         setSelectedTahunAjaranId,
         loadingTahunAjaran
     };

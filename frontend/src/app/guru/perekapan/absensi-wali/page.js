@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
 import { getAbbreviatedMapel } from '@/utils/mapelHelper';
+import { isNationalHoliday } from '@/utils/holidays';
 
 export default function RekapAbsensiPage() {
     const { token, user } = useAuth();
@@ -267,18 +268,14 @@ export default function RekapAbsensiPage() {
     }, [selectedTahunAjaranId, tahunAjaranList]);
 
     useEffect(() => {
-        if (availableMonths.length > 0 && (!selectedBulan || !availableMonths.includes(selectedBulan))) {
-            const currentMonthStr = new Date().toISOString().substring(0, 7);
-            if (availableMonths.includes(currentMonthStr)) {
-                setSelectedBulan(currentMonthStr);
-            } else {
-                setSelectedBulan(availableMonths[0]);
-            }
+        if (availableMonths.length > 0 && !selectedBulan) {
+            setSelectedBulan('all');
         }
     }, [availableMonths, selectedBulan]);
 
+
     const { firstLogDate, lastLogDate } = useMemo(() => {
-        if (!selectedKelas || !selectedBulan) return { firstLogDate: null, lastLogDate: null };
+        if (!selectedKelas || !selectedBulan || selectedBulan === 'all') return { firstLogDate: null, lastLogDate: null };
         const logs = waliLogs.filter(l => l.tanggal && l.tanggal.startsWith(selectedBulan));
         if (logs.length === 0) return { firstLogDate: null, lastLogDate: null };
         
@@ -290,7 +287,7 @@ export default function RekapAbsensiPage() {
     }, [waliLogs, selectedKelas, selectedBulan]);
 
     const uniqueDates = useMemo(() => {
-        if (!selectedKelas || !selectedBulan) return [];
+        if (!selectedKelas || !selectedBulan || selectedBulan === 'all') return [];
         
         const [year, month] = selectedBulan.split('-');
         const numDays = new Date(year, month, 0).getDate();
@@ -424,6 +421,7 @@ export default function RekapAbsensiPage() {
                                 onChange={(e) => setSelectedBulan(e.target.value)}
                                 className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:outline-none cursor-pointer text-ellipsis shadow-sm"
                             >
+                                <option value="all">Satu Semester Penuh</option>
                                 {availableMonths.map(m => {
                                     const dateObj = new Date(m + '-01');
                                     const monthName = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
@@ -480,49 +478,65 @@ export default function RekapAbsensiPage() {
                                         <tr className="bg-slate-50 dark:bg-[#061e16] border-b border-slate-300 dark:border-emerald-500/10">
                                             <th className="py-2 px-1 md:px-2 w-8 md:w-10 min-w-[32px] md:min-w-[40px] static md:sticky md:left-0 md:z-20 bg-slate-50 dark:bg-[#061e16] border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold text-center text-xs align-middle" rowSpan={2}>No</th>
                                             <th className="py-2 px-2 md:px-3 min-w-[150px] md:min-w-[180px] w-[150px] md:w-[180px] static md:sticky md:left-8 md:left-10 md:z-20 bg-slate-50 dark:bg-[#061e16] border-b border-slate-300 border-r-[3px] border-slate-400 dark:border-emerald-500/30 text-slate-800 dark:text-slate-300 font-extrabold text-left text-[10px] md:text-xs align-middle drop-shadow-md" rowSpan={2}>Nama Siswa</th>
-                                            <th className="py-1.5 text-center text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16]" colSpan={uniqueDates.length || 1}>
-                                                Bulan {selectedBulan ? new Date(selectedBulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : ''}
-                                            </th>
-                                            <th className="py-1.5 px-2 text-center text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 border-b border-l-[3px] border-slate-400 dark:border-emerald-500/30 bg-slate-50 dark:bg-[#061e16]" colSpan={3}>
-                                                Jumlah
+                                            {selectedBulan === 'all' ? (
+                                                availableMonths.map((m, idx) => (
+                                                    <th key={m} className={`py-1.5 text-center text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16] ${idx > 0 ? 'border-l-[2px] border-slate-400 dark:border-emerald-500/30' : ''}`} colSpan={4}>
+                                                        {new Date(m + '-01').toLocaleDateString('id-ID', { month: 'short' })}
+                                                    </th>
+                                                ))
+                                            ) : (
+                                                <th className="py-1.5 text-center text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-emerald-500/10 bg-slate-50 dark:bg-[#061e16]" colSpan={uniqueDates.length || 1}>
+                                                    Bulan {selectedBulan ? new Date(selectedBulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : ''}
+                                                </th>
+                                            )}
+                                            <th className="py-1.5 px-2 text-center text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 border-b border-l-[3px] border-slate-400 dark:border-emerald-500/30 bg-slate-50 dark:bg-[#061e16]" colSpan={4}>
+                                                {selectedBulan === 'all' ? 'Total Semester' : 'Jumlah'}
                                             </th>
                                         </tr>
                                         <tr className="bg-slate-50 dark:bg-[#061e16] border-b border-slate-300 dark:border-emerald-500/10">
-                                            {uniqueDates.length > 0 ? uniqueDates.map((date, idx) => {
-                                                const title = new Date(date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-                                                const dObj = new Date(date);
-                                                const dateLabel = `${String(dObj.getDate()).padStart(2, '0')}`;
-                                                
-                                                const isSunday = dObj.getDay() === 0;
-                                                const hasLog = waliLogs.some(l => {
-                                                    if (!l.tanggal) return false;
-                                                    const logD = new Date(l.tanggal);
-                                                    const logDateStr = `${logD.getFullYear()}-${String(logD.getMonth() + 1).padStart(2, '0')}-${String(logD.getDate()).padStart(2, '0')}`;
-                                                    return logDateStr === date;
-                                                });
-                                                
-                                                let isLibur = false;
-                                                if (isSunday) {
-                                                    isLibur = true;
-                                                } else if (!hasLog && firstLogDate && lastLogDate) {
-                                                    if (date >= firstLogDate && date <= lastLogDate) {
+                                            {selectedBulan === 'all' ? (
+                                                availableMonths.map((m, idx) => (
+                                                    <React.Fragment key={`sub-${m}`}>
+                                                        <th className={`py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center text-[9px] md:text-[10px] font-extrabold text-emerald-600 bg-emerald-50/20 border-b border-slate-300 dark:border-emerald-500/10 ${idx > 0 ? 'border-l-[2px] border-slate-400 dark:border-emerald-500/30' : 'border-l'}`}>H</th>
+                                                        <th className="py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center text-[9px] md:text-[10px] font-extrabold text-amber-500 bg-amber-50/20 border-b border-l border-slate-300 dark:border-emerald-500/10">S</th>
+                                                        <th className="py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center text-[9px] md:text-[10px] font-extrabold text-cyan-600 bg-cyan-50/20 border-b border-l border-slate-300 dark:border-emerald-500/10">I</th>
+                                                        <th className="py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center text-[9px] md:text-[10px] font-extrabold text-rose-600 bg-rose-50/20 border-b border-l border-slate-300 dark:border-emerald-500/10">A</th>
+                                                    </React.Fragment>
+                                                ))
+                                            ) : (
+                                                uniqueDates.length > 0 ? uniqueDates.map((date, idx) => {
+                                                    const title = new Date(date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                                                    const dObj = new Date(date);
+                                                    const dateLabel = `${String(dObj.getDate()).padStart(2, '0')}`;
+                                                    
+                                                    const isSunday = dObj.getDay() === 0;
+                                                    const hasLog = waliLogs.some(l => {
+                                                        if (!l.tanggal) return false;
+                                                        const logD = new Date(l.tanggal);
+                                                        const logDateStr = `${logD.getFullYear()}-${String(logD.getMonth() + 1).padStart(2, '0')}-${String(logD.getDate()).padStart(2, '0')}`;
+                                                        return logDateStr === date;
+                                                    });
+                                                    
+                                                    let isLibur = false;
+                                                    if (isSunday || isNationalHoliday(date)) {
                                                         isLibur = true;
                                                     }
-                                                }
-                                                
-                                                return (
-                                                    <th key={idx} className={`py-1 md:py-2 px-0 text-center text-[9px] md:text-[10px] w-[18px] md:w-[22px] min-w-[18px] md:min-w-[22px] align-middle border-b border-l border-slate-300 dark:border-emerald-500/10 ${isLibur ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`} title={title}>
-                                                        <div className={`flex justify-center font-extrabold mx-auto ${isLibur ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                                                            {dateLabel}
-                                                        </div>
-                                                    </th>
-                                                );
-                                            }) : (
-                                                <th className="py-1 px-1 text-center text-[10px] min-w-[32px] align-middle border-l border-slate-300 dark:border-emerald-500/10">
                                                     
-                                                </th>
+                                                    return (
+                                                        <th key={idx} className={`py-1 md:py-2 px-0 text-center text-[9px] md:text-[10px] w-[18px] md:w-[22px] min-w-[18px] md:min-w-[22px] align-middle border-b border-l border-slate-300 dark:border-emerald-500/10 ${isLibur ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`} title={title}>
+                                                            <div className={`flex justify-center font-extrabold mx-auto ${isLibur ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                                                {dateLabel}
+                                                            </div>
+                                                        </th>
+                                                    );
+                                                }) : (
+                                                    <th className="py-1 px-1 text-center text-[10px] min-w-[32px] align-middle border-l border-slate-300 dark:border-emerald-500/10">
+                                                        
+                                                    </th>
+                                                )
                                             )}
-                                            <th className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center text-[9px] md:text-[10px] font-extrabold text-amber-500 bg-amber-50/50 dark:bg-amber-900/10 border-b border-l-[3px] border-slate-400 dark:border-emerald-500/30">S</th>
+                                            <th className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center text-[9px] md:text-[10px] font-extrabold text-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/10 border-b border-l-[3px] border-slate-400 dark:border-emerald-500/30">H</th>
+                                            <th className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center text-[9px] md:text-[10px] font-extrabold text-amber-500 bg-amber-50/50 dark:bg-amber-900/10 border-b border-l border-slate-300 dark:border-emerald-500/10">S</th>
                                             <th className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center text-[9px] md:text-[10px] font-extrabold text-cyan-600 bg-cyan-50/50 dark:bg-cyan-900/10 border-b border-l border-slate-300 dark:border-emerald-500/10">I</th>
                                             <th className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center text-[9px] md:text-[10px] font-extrabold text-rose-600 bg-rose-50/50 dark:bg-rose-900/10 border-b border-l border-slate-300 dark:border-emerald-500/10">A</th>
                                         </tr>
@@ -536,59 +550,77 @@ export default function RekapAbsensiPage() {
                                                 <td className="py-1.5 px-2 md:px-3 static md:sticky md:left-8 md:left-10 md:z-20 bg-white dark:bg-[#041610] border-b border-slate-300 border-r-[3px] border-slate-400 dark:border-emerald-500/30 drop-shadow-md group-hover:bg-slate-50/50 dark:group-hover:bg-white/[0.02] min-w-[150px] md:min-w-[180px] w-[150px] md:w-[180px]">
                                                     <p className="font-extrabold text-[10px] md:text-[11px] text-slate-850 dark:text-white leading-tight truncate w-full" title={s.nama_lengkap}>{s.nama_lengkap}</p>
                                                 </td>
-                                                {uniqueDates.length > 0 ? uniqueDates.map((date, idx) => {
-                                                    const log = s.logsByDate[date];
-                                                    const isSunday = new Date(date).getDay() === 0;
-                                                    const hasLog = waliLogs.some(l => l.tanggal === date);
-                                                    
-                                                    let isLibur = false;
-                                                    if (isSunday) {
-                                                        isLibur = true;
-                                                    } else if (!hasLog && firstLogDate && lastLogDate) {
-                                                        if (date >= firstLogDate && date <= lastLogDate) {
+                                                {selectedBulan === 'all' ? (
+                                                    availableMonths.map((m, idx) => {
+                                                        const logsInMonth = Object.entries(s.logsByDate).filter(([dateStr]) => dateStr.startsWith(m)).map(e => e[1]);
+                                                        const mH = logsInMonth.filter(l => l && l.kehadiran === 'hadir').length;
+                                                        const mS = logsInMonth.filter(l => l && l.kehadiran === 'sakit').length;
+                                                        const mI = logsInMonth.filter(l => l && l.kehadiran === 'izin').length;
+                                                        const mA = logsInMonth.filter(l => l && l.kehadiran === 'alpa').length;
+                                                        return (
+                                                            <React.Fragment key={m}>
+                                                                <td className={`py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center font-extrabold text-[9px] md:text-[10px] text-emerald-600 bg-emerald-50/10 border-b border-slate-300 dark:border-emerald-500/10 ${idx > 0 ? 'border-l-[2px] border-slate-400 dark:border-emerald-500/30' : 'border-l'}`}>{mH || ''}</td>
+                                                                <td className="py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center font-extrabold text-[9px] md:text-[10px] text-amber-500 bg-amber-50/10 border-b border-l border-slate-300 dark:border-emerald-500/10">{mS || ''}</td>
+                                                                <td className="py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center font-extrabold text-[9px] md:text-[10px] text-cyan-600 bg-cyan-50/10 border-b border-l border-slate-300 dark:border-emerald-500/10">{mI || ''}</td>
+                                                                <td className="py-1 md:py-2 px-0 w-[20px] md:w-[24px] min-w-[20px] md:min-w-[24px] max-w-[20px] md:max-w-[24px] text-center font-extrabold text-[9px] md:text-[10px] text-rose-600 bg-rose-50/10 border-b border-l border-slate-300 dark:border-emerald-500/10">{mA || ''}</td>
+                                                            </React.Fragment>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    uniqueDates.length > 0 ? uniqueDates.map((date, idx) => {
+                                                        const log = s.logsByDate[date];
+                                                        const isSunday = new Date(date).getDay() === 0;
+                                                        const hasLog = waliLogs.some(l => l.tanggal === date);
+                                                        
+                                                        let isLibur = false;
+                                                        if (isSunday || isNationalHoliday(date)) {
                                                             isLibur = true;
                                                         }
-                                                    }
-                                                    
-                                                    let badge = '';
-                                                    let bg = '';
-                                                    
-                                                    if (log) {
-                                                        if (log.kehadiran === 'hadir') { badge = 'H'; bg = 'bg-emerald-500 text-white shadow-sm'; }
-                                                        else if (log.kehadiran === 'sakit') { badge = 'S'; bg = 'bg-amber-400 text-white shadow-sm'; }
-                                                        else if (log.kehadiran === 'izin') { badge = 'I'; bg = 'bg-cyan-500 text-white shadow-sm'; }
-                                                        else if (log.kehadiran === 'alpa') { badge = 'A'; bg = 'bg-rose-500 text-white shadow-sm'; }
-                                                    }
-
-                                                    return (
-                                                        <td key={idx} className={`py-1 md:py-2 px-0 text-center w-[18px] md:w-[22px] min-w-[18px] md:min-w-[22px] border-b border-l border-slate-300 dark:border-emerald-500/10 ${isLibur ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
-                                                            {badge ? (
-                                                                <div 
-                                                                    className={`w-3.5 h-3.5 md:w-4 md:h-4 rounded-full mx-auto flex items-center justify-center text-[7px] md:text-[8px] font-bold ${bg}`}
-                                                                    title={log.kehadiran.toUpperCase()}
-                                                                >
-                                                                    {badge}
-                                                                </div>
-                                                            ) : (
-                                                                <div className={`w-3.5 h-3.5 md:w-4 md:h-4 rounded-full mx-auto flex items-center justify-center text-[7px] font-bold bg-slate-100/50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 ${isLibur ? 'opacity-50' : ''}`} title={isLibur ? 'Libur / Tidak Ada KBM' : 'Belum Diabsen'}>
-                                                                    
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    );
-                                                }) : (
-                                                    <td className="py-1 px-1 text-center min-w-[32px] border-l border-slate-300 dark:border-emerald-500/10">
                                                         
-                                                    </td>
+                                                        let badge = '';
+                                                        let bg = '';
+                                                        
+                                                        if (log) {
+                                                            if (log.kehadiran === 'hadir') { badge = 'H'; bg = 'bg-emerald-500 text-white shadow-sm'; }
+                                                            else if (log.kehadiran === 'sakit') { badge = 'S'; bg = 'bg-amber-400 text-white shadow-sm'; }
+                                                            else if (log.kehadiran === 'izin') { badge = 'I'; bg = 'bg-cyan-500 text-white shadow-sm'; }
+                                                            else if (log.kehadiran === 'alpa') { badge = 'A'; bg = 'bg-rose-500 text-white shadow-sm'; }
+                                                        }
+
+                                                        return (
+                                                            <td key={idx} className={`py-1 md:py-2 px-0 text-center w-[18px] md:w-[22px] min-w-[18px] md:min-w-[22px] border-b border-l border-slate-300 dark:border-emerald-500/10 ${isLibur ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
+                                                                {badge ? (
+                                                                    <div 
+                                                                        className={`w-3.5 h-3.5 md:w-4 md:h-4 rounded-full mx-auto flex items-center justify-center text-[7px] md:text-[8px] font-bold ${bg}`}
+                                                                        title={log.kehadiran.toUpperCase()}
+                                                                    >
+                                                                        {badge}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className={`w-3.5 h-3.5 md:w-4 md:h-4 rounded-full mx-auto flex items-center justify-center text-[7px] font-bold bg-slate-100/50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 ${isLibur ? 'opacity-50' : ''}`} title={isLibur ? 'Libur / Tidak Ada KBM' : 'Belum Diabsen'}>
+                                                                        
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    }) : (
+                                                        <td className="py-1 px-1 text-center min-w-[32px] border-l border-slate-300 dark:border-emerald-500/10">
+                                                            
+                                                        </td>
+                                                    )
                                                 )}
                                                 {(() => {
-                                                    const totalH = Object.values(s.logsByDate).filter(l => l && l.kehadiran === 'hadir').length;
-                                                    const totalS = Object.values(s.logsByDate).filter(l => l && l.kehadiran === 'sakit').length;
-                                                    const totalI = Object.values(s.logsByDate).filter(l => l && l.kehadiran === 'izin').length;
-                                                    const totalA = Object.values(s.logsByDate).filter(l => l && l.kehadiran === 'alpa').length;
+                                                    const logsInMonth = selectedBulan === 'all' 
+                                                        ? Object.values(s.logsByDate) 
+                                                        : Object.entries(s.logsByDate).filter(([dateStr, l]) => dateStr.startsWith(selectedBulan)).map(e => e[1]);
+                                                    const totalH = logsInMonth.filter(l => l && l.kehadiran === 'hadir').length;
+                                                    const totalS = logsInMonth.filter(l => l && l.kehadiran === 'sakit').length;
+                                                    const totalI = logsInMonth.filter(l => l && l.kehadiran === 'izin').length;
+                                                    const totalA = logsInMonth.filter(l => l && l.kehadiran === 'alpa').length;
                                                     return (
                                                         <>
-                                                            <td className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center font-extrabold text-[9px] md:text-[10px] text-amber-500 bg-amber-50/30 dark:bg-amber-900/10 border-b border-slate-300 border-l-[3px] border-slate-400 dark:border-emerald-500/30">{totalS || ''}</td>
+                                                            <td className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center font-extrabold text-[9px] md:text-[10px] text-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10 border-b border-l-[3px] border-slate-400 dark:border-emerald-500/30">{totalH || ''}</td>
+                                                            <td className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center font-extrabold text-[9px] md:text-[10px] text-amber-500 bg-amber-50/30 dark:bg-amber-900/10 border-b border-l border-slate-300 dark:border-emerald-500/10">{totalS || ''}</td>
                                                             <td className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center font-extrabold text-[9px] md:text-[10px] text-cyan-600 bg-cyan-50/30 dark:bg-cyan-900/10 border-b border-l border-slate-300 dark:border-emerald-500/10">{totalI || ''}</td>
                                                             <td className="py-1 md:py-2 px-0 w-[24px] md:w-[28px] min-w-[24px] md:min-w-[28px] max-w-[24px] md:max-w-[28px] text-center font-extrabold text-[9px] md:text-[10px] text-rose-600 bg-rose-50/30 dark:bg-rose-900/10 border-b border-l border-slate-300 dark:border-emerald-500/10">{totalA || ''}</td>
                                                         </>

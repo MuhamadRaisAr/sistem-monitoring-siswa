@@ -101,10 +101,40 @@ export default function WaliKedisiplinanPage() {
     return (
         <div className="space-y-8 w-full min-w-0">
             {/* ── Header ───────────────────────────────────────────── */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-extrabold text-white tracking-tight">Kedisiplinan</h1>
-                    <p className="text-slate-400 text-sm mt-1">Lihat riwayat dan catatan pelanggaran siswa.</p>
+            <div className="mb-8 p-6 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent rounded-3xl border border-emerald-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-sm">
+                <div className="relative z-10">
+                    <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white flex items-center gap-3">
+                        <div className="p-3 bg-white dark:bg-emerald-500/20 rounded-2xl shadow-sm border border-emerald-100 dark:border-emerald-500/30">
+                            <ShieldAlert className="h-6 w-6 text-emerald-500" />
+                        </div>
+                        Kedisiplinan
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">Lihat riwayat dan catatan pelanggaran siswa.</p>
+                </div>
+                <div className="absolute -right-12 -top-12 text-emerald-500/5 rotate-12 scale-150 z-0 pointer-events-none">
+                    <ShieldAlert className="h-48 w-48" />
+                </div>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="h-7 w-7 text-rose-500" />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Pelanggaran</p>
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{allViolations.length} <span className="text-sm font-semibold text-slate-500">kasus</span></h3>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <ShieldAlert className="h-7 w-7 text-amber-500" />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pelanggaran Terkini</p>
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{terkiniList.length} <span className="text-sm font-semibold text-slate-500">kasus</span></h3>
+                    </div>
                 </div>
             </div>
 
@@ -192,15 +222,24 @@ export default function WaliKedisiplinanPage() {
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
                     </div>
                 ) : violations.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-500">
-                        <ShieldAlert className="h-10 w-10 opacity-30" />
-                        <p className="text-sm font-medium text-center">Alhamdulillah, tidak ada pelanggaran kedisiplinan tercatat.</p>
+                    <div className="text-center py-20 px-6 bg-gradient-to-b from-slate-50 to-white dark:from-[#041610] dark:to-[#020c08] rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+                        <div className="relative z-10 max-w-sm mx-auto">
+                            <div className="mx-auto w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-6 shadow-inner rotate-3">
+                                <Shield className="h-10 w-10 text-emerald-600 dark:text-emerald-400 -rotate-3" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Alhamdulillah!</h3>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ada pelanggaran kedisiplinan yang tercatat untuk saat ini.</p>
+                        </div>
                     </div>
                 ) : activeTab === 'terkini' ? (
                     terkiniList.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-500">
-                            <ShieldAlert className="h-10 w-10 opacity-30" />
-                            <p className="text-sm font-medium text-center">Tidak ada pelanggaran terkini di bulan ini.</p>
+                        <div className="text-center py-20 px-6 bg-slate-50 dark:bg-[#041610] rounded-3xl border border-slate-200 dark:border-emerald-500/10">
+                            <div className="mx-auto w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 rotate-3">
+                                <CheckCircle2 className="h-10 w-10 text-slate-400 -rotate-3" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Semua Aman</h3>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ada pelanggaran terkini di periode yang dipilih.</p>
                         </div>
                     ) : (
                         <div className="flex flex-col gap-3 sm:gap-4 w-full">

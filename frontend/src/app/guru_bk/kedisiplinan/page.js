@@ -226,11 +226,11 @@ export default function CatatPelanggaranPage() {
                 </div>
             </div>
 
-            {/* Selectors */}
+            {/* Selectors and Actions */}
             <div className="flex flex-col gap-4">
-                <div className="flex flex-row gap-3 sm:gap-4 w-full">
+                <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 w-full lg:items-end">
                     {/* Tahun Ajaran */}
-                    <div className="flex flex-col gap-1.5 w-[260px] sm:w-[220px]">
+                    <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[220px]">
                         <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tahun Ajaran:</label>
                         <select 
                             value={selectedTahunAjaranId} 
@@ -252,36 +252,37 @@ export default function CatatPelanggaranPage() {
                         </select>
                     </div>
 
-                    {/* Cari Siswa */}
-                    <div className="flex flex-col gap-1.5 w-[260px] sm:w-[260px]">
-                        <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Cari Siswa:</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-emerald-500" />
+                    {/* Search and Add Button */}
+                    <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 w-full lg:w-auto lg:ml-auto items-end">
+                        {/* Cari Siswa */}
+                        <div className="flex flex-col gap-1.5 w-full sm:w-[320px]">
+                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Cari Siswa:</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-emerald-500" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Ketik nama atau NIS..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-emerald-100 bg-white text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm placeholder:text-slate-400 placeholder:font-normal"
+                                />
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Ketik nama atau NIS..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-emerald-100 bg-white text-[12px] sm:text-sm font-bold text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm placeholder:text-slate-400 placeholder:font-normal"
-                            />
                         </div>
+
+                        {/* Add Button */}
+                        {isCurrentYearActive && (
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-md shrink-0 cursor-pointer h-[42px]"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Tambah Catatan
+                            </button>
+                        )}
                     </div>
                 </div>
-
-                {/* Add Button */}
-                {isCurrentYearActive && (
-                    <div className="w-full mt-2">
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-md shrink-0 cursor-pointer h-[42px]"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Tambah Catatan
-                        </button>
-                    </div>
-                )}
             </div>
 
             {!isCurrentYearActive && !loadingTahunAjaran && selectedTahunAjaranId && (

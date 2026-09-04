@@ -289,3 +289,29 @@ exports.deleteRecord = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+// Get Rekap for Surat Peringatan (Guru BK & Admin only)
+exports.getRekapSP = async (req, res) => {
+    try {
+        if (!['admin', 'guru_bk'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Access denied. Admins or Guru BK only.' });
+        }
+
+        const query = `
+            SELECT s.id, s.nis, s.nama_lengkap, s.kelas, 
+                   COUNT(k.id) AS total_pelanggaran
+            FROM siswa s
+            JOIN kedisiplinan k ON s.id = k.siswa_id
+            WHERE k.kategori = 'pelanggaran'
+            GROUP BY s.id
+            HAVING total_pelanggaran > 0
+            ORDER BY total_pelanggaran DESC, s.nama_lengkap ASC
+        `;
+        
+        const [rows] = await db.query(query);
+        return res.json(rows);
+    } catch (err) {
+        console.error('Get rekap SP error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};

@@ -36,7 +36,7 @@ const bimbinganKonselingRoutes = require('./routes/bimbinganKonselingRoutes');
 const ekskulRoutes = require('./routes/ekskulRoutes');
 const nilaiEkskulRoutes = require('./routes/nilaiEkskulRoutes');
 const mutasiRoutes = require('./routes/mutasiRoutes');
-
+const suratPeringatanRoutes = require('./routes/suratPeringatanRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/siswa', siswaRoutes);
 app.use('/api/akademik', akademikRoutes);
@@ -50,11 +50,12 @@ app.use('/api/pengumuman', pengumumanRoutes);
 app.use('/api/nilai', nilaiRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/tahun-ajaran', tahunAjaranRoutes);
-app.use('/api/bendahara/honor', honorRoutes);
+app.use('/api/honor', honorRoutes);
 app.use('/api/bimbingan-konseling', bimbinganKonselingRoutes);
 app.use('/api/ekskul', ekskulRoutes);
 app.use('/api/nilai-ekskul', nilaiEkskulRoutes);
 app.use('/api/mutasi', mutasiRoutes);
+app.use('/api/sp', suratPeringatanRoutes);
 
 // Root Route
 app.get('/', (req, res) => {

@@ -190,11 +190,22 @@ export default function BendaharaLayout({ children }) {
             title: "Menu Utama",
             items: [
                 { name: 'Dashboard', href: '/bendahara/dashboard', icon: LayoutDashboard },
+            ]
+        },
+        {
+            title: "Keuangan Siswa",
+            items: [
                 { name: 'Data Siswa', href: '/bendahara/siswa', icon: Users },
                 { name: 'Tagihan Aktif', href: '/bendahara/keuangan', icon: CircleDollarSign },
                 { name: 'Menunggu Validasi', href: '/bendahara/keuangan/validasi', icon: ClipboardCheck },
                 { name: 'Data Tunggakan', href: '/bendahara/keuangan/tunggakan', icon: ClipboardList },
                 { name: 'Riwayat Pembayaran', href: '/bendahara/keuangan/riwayat', icon: History },
+            ]
+        },
+        {
+            title: "Penggajian",
+            items: [
+                { name: 'Honor Guru', href: '/bendahara/honor', icon: Wallet },
             ]
         }
     ];
@@ -246,7 +257,7 @@ export default function BendaharaLayout({ children }) {
                 <nav className="flex-1 px-3 py-6 overflow-y-auto overscroll-none">
                     {navigationGroups.map((group, idx) => (
                         <div key={idx} className={idx > 0 ? "mt-6 pt-4 border-t border-slate-200 dark:border-emerald-500/10 space-y-1" : "space-y-1"}>
-                            {!isCollapsed && <p className="px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">{group.title}</p>}
+                            {!isCollapsed && group.title && <p className="px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">{group.title}</p>}
                             {group.items.map((item) => {
                                 const isActive = pathname === item.href;
                                 const Icon = item.icon;

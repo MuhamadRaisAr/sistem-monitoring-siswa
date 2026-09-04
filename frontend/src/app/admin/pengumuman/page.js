@@ -177,7 +177,7 @@ export default function AdminPengumumanPage() {
                         ) : (
                             filteredPengumuman.map((p) => (
                                 <div key={p.id} className="relative flex flex-col p-6 rounded-2xl bg-white dark:bg-[#020c08]/40 border border-emerald-500/10 hover:border-emerald-500/30 hover:bg-slate-50 dark:hover:bg-[#020c08]/60 transition-all group shadow-sm">
-                                    <div className="absolute top-3 right-3 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-black/50 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none p-1 sm:p-0 rounded-xl">
+                                    <div className="absolute top-3 right-3 flex gap-1 opacity-100 transition-opacity bg-white/80 dark:bg-black/50 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none p-1 sm:p-0 rounded-xl">
                                         <button onClick={() => openEditModal(p)} title="Edit Pengumuman" className="p-1.5 rounded-lg text-emerald-600 sm:text-emerald-400 hover:bg-emerald-500/10 transition-colors"><Edit2 className="h-4 w-4" /></button>
                                         <button onClick={() => handleDelete(p.id, p.judul)} title="Hapus Pengumuman" className="p-1.5 rounded-lg text-red-600 sm:text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 className="h-4 w-4" /></button>
                                     </div>

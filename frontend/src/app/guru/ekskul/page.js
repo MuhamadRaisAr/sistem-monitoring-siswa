@@ -16,6 +16,7 @@ export default function InputNilaiEkskulPage() {
     
     const { 
         tahunAjaranList, 
+        activeTahunAjaranList,
         activeTahunAjaran,
         selectedTahunAjaranId, 
         setSelectedTahunAjaranId,
@@ -206,17 +207,26 @@ export default function InputNilaiEkskulPage() {
                         <label className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Tahun Ajaran:</label>
                         {loadingTahunAjaran ? (
                             <div className="h-[38px] bg-slate-850/20 animate-pulse rounded-xl" />
+                        ) : activeTahunAjaranList && activeTahunAjaranList.length === 1 ? (
+                            <div className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
+                                {activeTahunAjaranList[0].nama_tahun} {activeTahunAjaranList[0].semester}
+                            </div>
                         ) : (
                             <select
                                 value={selectedTahunAjaranId}
                                 onChange={(e) => setSelectedTahunAjaranId(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm disabled:opacity-50"
+                                disabled={loadingTahunAjaran}
+                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm text-ellipsis overflow-hidden disabled:opacity-50"
                             >
-                                {tahunAjaranList.map(ta => (
-                                    <option key={ta.id} value={ta.id} className="bg-[#020c08] text-white">
-                                        {ta.nama_tahun} {ta.semester}
-                                    </option>
-                                ))}
+                                {!activeTahunAjaranList || activeTahunAjaranList.length === 0 ? (
+                                    <option value="">Tidak ada tahun ajaran aktif</option>
+                                ) : (
+                                    activeTahunAjaranList.map((ta) => (
+                                        <option key={ta.id} value={ta.id} className="bg-[#020c08] text-white">
+                                            {ta.nama_tahun} {ta.semester}
+                                        </option>
+                                    ))
+                                )}
                             </select>
                         )}
                     </div>

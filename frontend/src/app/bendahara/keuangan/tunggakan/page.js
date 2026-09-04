@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
-import { ClipboardList, Search } from 'lucide-react';
+import { ClipboardList, Search, Users, AlertCircle, Wallet } from 'lucide-react';
 
 const API_URL = '/api';
 
@@ -84,13 +84,49 @@ export default function TunggakanPage() {
     return (
         <div className="space-y-6 animate-fade-in relative">
             {/* Header */}
-            <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
-                        <ClipboardList className="h-8 w-8 text-rose-500" />
+            <div className="mb-8 p-6 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent rounded-3xl border border-rose-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-sm">
+                <div className="relative z-10">
+                    <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white flex items-center gap-3">
+                        <div className="p-3 bg-white dark:bg-rose-500/20 rounded-2xl shadow-sm border border-rose-100 dark:border-rose-500/30">
+                            <ClipboardList className="h-6 w-6 text-rose-500" />
+                        </div>
                         Data Tunggakan
                     </h1>
-                    <p className="text-slate-500 mt-1 text-sm">Rekapitulasi tagihan siswa yang belum dibayar.</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">Rekapitulasi tagihan siswa yang belum dibayar.</p>
+                </div>
+                <div className="absolute -right-12 -top-12 text-rose-500/5 rotate-12 scale-150 z-0 pointer-events-none">
+                    <ClipboardList className="h-48 w-48" />
+                </div>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <AlertCircle className="h-7 w-7 text-amber-500" />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tagihan</p>
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{filteredTunggakan.length} <span className="text-sm font-semibold text-slate-500">item</span></h3>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                        <Wallet className="h-7 w-7 text-rose-500" />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Nominal</p>
+                        <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400">{formatRupiah(filteredTunggakan.reduce((acc, curr) => acc + parseFloat(curr.nominal), 0))}</h3>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <Users className="h-7 w-7 text-blue-500" />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Siswa Menunggak</p>
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{new Set(filteredTunggakan.map(t => t.siswa_id)).size} <span className="text-sm font-semibold text-slate-500">siswa</span></h3>
+                    </div>
                 </div>
             </div>
 
@@ -131,15 +167,23 @@ export default function TunggakanPage() {
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
                     </div>
                 ) : tunggakanList.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500 text-sm bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-slate-100 dark:border-white/5">
-                        <div className="mx-auto w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-3">
-                            <ClipboardList className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                    <div className="text-center py-20 px-6 bg-gradient-to-b from-slate-50 to-white dark:from-[#041610] dark:to-[#020c08] rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+                        <div className="relative z-10 max-w-sm mx-auto">
+                            <div className="mx-auto w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-6 shadow-inner rotate-3">
+                                <ClipboardList className="h-10 w-10 text-emerald-600 dark:text-emerald-400 -rotate-3" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Alhamdulillah!</h3>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ada tagihan siswa yang belum dibayar. Semua tagihan sudah lunas.</p>
                         </div>
-                        Alhamdulillah, tidak ada tagihan siswa yang belum dibayar.
                     </div>
                 ) : filteredTunggakan.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500 text-sm bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-slate-100 dark:border-white/5">
-                        Tidak ada catatan tunggakan ditemukan untuk pencarian ini.
+                    <div className="text-center py-20 px-6 bg-slate-50 dark:bg-[#041610] rounded-3xl border border-slate-200 dark:border-emerald-500/10">
+                        <div className="mx-auto w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 rotate-3">
+                            <Search className="h-10 w-10 text-slate-400 -rotate-3" />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Data tidak ditemukan</h3>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ada catatan tunggakan yang cocok dengan pencarian Anda.</p>
                     </div>
                 ) : (
                     <div className="space-y-8">

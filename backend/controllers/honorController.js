@@ -1,180 +1,317 @@
 const db = require('../config/db');
 
-// Get Unpaid Honor per Guru and Mapel
-exports.getUnpaidHonor = async (req, res) => {
-    try {
-        if (req.user.role !== 'bendahara') {
-            return res.status(403).json({ message: 'Access denied. Bendahara only.' });
+const honorController = {
+    // 1. Mendapatkan daftar guru beserta tarif_per_jam
+    getGuruList: async (req, res) => {
+        try {
+            const [gurus] = await db.query(`
+                SELECT id, nama_lengkap, username, no_hp, tarif_per_jam 
+                FROM users 
+                WHERE role = 'guru'
+                ORDER BY nama_lengkap ASC
+            `);
+            res.json(gurus);
+        } catch (error) {
+            console.error('Error getGuruList:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
         }
+    },
 
-        const query = `
-            SELECT 
-                base.guru_id,
-                u.nama_lengkap AS nama_guru,
-                base.mapel,
-                COALESCE(unpaid.jumlah, 0) AS jumlah_pertemuan_belum_dibayar
-            FROM (
-                SELECT DISTINCT guru_id, mata_pelajaran AS mapel
-                FROM jadwal_pelajaran
-            ) AS base
-            JOIN users u ON base.guru_id = u.id
-            LEFT JOIN (
-                SELECT
-                    jp.guru_id,
-                    ka.jenis_kegiatan AS mapel,
-                    COUNT(DISTINCT CONCAT(s.kelas, '_', ka.tanggal)) AS jumlah
-                FROM kehadiran_siswa ka
-                JOIN siswa s ON ka.siswa_id = s.id
-                JOIN jadwal_pelajaran jp ON jp.mata_pelajaran = ka.jenis_kegiatan AND jp.kelas = s.kelas
-                WHERE ka.is_paid = 0 AND ka.jenis_kegiatan != 'wali_kelas'
-                GROUP BY jp.guru_id, ka.jenis_kegiatan
-            ) AS unpaid ON unpaid.guru_id = base.guru_id AND unpaid.mapel = base.mapel
-            ORDER BY u.nama_lengkap ASC
-        `;
-        const [rows] = await db.query(query);
-        return res.json(rows);
-    } catch (err) {
-        console.error('Get unpaid honor error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-// Pay Honor
-exports.payHonor = async (req, res) => {
-    try {
-        if (req.user.role !== 'bendahara') {
-            return res.status(403).json({ message: 'Access denied. Bendahara only.' });
-        }
-
-        const { guru_id, mapel, nominal_per_pertemuan } = req.body;
-        if (!guru_id || !mapel || !nominal_per_pertemuan) {
-            return res.status(400).json({ message: 'guru_id, mapel, and nominal_per_pertemuan are required.' });
-        }
-
-        // Hitung jumlah pertemuan yang akan dibayar untuk memastikan validasi
-        const queryCount = `
-            SELECT COUNT(DISTINCT CONCAT(s.kelas, '_', ka.tanggal)) AS jumlah
-            FROM kehadiran_siswa ka
-            JOIN siswa s ON ka.siswa_id = s.id
-            JOIN jadwal_pelajaran jp ON jp.mata_pelajaran = ka.jenis_kegiatan AND jp.kelas = s.kelas
-            WHERE jp.guru_id = ? AND ka.jenis_kegiatan = ? AND ka.is_paid = 0
-        `;
-        const [countRows] = await db.query(queryCount, [guru_id, mapel]);
-        const jumlah_pertemuan = countRows[0].jumlah;
-
-        if (jumlah_pertemuan === 0) {
-            return res.status(400).json({ message: 'Tidak ada pertemuan yang belum dibayar untuk guru dan mapel ini.' });
-        }
-
-        const total_bayar = jumlah_pertemuan * nominal_per_pertemuan;
-
-        // Mulai transaksi
-        await db.query('START TRANSACTION');
-
-        // Insert ke riwayat pembayaran_honor
-        const [insertRes] = await db.query(
-            'INSERT INTO pembayaran_honor (guru_id, mapel, jumlah_pertemuan, nominal_per_pertemuan, total_bayar) VALUES (?, ?, ?, ?, ?)',
-            [guru_id, mapel, jumlah_pertemuan, nominal_per_pertemuan, total_bayar]
-        );
-
-        // Update is_paid = 1 di kehadiran_siswa
-        // Karena MySQL tidak bisa UPDATE dengan JOIN yang terlalu kompleks dengan fungsi agregat mudah, 
-        // kita update berdasarkan kondisi IN (subquery). Tapi subquery di MySQL update kadang problematik.
-        // Cara amannya: Kita update kehadiran_siswa yang memiliki id tertentu.
-        const queryIds = `
-            SELECT ka.id
-            FROM kehadiran_siswa ka
-            JOIN siswa s ON ka.siswa_id = s.id
-            JOIN jadwal_pelajaran jp ON jp.mata_pelajaran = ka.jenis_kegiatan AND jp.kelas = s.kelas
-            WHERE jp.guru_id = ? AND ka.jenis_kegiatan = ? AND ka.is_paid = 0
-        `;
-        const [idRows] = await db.query(queryIds, [guru_id, mapel]);
-        const idsToUpdate = idRows.map(r => r.id);
-
-        if (idsToUpdate.length > 0) {
-            await db.query(
-                `UPDATE kehadiran_siswa SET is_paid = 1 WHERE id IN (?)`,
-                [idsToUpdate]
-            );
-        }
-
-        await db.query('COMMIT');
-
-        return res.json({ 
-            message: 'Pembayaran honor berhasil dicatat.',
-            pembayaran_id: insertRes.insertId,
-            jumlah_pertemuan,
-            total_bayar
-        });
-    } catch (err) {
-        await db.query('ROLLBACK');
-        console.error('Pay honor error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-// Get Riwayat Pembayaran
-exports.getRiwayatHonor = async (req, res) => {
-    try {
-        if (req.user.role !== 'bendahara') {
-            return res.status(403).json({ message: 'Access denied. Bendahara only.' });
-        }
-
-        const query = `
-            SELECT ph.*, u.nama_lengkap AS nama_guru
-            FROM pembayaran_honor ph
-            JOIN users u ON ph.guru_id = u.id
-            ORDER BY ph.tanggal_bayar DESC
-        `;
-        const [rows] = await db.query(query);
-        return res.json(rows);
-    } catch (err) {
-        console.error('Get riwayat honor error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-// Delete Riwayat Pembayaran (Batalkan Pembayaran)
-exports.deleteRiwayatHonor = async (req, res) => {
-    try {
-        if (req.user.role !== 'bendahara') {
-            return res.status(403).json({ message: 'Access denied. Bendahara only.' });
-        }
-
+    // 2. Mengupdate tarif per jam seorang guru
+    updateTarif: async (req, res) => {
         const { id } = req.params;
+        const { tarif_per_jam } = req.body;
+        
+        try {
+            await db.query(
+                `UPDATE users SET tarif_per_jam = ? WHERE id = ? AND role = 'guru'`,
+                [tarif_per_jam, id]
+            );
+            res.json({ message: 'Tarif berhasil diupdate' });
+        } catch (error) {
+            console.error('Error updateTarif:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
 
-        // Mulai transaksi
-        await db.query('START TRANSACTION');
-
-        const [riwayatRows] = await db.query('SELECT guru_id, mapel, jumlah_pertemuan FROM pembayaran_honor WHERE id = ?', [id]);
-        if (riwayatRows.length > 0) {
-            const { guru_id, mapel, jumlah_pertemuan } = riwayatRows[0];
-            
-            // Cari ID kehadiran_siswa yang sudah dibayar untuk di-revert
-            const queryIds = `
-                SELECT ka.id
-                FROM kehadiran_siswa ka
-                JOIN siswa s ON ka.siswa_id = s.id
-                JOIN jadwal_pelajaran jp ON jp.mata_pelajaran = ka.jenis_kegiatan AND jp.kelas = s.kelas
-                WHERE jp.guru_id = ? AND ka.jenis_kegiatan = ? AND ka.is_paid = 1
-                ORDER BY ka.id DESC
-                LIMIT ?
+    // 2.5 Mendapatkan akumulasi honor yang belum dibayar (Pending Balance)
+    getPendingHonor: async (req, res) => {
+        try {
+            let query = `
+                SELECT 
+                    u.id as guru_id, 
+                    u.nama_lengkap, 
+                    u.username,
+                    u.tarif_per_jam as default_tarif,
+                    h.id, h.bulan, h.tahun, h.total_jam_mengajar, h.tarif_per_jam, h.total_honor, h.status_pembayaran, h.tanggal_bayar, h.tahun_ajaran_id,
+                    (
+                        SELECT COUNT(DISTINCT k.tanggal, s.kelas)
+                        FROM kehadiran_siswa k
+                        JOIN siswa s ON k.siswa_id = s.id
+                        JOIN jadwal_pelajaran j ON k.jenis_kegiatan = j.mata_pelajaran AND (s.kelas = j.kelas OR s.kelas LIKE CONCAT(j.kelas, ' %'))
+                        WHERE j.guru_id = u.id 
+                          AND k.is_paid = 0
+                    ) as computed_pertemuan
+                FROM users u
+                LEFT JOIN honor_guru h ON u.id = h.guru_id AND h.status_pembayaran = 'belum_dibayar'
+                WHERE u.role = 'guru'
+                ORDER BY u.nama_lengkap ASC
             `;
-            const [idRows] = await db.query(queryIds, [guru_id, mapel, parseInt(jumlah_pertemuan)]);
-            const idsToUpdate = idRows.map(r => r.id);
+            const [honors] = await db.query(query);
+            res.json(honors);
+        } catch (error) {
+            console.error('Error getPendingHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
 
-            if (idsToUpdate.length > 0) {
-                await db.query('UPDATE kehadiran_siswa SET is_paid = 0 WHERE id IN (?)', [idsToUpdate]);
-            }
+    // 3. Mendapatkan data honor berdasarkan bulan & tahun
+    getHonorByBulan: async (req, res) => {
+        const { bulan, tahun, tahun_ajaran_id } = req.query;
+        try {
+            let query = `
+                SELECT 
+                    u.id as guru_id, 
+                    u.nama_lengkap, 
+                    u.username,
+                    u.tarif_per_jam as default_tarif,
+                    h.id, h.bulan, h.tahun, h.total_jam_mengajar, h.tarif_per_jam, h.total_honor, h.status_pembayaran, h.tanggal_bayar, h.tahun_ajaran_id,
+                    (SELECT GROUP_CONCAT(DISTINCT mata_pelajaran SEPARATOR ', ') FROM jadwal_pelajaran j WHERE j.guru_id = u.id AND j.tahun_ajaran_id = ?) as mapel,
+                    (
+                        SELECT COUNT(DISTINCT k.tanggal, s.kelas)
+                        FROM kehadiran_siswa k
+                        JOIN siswa s ON k.siswa_id = s.id
+                        JOIN jadwal_pelajaran j ON k.jenis_kegiatan = j.mata_pelajaran AND (s.kelas = j.kelas OR s.kelas LIKE CONCAT(j.kelas, ' %'))
+                        WHERE j.guru_id = u.id 
+                          AND MONTH(k.tanggal) = ? 
+                          AND YEAR(k.tanggal) = ?
+                    ) as computed_pertemuan
+                FROM users u
+                LEFT JOIN honor_guru h ON u.id = h.guru_id AND h.bulan = ? AND h.tahun = ? ${tahun_ajaran_id ? 'AND h.tahun_ajaran_id = ?' : ''}
+                WHERE u.role = 'guru'
+                ORDER BY u.nama_lengkap ASC
+            `;
+            let params = [tahun_ajaran_id || null, bulan, tahun, bulan, tahun];
+            if (tahun_ajaran_id) params.push(tahun_ajaran_id);
+
+            const [honors] = await db.query(query, params);
+            res.json(honors);
+        } catch (error) {
+            console.error('Error getHonorByBulan:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
+    // 4. Generate/Hitung otomatis honor untuk bulan tertentu berdasarkan jadwal
+    generateHonor: async (req, res) => {
+        const { bulan, tahun, tahun_ajaran_id, nominal } = req.body;
+        
+        if (!bulan || !tahun || !tahun_ajaran_id || nominal === undefined) {
+            return res.status(400).json({ message: 'Bulan, tahun, tahun ajaran, dan nominal wajib diisi' });
         }
 
-        await db.query('DELETE FROM pembayaran_honor WHERE id = ?', [id]);
+        try {
+            await db.query('START TRANSACTION');
+
+            // Ambil semua guru dengan default tarifnya
+            const [gurus] = await db.query(`SELECT id, tarif_per_jam FROM users WHERE role = 'guru'`);
+
+            let countNew = 0;
+            let countUpdate = 0;
+
+            for (const guru of gurus) {
+                // Hitung pertemuan dinamis dari kehadiran_siswa yang belum dibayar
+                const [[{ computed_pertemuan }]] = await db.query(`
+                    SELECT COUNT(DISTINCT k.tanggal, s.kelas) as computed_pertemuan
+                    FROM kehadiran_siswa k
+                    JOIN siswa s ON k.siswa_id = s.id
+                    JOIN jadwal_pelajaran j ON k.jenis_kegiatan = j.mata_pelajaran AND (s.kelas = j.kelas OR s.kelas LIKE CONCAT(j.kelas, ' %'))
+                    WHERE j.guru_id = ? 
+                      AND k.is_paid = 0
+                `, [guru.id]);
+
+                const totalJamBulan = computed_pertemuan || 0;
+
+                // Skip guru yang tidak ada absensi belum dibayar
+                if (totalJamBulan === 0) continue;
+
+                // Gunakan nominal dari input, jika tidak ada fallback ke tarif_per_jam milik guru
+                const tarif = nominal !== undefined && nominal !== null && nominal !== '' ? parseInt(nominal) : (parseInt(guru.tarif_per_jam) || 0);
+                const totalHonor = totalJamBulan * tarif;
+
+                // Cek apakah sudah ada tagihan yang belum dibayar (tanpa peduli bulannya)
+                const [existing] = await db.query(`
+                    SELECT id FROM honor_guru 
+                    WHERE guru_id = ? AND status_pembayaran = 'belum_dibayar'
+                `, [guru.id]);
+
+                if (existing.length > 0) {
+                    // Update hitungannya
+                    await db.query(`
+                        UPDATE honor_guru 
+                        SET total_jam_mengajar = ?, tarif_per_jam = ?, total_honor = ?, tahun_ajaran_id = ?, bulan = ?, tahun = ?
+                        WHERE id = ?
+                    `, [totalJamBulan, tarif, totalHonor, tahun_ajaran_id, bulan, tahun, existing[0].id]);
+                    countUpdate++;
+                } else {
+                    // Insert baru
+                    await db.query(`
+                        INSERT INTO honor_guru (guru_id, tahun_ajaran_id, bulan, tahun, total_jam_mengajar, tarif_per_jam, total_honor)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `, [guru.id, tahun_ajaran_id, bulan, tahun, totalJamBulan, tarif, totalHonor]);
+                    countNew++;
+                }
+            }
+
+            await db.query('COMMIT');
+            if (countNew === 0 && countUpdate === 0) {
+                return res.json({ message: 'Tidak ada guru dengan absensi yang belum terbayar.' });
+            }
+            res.json({ message: `Berhasil generate honor. Baru: ${countNew}, Diupdate: ${countUpdate}` });
+        } catch (error) {
+            await db.query('ROLLBACK');
+            console.error('Error generateHonor:', error);
+            res.status(500).json({ message: 'Gagal men-generate data honor' });
+        }
+    },
+
+    // 5. Update manual tarif atau jumlah jam
+    updateManualHonor: async (req, res) => {
+        const { id } = req.params;
+        const { total_jam_mengajar, tarif_per_jam } = req.body;
         
-        await db.query('COMMIT');
-        return res.json({ message: 'Riwayat pembayaran berhasil dihapus dan dibatalkan.' });
-    } catch (err) {
-        await db.query('ROLLBACK');
-        console.error('Delete riwayat honor error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        try {
+            const [honor] = await db.query(`SELECT total_jam_mengajar, tarif_per_jam FROM honor_guru WHERE id = ?`, [id]);
+            if(honor.length === 0) return res.status(404).json({ message: 'Data tidak ditemukan' });
+
+            const jmlPertemuan = total_jam_mengajar !== undefined ? total_jam_mengajar : honor[0].total_jam_mengajar;
+            const tarif = tarif_per_jam !== undefined ? tarif_per_jam : honor[0].tarif_per_jam;
+            const finalHonor = jmlPertemuan * tarif;
+
+            await db.query(
+                `UPDATE honor_guru SET total_jam_mengajar = ?, tarif_per_jam = ?, total_honor = ? WHERE id = ?`,
+                [jmlPertemuan, tarif, finalHonor, id]
+            );
+            res.json({ message: 'Data honor berhasil diupdate' });
+        } catch (error) {
+            console.error('Error updateManualHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
+    // 6. Bayar Honor
+    payHonor: async (req, res) => {
+        const { id } = req.params;
+        try {
+            await db.query('START TRANSACTION');
+
+            // Ambil guru_id dari tagihan ini
+            const [[honor]] = await db.query(`SELECT guru_id FROM honor_guru WHERE id = ?`, [id]);
+
+            await db.query(
+                `UPDATE honor_guru SET status_pembayaran = 'dibayar', tanggal_bayar = CURDATE() WHERE id = ?`,
+                [id]
+            );
+
+            // Lunasi absensi guru tersebut
+            if (honor && honor.guru_id) {
+                await db.query(`
+                    UPDATE kehadiran_siswa k
+                    JOIN siswa s ON k.siswa_id = s.id
+                    JOIN jadwal_pelajaran j ON k.jenis_kegiatan = j.mata_pelajaran AND (s.kelas = j.kelas OR s.kelas LIKE CONCAT(j.kelas, ' %'))
+                    SET k.is_paid = 1
+                    WHERE j.guru_id = ? AND k.is_paid = 0
+                `, [honor.guru_id]);
+            }
+
+            await db.query('COMMIT');
+            res.json({ message: 'Honor berhasil dibayar' });
+        } catch (error) {
+            await db.query('ROLLBACK');
+            console.error('Error payHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
+    // 6b. Batalkan Pembayaran Honor
+    cancelHonor: async (req, res) => {
+        const { id } = req.params;
+        try {
+            await db.query('START TRANSACTION');
+
+            // Ambil data tagihan
+            const [[honor]] = await db.query(
+                `SELECT * FROM honor_guru WHERE id = ?`, [id]
+            );
+
+            if (!honor) {
+                await db.query('ROLLBACK');
+                return res.status(404).json({ message: 'Data honor tidak ditemukan' });
+            }
+
+            if (honor.status_pembayaran !== 'dibayar') {
+                await db.query('ROLLBACK');
+                return res.status(400).json({ message: 'Hanya honor berstatus DIBAYAR yang dapat dibatalkan' });
+            }
+
+            // Reset status honor ke menunggu
+            await db.query(
+                `UPDATE honor_guru SET status_pembayaran = 'belum_dibayar', tanggal_bayar = NULL WHERE id = ?`,
+                [id]
+            );
+
+            // Reset absensi yang sempat dilunasi kembali ke belum dibayar
+            if (honor.guru_id) {
+                await db.query(`
+                    UPDATE kehadiran_siswa k
+                    JOIN siswa s ON k.siswa_id = s.id
+                    JOIN jadwal_pelajaran j ON k.jenis_kegiatan = j.mata_pelajaran AND (s.kelas = j.kelas OR s.kelas LIKE CONCAT(j.kelas, ' %'))
+                    SET k.is_paid = 0
+                    WHERE j.guru_id = ? AND k.is_paid = 1
+                `, [honor.guru_id]);
+            }
+
+            await db.query('COMMIT');
+            res.json({ message: 'Pembayaran honor berhasil dibatalkan' });
+        } catch (error) {
+            await db.query('ROLLBACK');
+            console.error('Error cancelHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
+    // 7. Mendapatkan data honor untuk diri sendiri (Role Guru)
+    getMyHonor: async (req, res) => {
+        const guru_id = req.user.id;
+        const { tahun_ajaran_id } = req.query;
+        
+        try {
+            let query = `
+                SELECT 
+                    h.*, ta.nama_tahun, ta.semester,
+                    u.nama_lengkap, u.username,
+                    (SELECT GROUP_CONCAT(DISTINCT mata_pelajaran SEPARATOR ', ') FROM jadwal_pelajaran j WHERE j.guru_id = h.guru_id AND j.tahun_ajaran_id = h.tahun_ajaran_id) as mapel
+                FROM honor_guru h
+                JOIN users u ON h.guru_id = u.id
+                LEFT JOIN tahun_ajaran ta ON h.tahun_ajaran_id = ta.id
+                WHERE h.guru_id = ?
+            `;
+            let params = [guru_id];
+
+            if (tahun_ajaran_id) {
+                query += ` AND h.tahun_ajaran_id = ?`;
+                params.push(tahun_ajaran_id);
+            }
+
+            query += ` ORDER BY h.tahun DESC, h.bulan DESC`;
+
+            const [honors] = await db.query(query, params);
+            res.json(honors);
+        } catch (error) {
+            console.error('Error getMyHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
     }
 };
+
+module.exports = honorController;

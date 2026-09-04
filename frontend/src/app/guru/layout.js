@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Users, BookOpen, Shield, HeartPulse, 
     CircleDollarSign, MessageSquare, LogOut, Menu, X, UserCheck,
     Sun, Moon, Key, UserCog, Eye, EyeOff, Camera, Calendar, ChevronsLeft, ChevronsRight, FileText,
-    Printer, ClipboardList, ChevronDown, Bell, BellOff, Activity
+    Printer, ClipboardList, ChevronDown, Bell, BellOff, Activity, Wallet, ShieldAlert
 } from 'lucide-react';
 import { useWebPush } from '@/hooks/useWebPush';
 import { useSocket } from '@/context/SocketContext';
@@ -253,49 +253,78 @@ export default function GuruLayout({ children }) {
         );
     }
 
-    const navigation = [
-        { name: 'Dashboard', href: '/guru/dashboard', icon: LayoutDashboard },
-        { name: 'Jadwal Mengajar', href: '/guru/jadwal', icon: Calendar },
-        { 
-            name: 'Input Absensi', 
-            icon: BookOpen,
-            id: 'absensi',
-            ...(mapels.length > 1 ? {
-                children: mapels.map(m => ({ name: `Absensi ${getAbbreviatedMapel(m)}`, href: `/guru/akademik?mapel=${encodeURIComponent(m)}` }))
-            } : {
-                href: '/guru/akademik'
-            })
+    const navigationGroups = [
+        {
+            title: "Menu Utama",
+            items: [
+                { name: 'Dashboard', href: '/guru/dashboard', icon: LayoutDashboard },
+            ]
         },
-        { 
-            name: 'Input Nilai', 
-            icon: FileText,
-            id: 'nilai',
-            ...(mapels.length > 1 ? {
-                children: mapels.map(m => ({ name: `Input Nilai ${getAbbreviatedMapel(m)}`, href: `/guru/nilai?mapel=${encodeURIComponent(m)}` }))
-            } : {
-                href: '/guru/nilai'
-            })
+        {
+            title: "Akademik",
+            items: [
+                { name: 'Jadwal Mengajar', href: '/guru/jadwal', icon: Calendar },
+                { 
+                    name: 'Input Absensi', 
+                    icon: BookOpen,
+                    id: 'absensi',
+                    ...(mapels.length > 1 ? {
+                        children: mapels.map(m => ({ name: `Absensi ${getAbbreviatedMapel(m)}`, href: `/guru/akademik?mapel=${encodeURIComponent(m)}` }))
+                    } : {
+                        href: '/guru/akademik'
+                    })
+                },
+                { 
+                    name: 'Input Nilai', 
+                    icon: FileText,
+                    id: 'nilai',
+                    ...(mapels.length > 1 ? {
+                        children: mapels.map(m => ({ name: `Input Nilai ${getAbbreviatedMapel(m)}`, href: `/guru/nilai?mapel=${encodeURIComponent(m)}` }))
+                    } : {
+                        href: '/guru/nilai'
+                    })
+                },
+            ]
         },
-        ...(hasEkskul ? [
-            { name: 'Ekstrakurikuler', href: '/guru/ekskul', icon: Activity }
-        ] : []),
-        { 
-            name: 'Perekapan', 
-            icon: ClipboardList,
-            id: 'perekapan',
-            children: [
-                { name: 'Rekap Absensi Guru', href: '/guru/perekapan/absensi' },
-                { name: 'Rekap Nilai Guru', href: '/guru/perekapan/nilai-mapel' },
+        {
+            title: "Kesiswaan",
+            items: [
                 ...(user?.is_wali_kelas ? [
-                    { name: 'Rekap Absensi Wali Kelas', href: '/guru/perekapan/absensi-wali' },
-                    { name: 'Rekap Nilai Wali Kelas', href: '/guru/perekapan/nilai' }
+                    { 
+                        name: 'Pelanggaran Kelas', 
+                        icon: ShieldAlert,
+                        id: 'pelanggaran-kelas',
+                        href: '/guru/kedisiplinan/kelas'
+                    }
+                ] : []),
+                ...(hasEkskul ? [
+                    { name: 'Ekstrakurikuler', href: '/guru/ekskul', icon: Activity }
                 ] : []),
             ]
         },
-        ...(user?.is_wali_kelas ? [
-            { name: 'Cetak Raport', href: '/guru/cetak_raport', icon: Printer }
-        ] : []),
-    ];
+        {
+            title: "Laporan & Administrasi",
+            items: [
+                { 
+                    name: 'Perekapan', 
+                    icon: ClipboardList,
+                    id: 'perekapan',
+                    children: [
+                        { name: 'Rekap Absensi Guru', href: '/guru/perekapan/absensi' },
+                        { name: 'Rekap Nilai Guru', href: '/guru/perekapan/nilai-mapel' },
+                        ...(user?.is_wali_kelas ? [
+                            { name: 'Rekap Absensi Wali Kelas', href: '/guru/perekapan/absensi-wali' },
+                            { name: 'Rekap Nilai Wali Kelas', href: '/guru/perekapan/nilai' }
+                        ] : []),
+                    ]
+                },
+                ...(user?.is_wali_kelas ? [
+                    { name: 'Cetak Raport', href: '/guru/cetak_raport', icon: Printer }
+                ] : []),
+                { name: 'Gaji Saya', href: '/guru/honor', icon: Wallet },
+            ]
+        }
+    ].filter(group => group.items.length > 0);
 
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -367,107 +396,112 @@ export default function GuruLayout({ children }) {
                 </div>
 
                 {/* Nav Links */}
-                <nav className="flex-1 space-y-1 px-3 py-6 overflow-y-auto overscroll-none">
-                    {navigation.map((item) => {
-                        const Icon = item.icon;
-                        if (item.children) {
-                            let isParentActive = false;
-                            let isDropdownOpen = false;
-                            let setDropdownOpen = null;
+                <nav className="flex-1 px-3 py-6 overflow-y-auto overscroll-none">
+                    {navigationGroups.map((group, idx) => (
+                        <div key={idx} className={idx > 0 ? "mt-6 pt-4 border-t border-slate-200 dark:border-emerald-500/10 space-y-1" : "space-y-1"}>
+                            {!isCollapsed && <p className="px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">{group.title}</p>}
+                            {group.items.map((item) => {
+                                const Icon = item.icon;
+                                if (item.children) {
+                                    let isParentActive = false;
+                                    let isDropdownOpen = false;
+                                    let setDropdownOpen = null;
 
-                            if (item.id === 'perekapan') {
-                                isParentActive = pathname.startsWith('/guru/perekapan');
-                                isDropdownOpen = isPerekapanOpen;
-                                setDropdownOpen = setIsPerekapanOpen;
-                            } else if (item.id === 'absensi') {
-                                isParentActive = pathname.startsWith('/guru/akademik');
-                                isDropdownOpen = isAbsensiOpen;
-                                setDropdownOpen = setIsAbsensiOpen;
-                            } else if (item.id === 'nilai') {
-                                isParentActive = pathname.startsWith('/guru/nilai');
-                                isDropdownOpen = isNilaiOpen;
-                                setDropdownOpen = setIsNilaiOpen;
-                            }
+                                    if (item.id === 'perekapan') {
+                                        isParentActive = pathname.startsWith('/guru/perekapan');
+                                        isDropdownOpen = isPerekapanOpen;
+                                        setDropdownOpen = setIsPerekapanOpen;
+                                    } else if (item.id === 'absensi') {
+                                        isParentActive = pathname.startsWith('/guru/akademik');
+                                        isDropdownOpen = isAbsensiOpen;
+                                        setDropdownOpen = setIsAbsensiOpen;
+                                    } else if (item.id === 'nilai') {
+                                        isParentActive = pathname.startsWith('/guru/nilai');
+                                        isDropdownOpen = isNilaiOpen;
+                                        setDropdownOpen = setIsNilaiOpen;
+                                    }
 
-                            return (
-                                <div key={item.name} className="space-y-1">
-                                    <button
-                                        onClick={() => setDropdownOpen && setDropdownOpen(!isDropdownOpen)}
+                                    return (
+                                        <div key={item.name} className="space-y-1">
+                                            <button
+                                                onClick={() => setDropdownOpen && setDropdownOpen(!isDropdownOpen)}
+                                                title={isCollapsed ? item.name : ""}
+                                                className={`
+                                                    w-full flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer
+                                                    ${isParentActive 
+                                                        ? 'bg-emerald-600/10 dark:bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_4px_0_12px_rgba(16,185,129,0.05)]' 
+                                                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#061e16] hover:text-slate-900 dark:hover:text-slate-100 border-l-4 border-transparent'
+                                                    }
+                                                    ${isCollapsed ? 'md:justify-center md:px-0' : ''}
+                                                `}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Icon className={`h-5 w-5 shrink-0 ${isParentActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                                                    <span className={`${isCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>{item.name}</span>
+                                                </div>
+                                                {!isCollapsed && (
+                                                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                                )}
+                                            </button>
+                                            {isDropdownOpen && !isCollapsed && (
+                                                <div className="pl-6 space-y-1 animate-fade-in">
+                                                    {item.children.map((child) => {
+                                                        let isChildActive = false;
+                                                        if (item.id === 'absensi' || item.id === 'nilai') {
+                                                            // use reactive searchParams from Next.js hook
+                                                            const currentMapel = searchParams.get('mapel');
+                                                            const mapelFromHref = new URLSearchParams(child.href.split('?')[1] || '').get('mapel');
+                                                            isChildActive = (pathname === child.href.split('?')[0]) && (currentMapel === mapelFromHref);
+                                                        } else {
+                                                            isChildActive = pathname === child.href;
+                                                        }
+                                                        return (
+                                                            <Link
+                                                                key={child.name}
+                                                                href={child.href}
+                                                                onClick={handleMenuClick}
+                                                                className={`
+                                                                    flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-250
+                                                                    ${isChildActive 
+                                                                        ? 'text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5 dark:bg-emerald-500/10' 
+                                                                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#061e16] hover:text-slate-900 dark:hover:text-slate-100'
+                                                                    }
+                                                                `}
+                                                            >
+                                                                <span className={`h-1.5 w-1.5 rounded-full ${isChildActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                                                <span>{child.name}</span>
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
+
+                                const isActive = pathname === item.href;
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        onClick={handleMenuClick}
                                         title={isCollapsed ? item.name : ""}
                                         className={`
-                                            w-full flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer
-                                            ${isParentActive 
+                                            flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200
+                                            ${isActive 
                                                 ? 'bg-emerald-600/10 dark:bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_4px_0_12px_rgba(16,185,129,0.05)]' 
                                                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#061e16] hover:text-slate-900 dark:hover:text-slate-100 border-l-4 border-transparent'
                                             }
                                             ${isCollapsed ? 'md:justify-center md:px-0' : ''}
                                         `}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <Icon className={`h-5 w-5 shrink-0 ${isParentActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
-                                            <span className={`${isCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>{item.name}</span>
-                                        </div>
-                                        {!isCollapsed && (
-                                            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                                        )}
-                                    </button>
-                                    {isDropdownOpen && !isCollapsed && (
-                                        <div className="pl-6 space-y-1 animate-fade-in">
-                                            {item.children.map((child) => {
-                                                let isChildActive = false;
-                                                if (item.id === 'absensi' || item.id === 'nilai') {
-                                                    // use reactive searchParams from Next.js hook
-                                                    const currentMapel = searchParams.get('mapel');
-                                                    const mapelFromHref = new URLSearchParams(child.href.split('?')[1] || '').get('mapel');
-                                                    isChildActive = (pathname === child.href.split('?')[0]) && (currentMapel === mapelFromHref);
-                                                } else {
-                                                    isChildActive = pathname === child.href;
-                                                }
-                                                return (
-                                                    <Link
-                                                        key={child.name}
-                                                        href={child.href}
-                                                        onClick={handleMenuClick}
-                                                        className={`
-                                                            flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-250
-                                                            ${isChildActive 
-                                                                ? 'text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5 dark:bg-emerald-500/10' 
-                                                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#061e16] hover:text-slate-900 dark:hover:text-slate-100'
-                                                            }
-                                                        `}
-                                                    >
-                                                        <span className={`h-1.5 w-1.5 rounded-full ${isChildActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                                        <span>{child.name}</span>
-                                                    </Link>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        }
-
-                        const isActive = pathname === item.href;
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                onClick={handleMenuClick}
-                                title={isCollapsed ? item.name : ""}
-                                className={`
-                                    flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200
-                                    ${isActive 
-                                        ? 'bg-emerald-600/10 dark:bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_4px_0_12px_rgba(16,185,129,0.05)]' 
-                                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#061e16] hover:text-slate-900 dark:hover:text-slate-100 border-l-4 border-transparent'
-                                    }
-                                    ${isCollapsed ? 'md:justify-center md:px-0' : ''}
-                                `}
-                            >
-                                <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
-                                <span className={`${isCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>{item.name}</span>
-                            </Link>
-                        );
-                    })}
+                                        <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                                        <span className={`${isCollapsed ? 'md:hidden' : 'block'} whitespace-nowrap`}>{item.name}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ))}
                 </nav>
 
 

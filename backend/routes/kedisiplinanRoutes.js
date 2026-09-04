@@ -8,6 +8,9 @@ router.use(authMiddleware);
 // Get records (Admin or parent for their kids)
 router.get('/', kedisiplinanController.getRecords);
 
+// Get rekap SP (Admin or Guru BK)
+router.get('/rekap-sp', kedisiplinanController.getRekapSP);
+
 // Admin-only operations
 router.post('/', kedisiplinanController.createRecord);
 router.put('/:id', kedisiplinanController.updateRecord);
