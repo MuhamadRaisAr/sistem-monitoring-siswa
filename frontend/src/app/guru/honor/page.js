@@ -78,20 +78,20 @@ export default function GuruHonorPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300 border-collapse border border-slate-200 dark:border-slate-700">
                         <thead className="bg-slate-50 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-200 font-bold">
                             <tr>
-                                <th className="px-4 py-3 rounded-l-xl">Periode</th>
-                                <th className="px-4 py-3">Total Jam</th>
-                                <th className="px-4 py-3">Total Honor</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3 rounded-r-xl text-right">Aksi</th>
+                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Periode</th>
+                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Total Pertemuan</th>
+                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Total Honor</th>
+                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Status</th>
+                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="5" className="text-center py-8">Memuat data...</td></tr>
-                            ) : honors.filter(h => h.status_pembayaran === 'dibayar').length === 0 ? (
+                            ) : honors.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" className="text-center py-12">
                                         <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
@@ -101,16 +101,16 @@ export default function GuruHonorPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                honors.filter(h => h.status_pembayaran === 'dibayar').map((h) => (
-                                    <tr key={h.id} className="border-b border-slate-100 dark:border-emerald-500/5 hover:bg-slate-50 dark:hover:bg-[#061e16]/50 transition-colors">
-                                        <td className="px-4 py-4 font-bold text-slate-800 dark:text-slate-100">
+                                honors.map((h) => (
+                                    <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50 transition-colors">
+                                        <td className="px-4 py-4 font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
                                             {getBulanName(h.bulan)} {h.tahun}
                                         </td>
-                                        <td className="px-4 py-4">{h.total_jam_mengajar} Jam</td>
-                                        <td className="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400">
+                                        <td className="px-4 py-4 border border-slate-200 dark:border-slate-700">{h.total_jam_mengajar} Pertemuan</td>
+                                        <td className="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700">
                                             Rp {parseInt(h.total_honor).toLocaleString('id-ID')}
                                         </td>
-                                        <td className="px-4 py-4">
+                                        <td className="px-4 py-4 border border-slate-200 dark:border-slate-700">
                                             {h.status_pembayaran === 'dibayar' ? (
                                                 <div className="flex flex-col">
                                                     <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
@@ -126,7 +126,7 @@ export default function GuruHonorPage() {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 text-right">
+                                        <td className="px-4 py-4 text-right border border-slate-200 dark:border-slate-700">
                                             <button 
                                                 onClick={() => cetakSlipGaji(h)}
                                                 disabled={h.status_pembayaran !== 'dibayar'}

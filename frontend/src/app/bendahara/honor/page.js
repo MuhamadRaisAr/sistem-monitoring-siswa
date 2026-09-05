@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
-import { Wallet, Settings, Search, Edit2, CheckCircle2, AlertCircle, FileText, Download, CalendarClock, X } from 'lucide-react';
+import { Wallet, Settings, Search, Edit2, CheckCircle2, AlertCircle, FileText, Download, CalendarClock, X, Trash2 } from 'lucide-react';
 import CetakSlipGajiModal from '@/components/CetakSlipGajiModal';
 
 export default function HonorBendaharaPage() {
@@ -28,6 +28,9 @@ export default function HonorBendaharaPage() {
     // States for Cetak Modal
     const [showCetakModal, setShowCetakModal] = useState(false);
     const [selectedHonorPrint, setSelectedHonorPrint] = useState(null);
+
+    // State checkbox untuk bayar massal
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     // Toast State
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -58,7 +61,9 @@ export default function HonorBendaharaPage() {
         return tahun;
     };
 
-    const fetchHonorBulanan = useCallback(async () => {
+    const fetchHonorBulanan = useCallback(async (restoreScroll = false) => {
+        const scrollEl = restoreScroll ? document.getElementById('main-scroll-area') : null;
+        const scrollY = scrollEl ? scrollEl.scrollTop : 0;
         try {
             setLoadingBulanan(true);
             const res = await fetch(`/api/honor/pending`, {
@@ -70,15 +75,17 @@ export default function HonorBendaharaPage() {
             console.error(error);
         } finally {
             setLoadingBulanan(false);
+            if (scrollEl) requestAnimationFrame(() => { scrollEl.scrollTop = scrollY; });
         }
     }, [token]);
 
-    const fetchHonorRiwayat = useCallback(async () => {
+    const fetchHonorRiwayat = useCallback(async (restoreScroll = false) => {
         if (!selectedRiwayatTA) return;
+        const scrollEl = restoreScroll ? document.getElementById('main-scroll-area') : null;
+        const scrollY = scrollEl ? scrollEl.scrollTop : 0;
         try {
             setLoadingRiwayat(true);
-            const tahun = getCalculatedTahun(selectedRiwayatBulan, selectedRiwayatTA);
-            const res = await fetch(`/api/honor/bulanan?bulan=${selectedRiwayatBulan}&tahun=${tahun}&tahun_ajaran_id=${selectedRiwayatTA}`, {
+            const res = await fetch(`/api/honor/riwayat?tahun_ajaran_id=${selectedRiwayatTA}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = await res.json();
@@ -87,8 +94,9 @@ export default function HonorBendaharaPage() {
             console.error(error);
         } finally {
             setLoadingRiwayat(false);
+            if (scrollEl) requestAnimationFrame(() => { scrollEl.scrollTop = scrollY; });
         }
-    }, [selectedRiwayatBulan, selectedRiwayatTA, token, tahunAjaranList]);
+    }, [selectedRiwayatTA, token]);
 
     useEffect(() => {
         if (activeTab === 'bulanan') fetchHonorBulanan();
@@ -143,15 +151,18 @@ export default function HonorBendaharaPage() {
     };
 
     const handlePayHonor = async (id, isRiwayat = false) => {
+        if (!confirm('Yakin ingin membayar honor ini? Pastikan jumlah dan tarif sudah sesuai sebelum melanjutkan.')) return;
         try {
             const res = await fetch(`/api/honor/pay/${id}`, {
                 method: 'PUT',
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                showToast('Honor berhasil dibayar', 'success');
-                if (isRiwayat) fetchHonorRiwayat();
-                else fetchHonorBulanan();
+                showToast('Honor berhasil dibayar! ✓', 'success');
+                if (isRiwayat) fetchHonorRiwayat(true);
+                else fetchHonorBulanan(true);
+            } else {
+                showToast('Gagal membayar honor', 'error');
             }
         } catch (error) {
             console.error(error);
@@ -168,8 +179,8 @@ export default function HonorBendaharaPage() {
             const data = await res.json();
             if (res.ok) {
                 showToast('Pembayaran berhasil dibatalkan', 'success');
-                fetchHonorRiwayat();
-                fetchHonorBulanan();
+                fetchHonorRiwayat(true);
+                fetchHonorBulanan(true);
             } else {
                 showToast(data.message || 'Gagal membatalkan', 'error');
             }
@@ -177,6 +188,50 @@ export default function HonorBendaharaPage() {
             console.error(error);
         }
     };
+
+    const handleDeleteHonor = async (id) => {
+        if (!confirm('Yakin ingin menghapus riwayat honor ini? Data yang dihapus tidak bisa dikembalikan.')) return;
+        try {
+            const res = await fetch(`/api/honor/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('Riwayat honor berhasil dihapus', 'success');
+                fetchHonorRiwayat(true);
+                fetchHonorBulanan(true);
+            } else {
+                showToast(data.message || 'Gagal menghapus riwayat', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleBulkPay = async () => {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`Yakin ingin membayar ${selectedIds.size} honor sekaligus? Pastikan semua tarif sudah sesuai.`)) return;
+        try {
+            const res = await fetch('/api/honor/pay-bulk', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ ids: Array.from(selectedIds) })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message || 'Honor berhasil dibayar sekaligus! ✓', 'success');
+                setSelectedIds(new Set());
+                fetchHonorBulanan(true);
+            } else {
+                showToast(data.message || 'Gagal membayar', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
 
     const handleUpdateTarifInline = async (honor, newTarifFormatted) => {
         if (honor.status_pembayaran === 'dibayar') return;
@@ -229,12 +284,79 @@ export default function HonorBendaharaPage() {
         return bulanArr[bln - 1];
     };
 
-    const renderTable = (data, isLoading, isRiwayat = false) => (
+    const renderTable = (data, isLoading, isRiwayat = false, selIds = selectedIds, setSelIds = setSelectedIds, onBulkPay = handleBulkPay) => {
+        // Baris yang bisa dicentang: punya id, belum dibayar, pertemuan > 0
+        const payableRows = data.filter(h =>
+            h.id && h.status_pembayaran === 'belum_dibayar' &&
+            (h.id ? h.total_jam_mengajar : (h.computed_pertemuan || 0)) > 0
+        );
+        const allChecked = payableRows.length > 0 && payableRows.every(h => selIds.has(h.id));
+        const someChecked = payableRows.some(h => selIds.has(h.id));
+
+        const toggleAll = () => {
+            if (allChecked) {
+                setSelIds(prev => {
+                    const next = new Set(prev);
+                    payableRows.forEach(h => next.delete(h.id));
+                    return next;
+                });
+            } else {
+                setSelIds(prev => {
+                    const next = new Set(prev);
+                    payableRows.forEach(h => next.add(h.id));
+                    return next;
+                });
+            }
+        };
+
+        const toggleOne = (id) => {
+            setSelIds(prev => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id); else next.add(id);
+                return next;
+            });
+        };
+
+        return (
         <div className="overflow-x-auto">
+            {/* Tombol Bayar Terpilih */}
+            {!isRiwayat && selIds.size > 0 && (
+                <div className="mb-3 flex items-center gap-3">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">{selIds.size} guru dipilih</span>
+                    <button
+                        onClick={onBulkPay}
+                        className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow"
+                    >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Bayar Terpilih ({selIds.size})
+                    </button>
+                    <button
+                        onClick={() => setSelIds(new Set())}
+                        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                        Batal Pilih
+                    </button>
+                </div>
+            )}
             <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300 border-collapse border border-slate-200 dark:border-slate-700">
                 <thead className="bg-slate-50 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-200 font-bold">
                     <tr>
+                        {!isRiwayat && (
+                            <th className="px-3 py-3 border border-slate-200 dark:border-slate-700 w-10 text-center">
+                                <input
+                                    type="checkbox"
+                                    checked={allChecked}
+                                    ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
+                                    onChange={toggleAll}
+                                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                                    title="Pilih semua"
+                                />
+                            </th>
+                        )}
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Nama Guru</th>
+                        {isRiwayat && (
+                            <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Periode Honor</th>
+                        )}
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Jml Pertemuan</th>
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Tarif/Pertemuan</th>
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Total Honor</th>
@@ -244,13 +366,34 @@ export default function HonorBendaharaPage() {
                 </thead>
                 <tbody>
                     {isLoading ? (
-                        <tr><td colSpan="6" className="text-center py-8">Memuat data...</td></tr>
+                        <tr><td colSpan={isRiwayat ? 7 : 7} className="text-center py-8">Memuat data...</td></tr>
                     ) : data.length === 0 ? (
-                        <tr><td colSpan="6" className="text-center py-8">Belum ada data guru.</td></tr>
+                        <tr><td colSpan={isRiwayat ? 7 : 7} className="text-center py-8">Belum ada data riwayat honor.</td></tr>
                     ) : (
                         data.map((h) => (
                             <tr key={h.guru_id} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50">
+                                {!isRiwayat && (() => {
+                                    const pertemuan = h.id ? h.total_jam_mengajar : (h.computed_pertemuan || 0);
+                                    const isPayable = h.id && h.status_pembayaran === 'belum_dibayar' && pertemuan > 0;
+                                    return (
+                                        <td className="px-3 py-3 border border-slate-200 dark:border-slate-700 text-center">
+                                            {isPayable ? (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selIds.has(h.id)}
+                                                    onChange={() => toggleOne(h.id)}
+                                                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                                                />
+                                            ) : <span className="text-slate-200 dark:text-slate-700">—</span>}
+                                        </td>
+                                    );
+                                })()}
                                 <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">{h.nama_lengkap}</td>
+                                {isRiwayat && (
+                                    <td className="px-4 py-3 border border-slate-200 dark:border-slate-700">
+                                        <span className="font-semibold text-emerald-700 dark:text-emerald-500">{getBulanName(h.bulan)} {h.tahun}</span>
+                                    </td>
+                                )}
                                 <td className="px-4 py-3 border border-slate-200 dark:border-slate-700">
                                     {h.id ? (
                                         <span>{h.total_jam_mengajar}x Pertemuan</span>
@@ -320,12 +463,21 @@ export default function HonorBendaharaPage() {
                                         return (
                                             <div className="flex items-center justify-end gap-2">
                                                 {!isRiwayat && h.status_pembayaran === 'belum_dibayar' && (
-                                                    <button 
-                                                        onClick={() => handlePayHonor(h.id, isRiwayat)}
-                                                        className="text-xs bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg font-semibold"
-                                                    >
-                                                        Bayar
-                                                    </button>
+                                                    <div className="flex gap-2 justify-end">
+                                                        <button 
+                                                            onClick={() => handlePayHonor(h.id, isRiwayat)}
+                                                            className="text-xs bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg font-semibold"
+                                                        >
+                                                            Bayar
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteHonor(h.id)}
+                                                            className="p-1.5 rounded-lg bg-red-50 hover:bg-red-500 text-red-600 hover:text-white dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white transition-colors border border-red-200 dark:border-red-800"
+                                                            title="Hapus data honor"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
                                                 )}
                                                 {h.status_pembayaran === 'dibayar' && (
                                                     <button 
@@ -355,7 +507,8 @@ export default function HonorBendaharaPage() {
                 </tbody>
             </table>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="space-y-6">
@@ -436,18 +589,6 @@ export default function HonorBendaharaPage() {
                                         <option key={ta.id} value={ta.id}>
                                             {ta.nama_tahun} - {ta.semester}
                                         </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">Bulan</label>
-                                <select 
-                                    value={selectedRiwayatBulan} 
-                                    onChange={(e) => setSelectedRiwayatBulan(Number(e.target.value))}
-                                    className="rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-[#061e16] py-2 px-3 text-sm focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
-                                >
-                                    {[...Array(12)].map((_, i) => (
-                                        <option key={i+1} value={i+1}>{getBulanName(i+1)}</option>
                                     ))}
                                 </select>
                             </div>

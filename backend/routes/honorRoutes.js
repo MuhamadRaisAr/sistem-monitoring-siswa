@@ -28,8 +28,11 @@ router.get('/guru-list', authMiddleware, isAdminOrBendahara, honorController.get
 // Mengupdate tarif per jam seorang guru
 router.put('/guru-tarif/:id', authMiddleware, isAdminOrBendahara, honorController.updateTarif);
 
-// Mendapatkan data honor berdasarkan bulan & tahun (Untuk Tab Riwayat)
+// Mendapatkan data honor berdasarkan bulan & tahun (Untuk tab Gaji Bulanan jika diperlukan nantinya)
 router.get('/bulanan', authMiddleware, isAdminOrBendahara, honorController.getHonorByBulan);
+
+// Mendapatkan data riwayat honor per semester (Untuk Tab Riwayat Honor)
+router.get('/riwayat', authMiddleware, isAdminOrBendahara, honorController.getHonorRiwayatBySemester);
 
 // Mendapatkan akumulasi honor yang belum dibayar (Untuk Tab Gaji Bulanan)
 router.get('/pending', authMiddleware, isAdminOrBendahara, honorController.getPendingHonor);
@@ -43,8 +46,14 @@ router.put('/manual/:id', authMiddleware, isAdminOrBendahara, honorController.up
 // Bayar Honor
 router.put('/pay/:id', authMiddleware, isAdminOrBendahara, honorController.payHonor);
 
+// Bayar Bulk Honor (sekaligus)
+router.put('/pay-bulk', authMiddleware, isAdminOrBendahara, honorController.payBulkHonor);
+
 // Batalkan Pembayaran Honor
 router.put('/cancel/:id', authMiddleware, isAdminOrBendahara, honorController.cancelHonor);
+
+// Hapus Riwayat Honor
+router.delete('/:id', authMiddleware, isAdminOrBendahara, honorController.deleteHonor);
 
 
 // === Routes untuk Guru ===

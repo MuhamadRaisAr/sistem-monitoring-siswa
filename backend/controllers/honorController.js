@@ -87,7 +87,7 @@ const honorController = {
                           AND YEAR(k.tanggal) = ?
                     ) as computed_pertemuan
                 FROM users u
-                LEFT JOIN honor_guru h ON u.id = h.guru_id AND h.bulan = ? AND h.tahun = ? ${tahun_ajaran_id ? 'AND h.tahun_ajaran_id = ?' : ''}
+                JOIN honor_guru h ON u.id = h.guru_id AND h.bulan = ? AND h.tahun = ? ${tahun_ajaran_id ? 'AND h.tahun_ajaran_id = ?' : ''} AND h.status_pembayaran = 'dibayar'
                 WHERE u.role = 'guru'
                 ORDER BY u.nama_lengkap ASC
             `;
@@ -98,6 +98,33 @@ const honorController = {
             res.json(honors);
         } catch (error) {
             console.error('Error getHonorByBulan:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
+    // 3b. Mendapatkan data riwayat honor per semester
+    getHonorRiwayatBySemester: async (req, res) => {
+        const { tahun_ajaran_id } = req.query;
+        try {
+            let query = `
+                SELECT 
+                    u.id as guru_id, 
+                    u.nama_lengkap, 
+                    u.username,
+                    u.tarif_per_jam as default_tarif,
+                    h.id, h.bulan, h.tahun, h.total_jam_mengajar, h.tarif_per_jam, h.total_honor, h.status_pembayaran, h.tanggal_bayar, h.tahun_ajaran_id
+                FROM users u
+                JOIN honor_guru h ON u.id = h.guru_id AND h.status_pembayaran = 'dibayar' ${tahun_ajaran_id ? 'AND h.tahun_ajaran_id = ?' : ''}
+                WHERE u.role = 'guru'
+                ORDER BY h.tanggal_bayar DESC, u.nama_lengkap ASC
+            `;
+            let params = [];
+            if (tahun_ajaran_id) params.push(tahun_ajaran_id);
+
+            const [honors] = await db.query(query, params);
+            res.json(honors);
+        } catch (error) {
+            console.error('Error getHonorRiwayatBySemester:', error);
             res.status(500).json({ message: 'Terjadi kesalahan server' });
         }
     },
@@ -233,6 +260,44 @@ const honorController = {
         }
     },
 
+    // 6a. Bayar Bulk Honor (sekaligus)
+    payBulkHonor: async (req, res) => {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'Tidak ada data yang dipilih' });
+        }
+        try {
+            await db.query('START TRANSACTION');
+
+            for (const id of ids) {
+                const [[honor]] = await db.query(`SELECT guru_id FROM honor_guru WHERE id = ? AND status_pembayaran = 'belum_dibayar'`, [id]);
+                if (!honor) continue;
+
+                await db.query(
+                    `UPDATE honor_guru SET status_pembayaran = 'dibayar', tanggal_bayar = CURDATE() WHERE id = ?`,
+                    [id]
+                );
+
+                if (honor.guru_id) {
+                    await db.query(`
+                        UPDATE kehadiran_siswa k
+                        JOIN siswa s ON k.siswa_id = s.id
+                        JOIN jadwal_pelajaran j ON k.jenis_kegiatan = j.mata_pelajaran AND (s.kelas = j.kelas OR s.kelas LIKE CONCAT(j.kelas, ' %'))
+                        SET k.is_paid = 1
+                        WHERE j.guru_id = ? AND k.is_paid = 0
+                    `, [honor.guru_id]);
+                }
+            }
+
+            await db.query('COMMIT');
+            res.json({ message: `${ids.length} honor berhasil dibayar sekaligus` });
+        } catch (error) {
+            await db.query('ROLLBACK');
+            console.error('Error payBulkHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
     // 6b. Batalkan Pembayaran Honor
     cancelHonor: async (req, res) => {
         const { id } = req.params;
@@ -276,6 +341,25 @@ const honorController = {
         } catch (error) {
             await db.query('ROLLBACK');
             console.error('Error cancelHonor:', error);
+            res.status(500).json({ message: 'Terjadi kesalahan server' });
+        }
+    },
+
+    // 6c. Hapus Riwayat Honor
+    deleteHonor: async (req, res) => {
+        const { id } = req.params;
+        try {
+            const [[honor]] = await db.query(`SELECT * FROM honor_guru WHERE id = ?`, [id]);
+            if (!honor) return res.status(404).json({ message: 'Data honor tidak ditemukan' });
+
+            if (honor.status_pembayaran === 'dibayar') {
+                return res.status(400).json({ message: 'Honor yang sudah dibayar tidak dapat dihapus, batalkan pembayaran terlebih dahulu' });
+            }
+
+            await db.query(`DELETE FROM honor_guru WHERE id = ?`, [id]);
+            res.json({ message: 'Riwayat honor berhasil dihapus' });
+        } catch (error) {
+            console.error('Error deleteHonor:', error);
             res.status(500).json({ message: 'Terjadi kesalahan server' });
         }
     },

@@ -289,7 +289,7 @@ export default function BendaharaLayout({ children }) {
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden">
+            <div id="main-scroll-area" className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden">
                 {/* Header Navbar */}
                 <header className={`flex items-center justify-between px-6 border-b border-slate-200 dark:border-emerald-500/10 bg-white/80 dark:bg-[#020c08]/50 backdrop-blur-md sticky top-0 z-30 transition-all duration-300 ${pathname.endsWith('/dashboard') ? 'h-24 py-2' : 'h-20'}`}>
                     <div className="flex items-center gap-3 flex-1 min-w-0 md:flex-none">
