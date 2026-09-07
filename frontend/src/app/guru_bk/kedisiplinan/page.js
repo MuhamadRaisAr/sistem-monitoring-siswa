@@ -48,6 +48,7 @@ export default function CatatPelanggaranPage() {
     const [editNamaKegiatan, setEditNamaKegiatan] = useState('');
     const [editTanggalKejadian, setEditTanggalKejadian] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchRecords = async () => {
         if (!selectedTahunAjaranId) return;
@@ -58,6 +59,7 @@ export default function CatatPelanggaranPage() {
             });
             const data = await res.json();
             setRecords(data);
+            setSelectedIds([]); // reset selection on data change
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -96,6 +98,34 @@ export default function CatatPelanggaranPage() {
                 setTimeout(() => setGlobalSuccess(''), 3000);
             }
         } catch (err) { console.error(err); }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+        if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} catatan yang dipilih?`)) return;
+        
+        try {
+            const res = await fetch(`${API_URL}/kedisiplinan/bulk-delete`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+            
+            if (res.ok) {
+                fetchRecords();
+                setGlobalSuccess(`${selectedIds.length} catatan berhasil dihapus!`);
+                setTimeout(() => setGlobalSuccess(''), 3000);
+            } else {
+                const errData = await res.json();
+                alert(errData.message || 'Gagal menghapus catatan secara massal');
+            }
+        } catch (err) { 
+            console.error(err);
+            alert('Terjadi kesalahan saat menghapus catatan');
+        }
     };
 
     const handleAddSubmit = async (e) => {
@@ -208,6 +238,21 @@ export default function CatatPelanggaranPage() {
         return isToday && matchesSearch;
     });
 
+    // Handle selection
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(displayedRecords.map(r => r.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelect = (id) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
     return (
         <div className="space-y-8 relative">
             {/* Global Toast Alerts */}
@@ -293,6 +338,21 @@ export default function CatatPelanggaranPage() {
 
             {/* -- Flat Table ----------------------------------- */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+                {selectedIds.length > 0 && isCurrentYearActive && (
+                    <div className="bg-emerald-50 border-b border-emerald-100 p-3 sm:p-4 flex items-center justify-between animate-fade-in">
+                        <span className="text-sm font-bold text-emerald-800">
+                            {selectedIds.length} catatan dipilih
+                        </span>
+                        <button 
+                            onClick={handleBulkDelete}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors shadow-sm shadow-red-500/20"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Hapus Terpilih
+                        </button>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="flex h-52 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
@@ -307,20 +367,36 @@ export default function CatatPelanggaranPage() {
                         <table className="w-full table-fixed text-left text-xs border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                                    <th className="py-3 px-3 w-10 text-center border border-slate-200 rounded-tl-lg">
+                                        <input 
+                                            type="checkbox"
+                                            checked={displayedRecords.length > 0 && selectedIds.length === displayedRecords.length}
+                                            onChange={handleSelectAll}
+                                            className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                        />
+                                    </th>
                                     <th className="py-3 px-3 w-10 text-center border border-slate-200">No</th>
-                                    <th className="py-3 px-3 w-36 border border-slate-200">Tanggal</th>
-                                    <th className="py-3 px-3 w-44 border border-slate-200">Siswa</th>
-                                    <th className="py-3 px-3 w-32 border border-slate-200">Kelas</th>
-                                    <th className="py-3 px-3 border border-slate-200">Pelanggaran / Tindakan</th>
-                                    <th className="py-3 px-3 w-20 text-center border border-slate-200">Aksi</th>
+                                    <th className="py-3 px-3 w-36 text-center border border-slate-200">Tanggal</th>
+                                    <th className="py-3 px-3 w-44 text-center border border-slate-200">Siswa</th>
+                                    <th className="py-3 px-3 w-32 text-center border border-slate-200">Kelas</th>
+                                    <th className="py-3 px-3 text-center border border-slate-200">Pelanggaran / Tindakan</th>
+                                    <th className="py-3 px-3 w-20 text-center border border-slate-200 rounded-tr-lg">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm">
                                 {displayedRecords.map((r, idx) => (
                                     <tr 
                                         key={r.id}
-                                        className="hover:bg-slate-50 transition-colors group"
+                                        className={`hover:bg-slate-50 transition-colors group ${selectedIds.includes(r.id) ? 'bg-emerald-50/50' : ''}`}
                                     >
+                                        <td className="py-3 px-3 text-center align-middle border border-slate-200">
+                                            <input 
+                                                type="checkbox"
+                                                checked={selectedIds.includes(r.id)}
+                                                onChange={() => handleSelect(r.id)}
+                                                className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                            />
+                                        </td>
                                         <td className="py-3 px-3 text-center align-middle text-slate-500 font-black text-xs border border-slate-200">
                                             {idx + 1}
                                         </td>
@@ -332,7 +408,7 @@ export default function CatatPelanggaranPage() {
                                             </p>
                                         </td>
                                         <td className="py-3 px-3 align-middle border border-slate-200">
-                                            <p className="font-bold text-slate-800 text-xs">{r.nama_siswa}</p>
+                                            <p className="font-bold text-slate-800 text-[11px] leading-snug line-clamp-2">{r.nama_siswa}</p>
                                         </td>
                                         <td className="py-3 px-3 align-middle border border-slate-200">
                                             <span className="inline-flex rounded-lg bg-slate-100 text-slate-600 font-semibold px-2 py-1 text-xs">

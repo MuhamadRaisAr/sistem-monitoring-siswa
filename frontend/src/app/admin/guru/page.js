@@ -340,7 +340,7 @@ export default function AdminGuruPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto bg-white dark:bg-[#020c08]/50 rounded-2xl border border-slate-200 dark:border-emerald-500/10 shadow-sm">
-                        <table className="w-full text-left text-xs sm:text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
+                        <table className="w-full text-left text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     {selectedIds.length > 0 && (
@@ -377,7 +377,7 @@ export default function AdminGuruPage() {
                                             className={`transition-colors group cursor-pointer select-none ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-[#082a1f]'}`}
                                         >
                                             {selectedIds.length > 0 && (
-                                                <td className={`py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center static md:sticky md:left-0 md:z-20 ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-[#06241a]' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`} onClick={(e) => e.stopPropagation()}>
+                                                <td className={`py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center static md:sticky md:left-0 md:z-20 ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-[#06241a]' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`} onClick={(e) => e.stopPropagation()}>
                                                     <input 
                                                         type="checkbox" 
                                                         className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
@@ -386,19 +386,19 @@ export default function AdminGuruPage() {
                                                     />
                                                 </td>
                                             )}
-                                            <td className={`py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 font-semibold text-slate-500 text-center static md:sticky ${selectedIds.length > 0 ? 'md:left-8' : 'md:left-0'} md:z-20 ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-[#06241a]' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>{idx + 1}</td>
-                                            <td className={`py-1.5 px-3 border-b border-r border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white text-left static md:sticky ${selectedIds.length > 0 ? 'md:left-16' : 'md:left-8'} md:z-20 drop-shadow-md ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-[#06241a]' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'} max-w-[200px] truncate`} title={u.nama_lengkap}>{u.nama_lengkap}</td>
-                                            <td className={`py-1.5 px-3 border-b border-r-[3px] border-slate-300 dark:border-emerald-500/10 font-medium text-slate-600 dark:text-slate-300 text-center ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>{u.nip || '-'}</td>
-                                            <td className={`py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center font-medium text-slate-600 dark:text-slate-300 ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>
+                                            <td className={`py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 font-semibold text-slate-500 text-center static md:sticky ${selectedIds.length > 0 ? 'md:left-8' : 'md:left-0'} md:z-20 ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-[#06241a]' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>{idx + 1}</td>
+                                            <td className={`py-2.5 px-3 border-b border-r border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white text-left static md:sticky ${selectedIds.length > 0 ? 'md:left-16' : 'md:left-8'} md:z-20 drop-shadow-md ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-[#06241a]' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'} max-w-[200px] truncate`} title={u.nama_lengkap}>{u.nama_lengkap}</td>
+                                            <td className={`py-2.5 px-3 border-b border-r-[3px] border-slate-300 dark:border-emerald-500/10 font-medium text-slate-600 dark:text-slate-300 text-center ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>{u.nip || '-'}</td>
+                                            <td className={`py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center font-medium text-slate-600 dark:text-slate-300 ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>
                                                 {u.jenis_kelamin === 'L' ? 'Laki-laki' : u.jenis_kelamin === 'P' ? 'Perempuan' : '-'}
                                             </td>
-                                            <td className={`py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>{u.no_hp || '-'}</td>
-                                            <td className={`py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>
+                                            <td className={`py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>{u.no_hp || '-'}</td>
+                                            <td className={`py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>
                                                 <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider font-extrabold rounded-lg border ${u.status_aktif === 'aktif' ? 'bg-emerald-100 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-red-100 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'}`}>
                                                     {u.status_aktif === 'aktif' ? 'Aktif' : 'Non-aktif'}
                                                 </span>
                                             </td>
-                                            <td className={`py-1.5 px-2 border-b border-slate-300 dark:border-emerald-500/10 text-center ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>
+                                            <td className={`py-2.5 px-2 border-b border-slate-300 dark:border-emerald-500/10 text-center ${selectedIds.includes(u.id) ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]'}`}>
                                                 <div className="flex justify-center gap-2">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); openEditModal(u); }}

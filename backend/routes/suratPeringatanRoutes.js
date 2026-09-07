@@ -16,6 +16,7 @@ router.use(isAdminOrGuruBK);
 
 router.get('/', spController.getAllSP);
 router.post('/', spController.createSP);
+router.post('/bulk-delete', spController.deleteBulkSP);
 router.put('/:id', spController.updateSP);
 router.delete('/:id', spController.deleteSP);
 

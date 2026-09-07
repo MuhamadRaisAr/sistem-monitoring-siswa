@@ -8,16 +8,14 @@ import { id as localeId } from 'date-fns/locale';
 
 export default function SuratPeringatanPage() {
     const { token } = useAuth();
-    const [activeTab, setActiveTab] = useState('kandidat'); // 'kandidat' or 'daftar_sp'
-    
     const [searchTerm, setSearchTerm] = useState('');
     const [spList, setSpList] = useState([]);
-    const [rekapData, setRekapData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionMessage, setActionMessage] = useState('');
     const [tahunAjaranList, setTahunAjaranList] = useState([]);
     const [selectedTahunAjaranId, setSelectedTahunAjaranId] = useState('');
     const [isCurrentYearActive, setIsCurrentYearActive] = useState(true);
+    const [selectedIds, setSelectedIds] = useState([]);
 
     // Modal states
     const [isCetakModalOpen, setIsCetakModalOpen] = useState(false);
@@ -30,6 +28,7 @@ export default function SuratPeringatanPage() {
     const [formData, setFormData] = useState({
         jenis_sp: 'SP 1',
         tanggal_sp: format(new Date(), 'yyyy-MM-dd'),
+        tanggal_undangan: '',
         keterangan: ''
     });
 
@@ -58,7 +57,7 @@ export default function SuratPeringatanPage() {
         if (selectedTahunAjaranId) {
             fetchData();
         }
-    }, [selectedTahunAjaranId, activeTab]);
+    }, [selectedTahunAjaranId]);
 
     const fetchTahunAjaran = async () => {
         try {
@@ -87,19 +86,13 @@ export default function SuratPeringatanPage() {
             const selectedTA = tahunAjaranList.find(ta => ta.id === parseInt(selectedTahunAjaranId));
             setIsCurrentYearActive(selectedTA ? selectedTA.is_active === 1 : false);
 
-            if (activeTab === 'daftar_sp') {
-                const res = await fetch(`${API_URL}/sp?tahun_ajaran_id=${selectedTahunAjaranId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                setSpList(Array.isArray(data) ? data : []);
-            } else {
-                const res = await fetch(`${API_URL}/kedisiplinan/rekap-sp?tahun_ajaran_id=${selectedTahunAjaranId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                setRekapData(Array.isArray(data) ? data : []);
-            }
+            const res = await fetch(`${API_URL}/sp?tahun_ajaran_id=${selectedTahunAjaranId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setSpList(Array.isArray(data) ? data : []);
+            
+            setSelectedIds([]); // Clear selection when data is refreshed
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -114,6 +107,7 @@ export default function SuratPeringatanPage() {
             setFormData({
                 jenis_sp: spToEdit.jenis_sp,
                 tanggal_sp: spToEdit.tanggal_sp.split('T')[0],
+                tanggal_undangan: spToEdit.tanggal_undangan ? spToEdit.tanggal_undangan.split('T')[0] : '',
                 keterangan: spToEdit.keterangan || ''
             });
         } else {
@@ -122,6 +116,7 @@ export default function SuratPeringatanPage() {
             setFormData({
                 jenis_sp: 'SP 1',
                 tanggal_sp: format(new Date(), 'yyyy-MM-dd'),
+                tanggal_undangan: '',
                 keterangan: ''
             });
         }
@@ -175,6 +170,33 @@ export default function SuratPeringatanPage() {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+        if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} Surat Peringatan yang dipilih?`)) return;
+        
+        try {
+            const res = await fetch(`${API_URL}/sp/bulk-delete`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+            
+            if (res.ok) {
+                fetchData();
+                showActionMessage(`${selectedIds.length} Surat Peringatan berhasil dihapus!`);
+            } else {
+                const errData = await res.json();
+                alert(errData.message || 'Gagal menghapus secara massal');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Terjadi kesalahan saat menghapus data secara massal');
+        }
+    };
+
     const showActionMessage = (msg) => {
         setActionMessage(msg);
         setTimeout(() => setActionMessage(''), 3000);
@@ -198,13 +220,34 @@ export default function SuratPeringatanPage() {
         sp.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sp.nis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sp.kelas?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => {
+        const nisA = a.nis || '';
+        const nisB = b.nis || '';
+        if (nisA < nisB) return -1;
+        if (nisA > nisB) return 1;
+        
+        const jenisA = a.jenis_sp || '';
+        const jenisB = b.jenis_sp || '';
+        if (jenisA < jenisB) return -1;
+        if (jenisA > jenisB) return 1;
+        
+        return 0;
+    });
 
-    const filteredKandidat = rekapData.filter(student =>
-        student.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.nis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.kelas?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Handle selection
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(filteredDaftarSP.map(sp => sp.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelect = (id) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
 
     return (
         <div className="space-y-6">
@@ -269,22 +312,6 @@ export default function SuratPeringatanPage() {
                 </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-2 border-b border-slate-200 dark:border-emerald-500/10">
-                <button
-                    onClick={() => setActiveTab('kandidat')}
-                    className={`pb-3 px-4 font-bold text-sm border-b-2 transition-colors ${activeTab === 'kandidat' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
-                >
-                    Kandidat SP (Riwayat Pelanggaran)
-                </button>
-                <button
-                    onClick={() => setActiveTab('daftar_sp')}
-                    className={`pb-3 px-4 font-bold text-sm border-b-2 transition-colors ${activeTab === 'daftar_sp' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
-                >
-                    Daftar SP Dikeluarkan
-                </button>
-            </div>
-
             {!isCurrentYearActive && (
                 <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 p-4 rounded-xl flex items-center justify-center gap-2 font-medium text-sm">
                     Mode Arsip (Read-Only). Anda melihat data tahun ajaran lalu.
@@ -292,37 +319,70 @@ export default function SuratPeringatanPage() {
             )}
 
             <div className="bg-white dark:bg-[#041610] rounded-2xl shadow-sm border border-slate-200 dark:border-emerald-500/10 overflow-hidden">
+                {selectedIds.length > 0 && isCurrentYearActive && (
+                    <div className="bg-emerald-50 border-b border-emerald-100 p-3 sm:p-4 flex items-center justify-between animate-fade-in">
+                        <span className="text-sm font-bold text-emerald-800">
+                            {selectedIds.length} catatan dipilih
+                        </span>
+                        <button 
+                            onClick={handleBulkDelete}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors shadow-sm shadow-red-500/20"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Hapus Terpilih
+                        </button>
+                    </div>
+                )}
                 <div className="overflow-x-auto">
-                    {activeTab === 'daftar_sp' ? (
-                        <table className="w-full text-left text-sm whitespace-nowrap">
+                        <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                             <thead className="bg-slate-50 dark:bg-[#061e16] text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th className="px-4 py-3 font-semibold">Tgl SP</th>
-                                    <th className="px-4 py-3 font-semibold">NIS</th>
-                                    <th className="px-4 py-3 font-semibold">Nama Siswa</th>
-                                    <th className="px-4 py-3 font-semibold">Kelas</th>
-                                    <th className="px-4 py-3 font-semibold">Jenis SP</th>
-                                    <th className="px-4 py-3 font-semibold text-center">Aksi</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center w-12 border border-slate-200">
+                                        <input 
+                                            type="checkbox"
+                                            checked={filteredDaftarSP.length > 0 && selectedIds.length === filteredDaftarSP.length}
+                                            onChange={handleSelectAll}
+                                            className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                        />
+                                    </th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200">Tgl SP</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200">Nama Siswa</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200 w-32">NIS</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200">Kelas</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200">Keterangan / Alasan</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200">Jenis SP</th>
+                                    <th className="px-3 py-2.5 font-semibold text-center border border-slate-200">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-emerald-500/10 text-slate-700 dark:text-slate-300">
+                            <tbody className="text-slate-700 dark:text-slate-300">
                                 {loading ? (
-                                    <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-500">Memuat data...</td></tr>
+                                    <tr><td colSpan="7" className="px-4 py-8 text-center text-slate-500">Memuat data...</td></tr>
                                 ) : filteredDaftarSP.length === 0 ? (
-                                    <tr><td colSpan="6" className="px-4 py-8 text-center text-slate-500">Belum ada SP yang diterbitkan.</td></tr>
+                                    <tr><td colSpan="7" className="px-4 py-8 text-center text-slate-500">Belum ada SP yang diterbitkan.</td></tr>
                                 ) : (
                                     filteredDaftarSP.map((sp) => (
-                                        <tr key={sp.id} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50 transition-colors">
-                                            <td className="px-4 py-3">{format(new Date(sp.tanggal_sp), 'dd MMM yyyy', { locale: localeId })}</td>
-                                            <td className="px-4 py-3 font-mono">{sp.nis}</td>
-                                            <td className="px-4 py-3 font-medium">{sp.nama_lengkap}</td>
-                                            <td className="px-4 py-3">{sp.kelas}</td>
-                                            <td className="px-4 py-3">
+                                        <tr key={sp.id} className={`hover:bg-slate-50 dark:hover:bg-[#061e16]/50 transition-colors ${selectedIds.includes(sp.id) ? 'bg-emerald-50/50' : ''}`}>
+                                            <td className="px-3 py-2.5 text-center align-middle border border-slate-200">
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(sp.id)}
+                                                    onChange={() => handleSelect(sp.id)}
+                                                    className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                                />
+                                            </td>
+                                            <td className="px-3 py-2.5 border border-slate-200">{format(new Date(sp.tanggal_sp), 'dd MMM yyyy', { locale: localeId })}</td>
+                                            <td className="px-3 py-2.5 font-medium border border-slate-200">{sp.nama_lengkap}</td>
+                                            <td className="px-3 py-2.5 font-mono border border-slate-200">{sp.nis}</td>
+                                            <td className="px-3 py-2.5 border border-slate-200">{sp.kelas}</td>
+                                            <td className="px-3 py-2.5 border border-slate-200">
+                                                <p className="text-xs text-slate-600 whitespace-normal min-w-[200px] max-w-xs">{sp.keterangan || '-'}</p>
+                                            </td>
+                                            <td className="px-3 py-2.5 border border-slate-200 text-center">
                                                 <span className="bg-amber-100 text-amber-700 font-bold px-2.5 py-1 rounded-lg text-xs">
                                                     {sp.jenis_sp}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td className="px-3 py-2.5 border border-slate-200">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button onClick={() => handleCetakSP(sp)} className="p-1.5 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded-lg transition-colors" title="Cetak SP">
                                                         <Printer className="h-4 w-4" />
@@ -344,49 +404,6 @@ export default function SuratPeringatanPage() {
                                 )}
                             </tbody>
                         </table>
-                    ) : (
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-slate-50 dark:bg-[#061e16] text-slate-500 dark:text-slate-400">
-                                <tr>
-                                    <th className="px-4 py-3 font-semibold">NIS</th>
-                                    <th className="px-4 py-3 font-semibold">Nama Siswa</th>
-                                    <th className="px-4 py-3 font-semibold">Kelas</th>
-                                    <th className="px-4 py-3 font-semibold text-center">Total Poin Pelanggaran</th>
-                                    <th className="px-4 py-3 font-semibold text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-emerald-500/10 text-slate-700 dark:text-slate-300">
-                                {loading ? (
-                                    <tr><td colSpan="5" className="px-4 py-8 text-center text-slate-500">Memuat data...</td></tr>
-                                ) : filteredKandidat.length === 0 ? (
-                                    <tr><td colSpan="5" className="px-4 py-8 text-center text-slate-500">Tidak ada data siswa dengan pelanggaran.</td></tr>
-                                ) : (
-                                    filteredKandidat.map((student) => (
-                                        <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50 transition-colors">
-                                            <td className="px-4 py-3 font-mono">{student.nis}</td>
-                                            <td className="px-4 py-3 font-medium">{student.nama_lengkap}</td>
-                                            <td className="px-4 py-3">{student.kelas}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                <span className="font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full text-xs">
-                                                    {student.total_poin || 0} Poin
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <button 
-                                                    onClick={() => handleOpenFormModal(student)}
-                                                    disabled={!isCurrentYearActive}
-                                                    className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 text-white px-3 py-1.5 rounded-xl font-bold text-xs transition-colors shadow-sm"
-                                                >
-                                                    <Plus className="h-3.5 w-3.5" />
-                                                    Buat SP
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    )}
                 </div>
             </div>
 
@@ -404,57 +421,71 @@ export default function SuratPeringatanPage() {
                             </button>
                         </div>
                         <form onSubmit={handleSubmitSP} className="p-6 space-y-4">
-                            {!selectedSP && (
-                                <div className="mb-4">
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Siswa <span className="text-red-500">*</span></label>
-                                    {selectedStudent ? (
-                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                                            <p className="font-bold text-sm">{selectedStudent.nama_lengkap} ({selectedStudent.nis})</p>
-                                            <p className="text-sm text-slate-600">{selectedStudent.kelas}</p>
-                                        </div>
-                                    ) : (
-                                        <select
-                                            value={formData.siswa_id || ''}
-                                            onChange={e => setFormData({...formData, siswa_id: e.target.value})}
-                                            className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
-                                            required
-                                        >
-                                            <option value="">-- Pilih Siswa --</option>
-                                            {allStudents.map(s => (
-                                                <option key={s.id} value={s.id}>{s.nama_lengkap} - {s.kelas} ({s.nis})</option>
-                                            ))}
-                                        </select>
-                                    )}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {!selectedSP && (
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Siswa <span className="text-red-500">*</span></label>
+                                        {selectedStudent ? (
+                                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 h-full flex flex-col justify-center">
+                                                <p className="font-bold text-sm">{selectedStudent.nama_lengkap} ({selectedStudent.nis})</p>
+                                                <p className="text-sm text-slate-600">{selectedStudent.kelas}</p>
+                                            </div>
+                                        ) : (
+                                            <select
+                                                value={formData.siswa_id || ''}
+                                                onChange={e => setFormData({...formData, siswa_id: e.target.value})}
+                                                className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
+                                                required
+                                            >
+                                                <option value="">-- Pilih Siswa --</option>
+                                                {allStudents.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.nama_lengkap} - {s.kelas} ({s.nis})</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className={selectedSP ? "col-span-1 sm:col-span-2" : ""}>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Jenis Surat Peringatan <span className="text-red-500">*</span></label>
+                                    <select 
+                                        value={formData.jenis_sp}
+                                        onChange={e => setFormData({...formData, jenis_sp: e.target.value})}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
+                                        required
+                                    >
+                                        <option value="SP 1">Surat Peringatan 1 (SP 1)</option>
+                                        <option value="SP 2">Surat Peringatan 2 (SP 2)</option>
+                                        <option value="SP 3">Surat Peringatan 3 (SP 3)</option>
+                                    </select>
                                 </div>
-                            )}
+                            </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1.5">Jenis Surat Peringatan <span className="text-red-500">*</span></label>
-                                <select 
-                                    value={formData.jenis_sp}
-                                    onChange={e => setFormData({...formData, jenis_sp: e.target.value})}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
-                                    required
-                                >
-                                    <option value="SP 1">Surat Peringatan 1 (SP 1)</option>
-                                    <option value="SP 2">Surat Peringatan 2 (SP 2)</option>
-                                    <option value="SP 3">Surat Peringatan 3 (SP 3)</option>
-                                </select>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Tanggal SP <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="date" 
+                                        value={formData.tanggal_sp}
+                                        onChange={e => setFormData({...formData, tanggal_sp: e.target.value})}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Tanggal Undangan</label>
+                                    <input 
+                                        type="date" 
+                                        value={formData.tanggal_undangan}
+                                        onChange={e => setFormData({...formData, tanggal_undangan: e.target.value})}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1.5">Tanggal SP <span className="text-red-500">*</span></label>
-                                <input 
-                                    type="date" 
-                                    value={formData.tanggal_sp}
-                                    onChange={e => setFormData({...formData, tanggal_sp: e.target.value})}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium focus:border-emerald-500 focus:ring-emerald-500"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1.5">Keterangan / Alasan <span className="text-slate-400 font-normal">(Opsional)</span></label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1.5">Keterangan / Alasan</label>
                                 <textarea 
                                     value={formData.keterangan}
                                     onChange={e => setFormData({...formData, keterangan: e.target.value})}

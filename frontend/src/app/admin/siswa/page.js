@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Plus, Search, Edit2, Trash2, UserCheck, X, Check, CheckCircle, Download } from 'lucide-react';
 import { toTitleCase } from '@/utils/textFormatter';
 import { useLongPress } from '@/hooks/useLongPress';
+import { apiFetch } from '@/utils/apiFetch';
 
 export default function AdminsiswaPage() {
     const { token } = useAuth();
@@ -74,13 +75,10 @@ export default function AdminsiswaPage() {
 
     const fetchsiswa = async () => {
         try {
-            const [ressiswa, resKelas] = await Promise.all([
-                fetch(`${API_URL}/siswa`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/kelas`, { headers: { 'Authorization': `Bearer ${token}` } })
+            const [datasiswa, dataKelas] = await Promise.all([
+                apiFetch(`${API_URL}/siswa`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                apiFetch(`${API_URL}/kelas`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
-            
-            const datasiswa = await ressiswa.json();
-            const dataKelas = await resKelas.json();
             
             setsiswaList(datasiswa);
             setKelasList(Array.isArray(dataKelas) ? dataKelas : []);

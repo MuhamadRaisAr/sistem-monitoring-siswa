@@ -14,7 +14,9 @@ export default function GuruBkDashboard() {
         totalsiswa: 0,
         totalGuru: 0,
         totalKelas: 0,
-        totalPelanggaran: 0
+        totalPelanggaran: 0,
+        totalBimbingan: 0,
+        totalSP: 0
     });
 
     const [recentPelanggaran, setRecentPelanggaran] = useState([]);
@@ -49,6 +51,16 @@ export default function GuruBkDashboard() {
                 });
                 const kedisiplinanData = await resKedisiplinan.json();
                 
+                const resBimbingan = await fetch(`${API_URL}/bimbingan-konseling`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const bimbinganData = await resBimbingan.json();
+
+                const resSP = await fetch(`${API_URL}/sp`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const spData = await resSP.json();
+
                 const now = new Date();
                 const oneDayMs = 24 * 60 * 60 * 1000;
                 
@@ -64,7 +76,9 @@ export default function GuruBkDashboard() {
                     totalsiswa: siswa.length || 0,
                     totalGuru: Array.isArray(guruList) ? guruList.length : 0,
                     totalKelas: Array.isArray(kelasData) ? kelasData.length : 0,
-                    totalPelanggaran: Array.isArray(kedisiplinanData) ? kedisiplinanData.length : 0
+                    totalPelanggaran: Array.isArray(kedisiplinanData) ? kedisiplinanData.length : 0,
+                    totalBimbingan: Array.isArray(bimbinganData) ? bimbinganData.length : 0,
+                    totalSP: Array.isArray(spData) ? spData.length : 0
                 });
             } catch (err) {
                 console.error('Error fetching dashboard stats:', err);
@@ -107,6 +121,26 @@ export default function GuruBkDashboard() {
             iconColor: 'text-white',
             linkColor: 'text-amber-600 dark:text-amber-400',
             link: '/guru_bk/kedisiplinan'
+        },
+        {
+            title: 'Total Bimbingan',
+            value: stats.totalBimbingan !== undefined ? stats.totalBimbingan : 0,
+            subtitle: 'Catatan konseling',
+            icon: BookOpenCheck,
+            color: 'from-blue-400 to-indigo-500',
+            iconColor: 'text-white',
+            linkColor: 'text-blue-600 dark:text-blue-400',
+            link: '/guru_bk/konseling'
+        },
+        {
+            title: 'Total Surat SP',
+            value: stats.totalSP !== undefined ? stats.totalSP : 0,
+            subtitle: 'SP yang diterbitkan',
+            icon: Megaphone,
+            color: 'from-red-400 to-rose-500',
+            iconColor: 'text-white',
+            linkColor: 'text-red-600 dark:text-red-400',
+            link: '/guru_bk/sp'
         }
     ];
 

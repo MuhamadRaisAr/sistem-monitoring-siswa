@@ -291,7 +291,8 @@ export default function AdminUsersPage() {
                         <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
-                                    <th className="py-2 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 text-slate-800 dark:text-slate-300 font-extrabold align-middle static md:sticky md:left-0 md:z-30 bg-slate-50 dark:bg-[#061e16] shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)]">Nama Pengguna</th>
+                                    <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center text-slate-800 dark:text-slate-300 font-extrabold align-middle static md:sticky md:left-0 md:z-30 bg-slate-50 dark:bg-[#061e16] w-10">No</th>
+                                    <th className="py-2 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 text-slate-800 dark:text-slate-300 font-extrabold align-middle static md:sticky md:left-10 md:z-30 bg-slate-50 dark:bg-[#061e16] shadow-[4px_0_12px_rgba(0,0,0,0.03)] dark:shadow-[4px_0_12px_rgba(0,0,0,0.2)]">Nama Pengguna</th>
                                     <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold align-middle bg-slate-50 dark:bg-[#061e16]">Username</th>
                                     <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold align-middle bg-slate-50 dark:bg-[#061e16]">Nama Siswa</th>
                                     <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-slate-800 dark:text-slate-300 font-extrabold align-middle bg-slate-50 dark:bg-[#061e16]">Peran / Role</th>
@@ -303,16 +304,17 @@ export default function AdminUsersPage() {
                             <tbody>
                                 {filteredUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="text-center py-8 text-slate-500 bg-white dark:bg-[#041610] border-b border-slate-300 dark:border-emerald-500/10">
+                                        <td colSpan="8" className="text-center py-8 text-slate-500 bg-white dark:bg-[#041610] border-b border-slate-300 dark:border-emerald-500/10">
                                             Tidak ada pengguna ditemukan.
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredUsers.map((u) => {
+                                    filteredUsers.map((u, idx) => {
                                         const isSelf = u.id === currentUser?.id;
                                         return (
                                             <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group">
-                                                <td className="py-1.5 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white static md:sticky md:left-0 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors drop-shadow-md">
+                                                <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center font-semibold text-slate-500 dark:text-slate-400 static md:sticky md:left-0 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">{idx + 1}</td>
+                                                <td className="py-1.5 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white static md:sticky md:left-10 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors drop-shadow-md">
                                                     {u.nama_lengkap}
                                                     {isSelf && (
                                                         <span className="ml-2 inline-flex items-center rounded-md bg-emerald-100 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-200 dark:ring-emerald-500/20">

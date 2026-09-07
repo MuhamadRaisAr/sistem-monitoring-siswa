@@ -28,6 +28,7 @@ export default function CetakRaportAdmin() {
     const [pelanggaranData, setPelanggaranData] = useState([]);
     const [ekskulData, setEkskulData] = useState([]);
     const [mapelKelasList, setMapelKelasList] = useState([]);
+    const [listAllEkskul, setListAllEkskul] = useState([]);
     
     const [showModal, setShowModal] = useState(false);
     const [loadingRaport, setLoadingRaport] = useState(false);
@@ -72,6 +73,13 @@ export default function CetakRaportAdmin() {
                 if (Array.isArray(dataKelas) && dataKelas.length > 0) {
                     setKelasOptions(dataKelas);
                 }
+
+                const resEkskulAll = await fetch(`${API_URL}/ekskul`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const dataEkskulAll = await resEkskulAll.json();
+                setListAllEkskul(Array.isArray(dataEkskulAll) ? dataEkskulAll : []);
+                
             } catch (err) {
                 console.error("Error fetching data:", err);
             } finally {
@@ -317,18 +325,58 @@ export default function CetakRaportAdmin() {
     const handleDownloadPdf = async () => {
         try {
             const html2pdf = (await import('html2pdf.js')).default;
-            const element = document.getElementById('raport-print-area');
+
+            const printContainer = document.getElementById('hidden-print-container');
+            if (!printContainer) return;
+
+            printContainer.classList.remove('hidden');
+            printContainer.style.display = 'block';
+            printContainer.style.position = 'fixed';
+            printContainer.style.top = '0';
+            printContainer.style.left = '-9999px';
+            printContainer.style.width = '794px';
+            printContainer.style.zIndex = '-1';
+
+            await new Promise(resolve => setTimeout(resolve, 400));
+
+            const element = printContainer.querySelector('#raport-print-area') || printContainer.querySelector('.raport-print-content') || printContainer.firstElementChild;
+            if (!element) return;
+
+            element.classList.add('pdf-export');
+
+            const origStyle = element.getAttribute('style') || '';
+            element.style.zoom = '1';
+            element.style.width = '718px';   // A4 - 2×1cm margin = 190mm = 718px
+            element.style.maxWidth = '718px';
+            element.style.padding = '0';
+            element.style.border = 'none';
+            element.style.boxShadow = 'none';
+
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5],
-                filename:     `Raport_${selectedStudent?.nama_lengkap || 'Siswa'}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                margin:      [10, 10, 10, 10],  // 1cm each side in mm
+                filename:    `Raport_${selectedStudent?.nama_lengkap || 'Siswa'}.pdf`,
+                image:       { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 718 },
+                jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:   { mode: ['css', 'legacy'] }
             };
-            html2pdf().set(opt).from(element).save();
+
+            await html2pdf().set(opt).from(element).save();
+
+            element.classList.remove('pdf-export');
+            element.setAttribute('style', origStyle);
+            printContainer.classList.add('hidden');
+            printContainer.style.display = '';
+            printContainer.style.position = '';
+            printContainer.style.top = '';
+            printContainer.style.left = '';
+            printContainer.style.width = '';
+            printContainer.style.zIndex = '';
         } catch (error) {
-            console.error("Error generating PDF:", error);
-            alert("Gagal mengunduh PDF. Pastikan perangkat Anda mendukung fitur ini.");
+            console.error('Error generating PDF:', error);
+            alert('Gagal mengunduh PDF.');
         }
     };
 
@@ -355,6 +403,22 @@ export default function CetakRaportAdmin() {
     return (
         <div className="space-y-6">
             <style>{`
+                .pdf-export table {
+                    border-collapse: separate !important;
+                    border-spacing: 0 !important;
+                    border-top: 1px solid black !important;
+                    border-left: 1px solid black !important;
+                }
+                .pdf-export table th, .pdf-export table td {
+                    border-top: none !important;
+                    border-left: none !important;
+                    border-right: 1px solid black !important;
+                    border-bottom: 1px solid black !important;
+                }
+                .pdf-export tr {
+                    page-break-inside: avoid !important;
+                }
+                
                 @media print {
                     body * { visibility: hidden !important; }
                     .print-area, .print-area * { visibility: visible !important; }
@@ -546,7 +610,7 @@ export default function CetakRaportAdmin() {
                                     dataKehadiran={kehadiranData} 
                                     dataPelanggaran={pelanggaranData} 
                                     listMapelKelas={mapelKelasList} 
-                                    dataEkskul={ekskulData} tahunAjaranList={tahunAjaranList} selectedTahunAjaranId={selectedTahunAjaranId} zoomScale={zoomScale}
+                                    dataEkskul={ekskulData} listAllEkskul={listAllEkskul} tahunAjaranList={tahunAjaranList} selectedTahunAjaranId={selectedTahunAjaranId} zoomScale={zoomScale}
                                 />
                             )}
                         </div>
@@ -578,8 +642,54 @@ export default function CetakRaportAdmin() {
                 </div>
             )}
 
+            <style>{`
+                @media print {
+                    aside, header, nav, .sidebar, .navbar { display: none !important; }
+                    .no-print { display: none !important; }
+                    .print-area { 
+                        display: block !important;
+                        width: 100% !important; 
+                        background: white !important;
+                        color: black !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        box-shadow: none !important;
+                        position: relative !important;
+                    }
+                    /* Fix 1 page print issue: Reset overflow and height on ALL ancestors */
+                    html, body { 
+                        height: auto !important; 
+                        min-height: auto !important; 
+                        overflow: visible !important;
+                        background: white !important;
+                    }
+                    #__next, [class*="flex-1"], [class*="overflow-y-auto"], [class*="overflow-hidden"] {
+                        height: auto !important;
+                        min-height: auto !important;
+                        overflow: visible !important;
+                    }
+                    main { padding: 0 !important; margin: 0 !important; }
+
+                    /* Reset zoom on the raport content div for correct multi-page rendering */
+                    #raport-print-area, .raport-print-content {
+                        zoom: 1 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                    }
+
+                    @page {
+                        size: A4 portrait;
+                        margin: 1cm;
+                    }
+                }
+            `}</style>
+
             {/* HIDDEN PRINT TARGET (Only visible during print) */}
-            <div className="hidden print:block print-area">
+            <div id="hidden-print-container" className="hidden print:block print-area">
                 {printAllMode ? (
                     allStudentsPrintData.map((data, idx) => (
                         <RaportContent 
@@ -589,7 +699,7 @@ export default function CetakRaportAdmin() {
                             dataKehadiran={data.dataKehadiran}
                             dataPelanggaran={data.dataPelanggaran}
                             listMapelKelas={data.listMapelKelas}
-                            dataEkskul={data.dataEkskul} tahunAjaranList={tahunAjaranList} selectedTahunAjaranId={selectedTahunAjaranId} zoomScale={zoomScale}
+                            dataEkskul={data.dataEkskul} listAllEkskul={listAllEkskul} tahunAjaranList={tahunAjaranList} selectedTahunAjaranId={selectedTahunAjaranId} zoomScale={zoomScale}
                             isBulkPrint={true}
                         />
                     ))
@@ -601,7 +711,7 @@ export default function CetakRaportAdmin() {
                             dataKehadiran={kehadiranData} 
                             dataPelanggaran={pelanggaranData} 
                             listMapelKelas={mapelKelasList} 
-                            dataEkskul={ekskulData} tahunAjaranList={tahunAjaranList} selectedTahunAjaranId={selectedTahunAjaranId} zoomScale={zoomScale}
+                            dataEkskul={ekskulData} listAllEkskul={listAllEkskul} tahunAjaranList={tahunAjaranList} selectedTahunAjaranId={selectedTahunAjaranId} zoomScale={zoomScale}
                         />
                     )
                 )}

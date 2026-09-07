@@ -88,7 +88,7 @@ export default function BendaharaSiswaPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-emerald-500/10">
-                        <table className="w-full text-left text-[10px] md:text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
+                        <table className="w-full text-left text-sm whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-[#061e16]">
                                     <th className="py-2 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-center w-10 static md:sticky md:left-0 md:z-30 bg-slate-50 dark:bg-[#061e16] text-slate-800 dark:text-slate-300 font-extrabold uppercase">No</th>
@@ -112,17 +112,17 @@ export default function BendaharaSiswaPage() {
                                             key={s.id} 
                                             className="transition-colors group hover:bg-slate-50 dark:hover:bg-[#082a1f]"
                                         >
-                                            <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 font-semibold text-slate-500 text-center static md:sticky md:left-0 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">{idx + 1}</td>
-                                            <td className="py-1.5 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white text-left static md:sticky md:left-10 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] drop-shadow-md">{s.nama_lengkap}</td>
-                                            <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 font-semibold text-slate-700 dark:text-slate-300 text-center whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">{s.kelas || '-'}</td>
-                                            <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-left font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                            <td className="py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 font-semibold text-slate-500 text-center static md:sticky md:left-0 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">{idx + 1}</td>
+                                            <td className="py-2.5 px-3 border-b border-r-[3px] border-slate-400 dark:border-emerald-500/30 font-extrabold text-slate-850 dark:text-white text-left static md:sticky md:left-10 md:z-20 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] drop-shadow-md">{s.nama_lengkap}</td>
+                                            <td className="py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 font-semibold text-slate-700 dark:text-slate-300 text-center whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">{s.kelas || '-'}</td>
+                                            <td className="py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-left font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 {s.nama_wali ? (
                                                     s.nama_wali
                                                 ) : (
                                                     <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">Belum dipetakan</span>
                                                 )}
                                             </td>
-                                            <td className="py-1.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-left font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                            <td className="py-2.5 px-2 border-b border-r border-slate-300 dark:border-emerald-500/10 text-left font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 {s.no_hp ? (
                                                     <a href={`https://wa.me/${s.no_hp.replace(/^0/, '62')}`} target="_blank" rel="noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">
                                                         {s.no_hp}
@@ -131,7 +131,7 @@ export default function BendaharaSiswaPage() {
                                                     <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">-</span>
                                                 )}
                                             </td>
-                                            <td className="py-1.5 px-2 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                            <td className="py-2.5 px-2 border-b border-slate-300 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                 <span className={`inline-flex rounded-lg px-2 py-0.5 text-[10px] font-bold tracking-wide leading-none uppercase border
                                                     ${s.status_aktif === 'aktif' ? 'bg-emerald-100 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-red-100 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'}
                                                 `}>

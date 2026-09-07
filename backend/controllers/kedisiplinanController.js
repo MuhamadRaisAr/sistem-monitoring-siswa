@@ -290,6 +290,54 @@ exports.deleteRecord = async (req, res) => {
     }
 };
 
+// Bulk delete records
+exports.deleteBulkRecord = async (req, res) => {
+    try {
+        if (!['admin', 'guru', 'guru_bk'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Access denied. Admins, Guru, or Guru BK only.' });
+        }
+
+        const { ids } = req.body;
+        
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'Tidak ada catatan yang dipilih.' });
+        }
+
+        // For guru, we need to check ownership for all selected records
+        if (req.user.role === 'guru') {
+            const placeholders = ids.map(() => '?').join(',');
+            const [records] = await db.query(`
+                SELECT k.id, k.pelapor_id, s.kelas
+                FROM kedisiplinan k
+                JOIN siswa s ON k.siswa_id = s.id
+                WHERE k.id IN (${placeholders})
+            `, ids);
+            
+            for (const record of records) {
+                const isPelapor = record.pelapor_id === req.user.id;
+                let isWaliKelas = false;
+                
+                if (record.kelas) {
+                    const [kelasRows] = await db.query('SELECT id FROM kelas WHERE nama_kelas = ? AND wali_kelas_id = ?', [record.kelas, req.user.id]);
+                    if (kelasRows.length > 0) isWaliKelas = true;
+                }
+                
+                if (!isPelapor && !isWaliKelas) {
+                    return res.status(403).json({ message: `Akses ditolak. Anda tidak memiliki izin untuk menghapus beberapa rekaman yang dipilih.` });
+                }
+            }
+        }
+
+        const placeholders = ids.map(() => '?').join(',');
+        await db.query(`DELETE FROM kedisiplinan WHERE id IN (${placeholders})`, ids);
+        
+        return res.json({ message: `${ids.length} catatan berhasil dihapus.` });
+    } catch (err) {
+        console.error('Bulk delete discipline records error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 // Get Rekap for Surat Peringatan (Guru BK & Admin only)
 exports.getRekapSP = async (req, res) => {
     try {

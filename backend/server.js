@@ -169,3 +169,16 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+// Global error handlers — mencegah backend crash karena unhandled error
+process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught Exception:', err.message);
+    console.error(err.stack);
+    // Jangan exit — biarkan server tetap berjalan
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled Promise Rejection at:', promise);
+    console.error('Reason:', reason);
+    // Jangan exit — biarkan server tetap berjalan
+});

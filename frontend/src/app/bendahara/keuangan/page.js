@@ -75,7 +75,6 @@ export default function BendaharaKeuanganPage() {
                 });
             }
             setSelectedBills([]);
-            setShowCheckboxes(false);
             fetchBills();
         } catch (err) {
             console.error('Error bulk delete:', err);
@@ -148,19 +147,15 @@ export default function BendaharaKeuanganPage() {
         }
     }, [availableYears, genTahun]);
 
-    const [showCheckboxes, setShowCheckboxes] = useState(false);
+    const [showCheckboxes, setShowCheckboxes] = useState(true);
     const pressTimer = React.useRef(null);
 
     const handlePressStart = () => {
-        pressTimer.current = setTimeout(() => {
-            setShowCheckboxes(true);
-        }, 1000);
+        // No longer needed since checkboxes are always shown
     };
 
     const handlePressEnd = () => {
-        if (pressTimer.current) {
-            clearTimeout(pressTimer.current);
-        }
+        // No longer needed
     };
 
     const API_URL = '/api';
@@ -319,17 +314,16 @@ export default function BendaharaKeuanganPage() {
                     <p className="text-slate-500 mt-1 text-sm">Kelola tagihan keuangan siswa secara kolektif.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    {isCurrentYearActive && showCheckboxes && (
+                    {isCurrentYearActive && (
                         <>
-                            <button
-                                onClick={() => {
-                                    setShowCheckboxes(false);
-                                    setSelectedBills([]);
-                                }}
-                                className="flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors shrink-0 w-full sm:w-auto animate-fade-in"
-                            >
-                                <X className="h-5 w-5" /> Batal Pilih
-                            </button>
+                            {selectedBills.length > 0 && (
+                                <button
+                                    onClick={() => setSelectedBills([])}
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-slate-700 hover:bg-slate-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors shrink-0 w-full sm:w-auto animate-fade-in"
+                                >
+                                    <X className="h-5 w-5" /> Batal Pilih
+                                </button>
+                            )}
                             {selectedBills.length > 0 && (
                                 <button
                                     onClick={handleBulkDelete}
@@ -444,7 +438,7 @@ export default function BendaharaKeuanganPage() {
                                                             <thead>
                                                                 <tr className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-50/80 dark:bg-[#061e16]">
                                                                     {isCurrentYearActive && showCheckboxes && (
-                                                                        <th className="py-3 px-3 w-10 text-center border-b border-slate-200 dark:border-emerald-500/10">
+                                                                        <th className="py-3 px-3 w-10 text-center border-b border-r border-slate-200 dark:border-emerald-500/10">
                                                                             <input 
                                                                                 type="checkbox" 
                                                                                 className="rounded border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500 cursor-pointer"
@@ -484,7 +478,7 @@ export default function BendaharaKeuanganPage() {
                                                                 }}
                                                             >
                                                                 {isCurrentYearActive && showCheckboxes && (
-                                                                    <td className="py-3 px-3 text-center border-b border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
+                                                                    <td className="py-3 px-3 text-center border-b border-r border-slate-200 dark:border-emerald-500/10 bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f]">
                                                                         <input 
                                                                             type="checkbox" 
                                                                             className="rounded border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500 cursor-pointer"

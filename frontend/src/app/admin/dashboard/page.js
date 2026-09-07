@@ -14,6 +14,8 @@ export default function AdminDashboard() {
         totalsiswa: 0,
         totalGuru: 0,
         totalKelas: 0,
+        totalGuru: 0,
+        totalKelas: 0,
         totalPelanggaran: 0
     });
 

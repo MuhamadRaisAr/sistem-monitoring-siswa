@@ -355,7 +355,7 @@ export default function HonorBendaharaPage() {
                         )}
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Nama Guru</th>
                         {isRiwayat && (
-                            <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Periode Honor</th>
+                            <th className="px-4 py-3 border border-slate-200 dark:border-slate-700 text-center">Tanggal Pembayaran</th>
                         )}
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Jml Pertemuan</th>
                         <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Tarif/Pertemuan</th>
@@ -370,8 +370,8 @@ export default function HonorBendaharaPage() {
                     ) : data.length === 0 ? (
                         <tr><td colSpan={isRiwayat ? 7 : 7} className="text-center py-8">Belum ada data riwayat honor.</td></tr>
                     ) : (
-                        data.map((h) => (
-                            <tr key={h.guru_id} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50">
+                        data.map((h, index) => (
+                            <tr key={h.id ? `honor_${h.id}` : `guru_${h.guru_id}_${index}`} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50">
                                 {!isRiwayat && (() => {
                                     const pertemuan = h.id ? h.total_jam_mengajar : (h.computed_pertemuan || 0);
                                     const isPayable = h.id && h.status_pembayaran === 'belum_dibayar' && pertemuan > 0;
@@ -390,8 +390,10 @@ export default function HonorBendaharaPage() {
                                 })()}
                                 <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">{h.nama_lengkap}</td>
                                 {isRiwayat && (
-                                    <td className="px-4 py-3 border border-slate-200 dark:border-slate-700">
-                                        <span className="font-semibold text-emerald-700 dark:text-emerald-500">{getBulanName(h.bulan)} {h.tahun}</span>
+                                    <td className="px-4 py-3 border border-slate-200 dark:border-slate-700 text-center">
+                                        <span className="font-semibold text-emerald-700 dark:text-emerald-500">
+                                            {h.tanggal_bayar ? new Date(h.tanggal_bayar).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                        </span>
                                     </td>
                                 )}
                                 <td className="px-4 py-3 border border-slate-200 dark:border-slate-700">

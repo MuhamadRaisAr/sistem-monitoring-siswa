@@ -160,25 +160,25 @@ export default function GuruJadwalPage() {
                                 <div className="w-full bg-white dark:bg-[#041610]">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="bg-white dark:bg-[#041610] text-slate-500 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-widest border-b border-slate-200 dark:border-emerald-500/10">
+                                            <tr className="bg-white dark:bg-[#041610] text-slate-500 dark:text-emerald-400 text-xs font-extrabold uppercase tracking-widest border-b border-slate-200 dark:border-emerald-500/10">
                                                 <th className="py-2 px-3 border-r border-slate-200 dark:border-emerald-500/10 w-[20%] text-center">Jam</th>
                                                 <th className="py-2 px-3 border-r border-slate-200 dark:border-emerald-500/10 w-[40%]">Kelas</th>
                                                 <th className="py-2 px-3">Mapel</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="text-[11px]">
+                                        <tbody className="text-sm">
                                             {groupedJadwal[hari].map((j, idx) => (
                                                 <tr key={j.id || idx} className="hover:bg-slate-50 dark:hover:bg-[#082a1f] transition-colors group cursor-pointer border-b border-slate-200 dark:border-emerald-500/10 last:border-0">
                                                     {/* Jam */}
-                                                    <td className="py-1.5 px-3 border-r border-slate-200 dark:border-emerald-500/10 font-bold text-slate-700 dark:text-slate-300 font-mono align-middle text-center whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
+                                                    <td className="py-3 px-4 border-r border-slate-200 dark:border-emerald-500/10 font-bold text-slate-700 dark:text-slate-300 font-mono align-middle text-center whitespace-nowrap bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                         {j.jam_mulai?.slice(0, 5)} – {j.jam_selesai?.slice(0, 5)}
                                                     </td>
                                                     {/* Kelas */}
-                                                    <td className="py-1.5 px-3 border-r border-slate-200 dark:border-emerald-500/10 text-slate-700 dark:text-slate-300 font-bold align-middle break-words bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
+                                                    <td className="py-3 px-4 border-r border-slate-200 dark:border-emerald-500/10 text-slate-700 dark:text-slate-300 font-bold align-middle break-words bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors">
                                                         Kelas {decodeURIComponent(j.kelas)}
                                                     </td>
                                                     {/* Mapel */}
-                                                    <td className={`py-1.5 px-3 font-bold align-middle break-words bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors ${getSubjectColor(j.mata_pelajaran)}`}>
+                                                    <td className={`py-3 px-4 font-bold align-middle break-words bg-white dark:bg-[#041610] group-hover:bg-slate-50 dark:group-hover:bg-[#082a1f] transition-colors ${getSubjectColor(j.mata_pelajaran)}`}>
                                                         {getAbbreviatedMapel(j.mata_pelajaran)}
                                                     </td>
                                                 </tr>

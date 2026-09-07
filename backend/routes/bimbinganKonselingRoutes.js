@@ -7,6 +7,7 @@ router.use(authMiddleware);
 
 router.get('/', bimbinganKonselingController.getAllBimbingan);
 router.post('/', bimbinganKonselingController.createBimbingan);
+router.post('/bulk-delete', bimbinganKonselingController.deleteBulkBimbingan);
 router.put('/:id', bimbinganKonselingController.updateBimbingan);
 router.delete('/:id', bimbinganKonselingController.deleteBimbingan);
 

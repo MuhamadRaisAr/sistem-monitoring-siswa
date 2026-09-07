@@ -100,3 +100,27 @@ exports.deleteBimbingan = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+// Bulk delete bimbingan konseling records
+exports.deleteBulkBimbingan = async (req, res) => {
+    try {
+        if (!['admin', 'guru_bk'].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Access denied.' });
+        }
+
+        const { ids } = req.body;
+        
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'Tidak ada catatan yang dipilih.' });
+        }
+
+        // Use parameterized query with IN clause
+        const placeholders = ids.map(() => '?').join(',');
+        await db.query(`DELETE FROM bimbingan_konseling WHERE id IN (${placeholders})`, ids);
+        
+        return res.json({ message: `${ids.length} catatan konseling berhasil dihapus.` });
+    } catch (err) {
+        console.error('Bulk delete bimbingan konseling error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};

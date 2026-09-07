@@ -116,27 +116,7 @@ export default function WaliKedisiplinanPage() {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                    <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
-                        <AlertTriangle className="h-7 w-7 text-rose-500" />
-                    </div>
-                    <div>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Pelanggaran</p>
-                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{allViolations.length} <span className="text-sm font-semibold text-slate-500">kasus</span></h3>
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-[#041610] p-5 rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                    <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                        <ShieldAlert className="h-7 w-7 text-amber-500" />
-                    </div>
-                    <div>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pelanggaran Terkini</p>
-                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">{terkiniList.length} <span className="text-sm font-semibold text-slate-500">kasus</span></h3>
-                    </div>
-                </div>
-            </div>
+
 
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-col sm:flex-row gap-4 w-full items-start sm:items-center">
@@ -163,21 +143,7 @@ export default function WaliKedisiplinanPage() {
                             </select>
                         </div>
 
-                        <div className="flex flex-col gap-1.5 flex-1 sm:flex-none sm:w-[180px]">
-                            <label className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Bulan:</label>
-                            <select
-                                value={selectedBulan}
-                                onChange={(e) => setSelectedBulan(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#041610] py-2.5 px-3 sm:px-4 text-[12px] sm:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-sm text-ellipsis overflow-hidden"
-                            >
-                                <option value="">Semua Bulan</option>
-                                {availableMonths.map(m => {
-                                    const dateObj = new Date(m + '-01');
-                                    const monthName = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-                                    return <option key={m} value={m}>{monthName}</option>;
-                                })}
-                            </select>
-                        </div>
+
                     </div>
                     
                     {/* Pencarian */}

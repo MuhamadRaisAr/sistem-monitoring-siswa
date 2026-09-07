@@ -30,15 +30,15 @@ exports.getAllSP = async (req, res) => {
 
 exports.createSP = async (req, res) => {
     try {
-        const { siswa_id, tahun_ajaran_id, jenis_sp, tanggal_sp, keterangan } = req.body;
+        const { siswa_id, tahun_ajaran_id, jenis_sp, tanggal_sp, tanggal_undangan, keterangan } = req.body;
         
         if (!siswa_id || !tahun_ajaran_id || !jenis_sp || !tanggal_sp) {
             return res.status(400).json({ message: 'Data tidak lengkap' });
         }
 
         await db.query(
-            'INSERT INTO surat_peringatan (siswa_id, tahun_ajaran_id, jenis_sp, tanggal_sp, keterangan) VALUES (?, ?, ?, ?, ?)',
-            [siswa_id, tahun_ajaran_id, jenis_sp, tanggal_sp, keterangan || null]
+            'INSERT INTO surat_peringatan (siswa_id, tahun_ajaran_id, jenis_sp, tanggal_sp, tanggal_undangan, keterangan) VALUES (?, ?, ?, ?, ?, ?)',
+            [siswa_id, tahun_ajaran_id, jenis_sp, tanggal_sp, tanggal_undangan || null, keterangan || null]
         );
         
         res.status(201).json({ message: 'Surat Peringatan berhasil dibuat' });
@@ -51,15 +51,15 @@ exports.createSP = async (req, res) => {
 exports.updateSP = async (req, res) => {
     try {
         const { id } = req.params;
-        const { jenis_sp, tanggal_sp, keterangan } = req.body;
+        const { jenis_sp, tanggal_sp, tanggal_undangan, keterangan } = req.body;
 
         if (!jenis_sp || !tanggal_sp) {
             return res.status(400).json({ message: 'Data tidak lengkap' });
         }
 
         await db.query(
-            'UPDATE surat_peringatan SET jenis_sp = ?, tanggal_sp = ?, keterangan = ? WHERE id = ?',
-            [jenis_sp, tanggal_sp, keterangan || null, id]
+            'UPDATE surat_peringatan SET jenis_sp = ?, tanggal_sp = ?, tanggal_undangan = ?, keterangan = ? WHERE id = ?',
+            [jenis_sp, tanggal_sp, tanggal_undangan || null, keterangan || null, id]
         );
         
         res.json({ message: 'Surat Peringatan berhasil diupdate' });
@@ -76,6 +76,23 @@ exports.deleteSP = async (req, res) => {
         res.json({ message: 'Surat Peringatan berhasil dihapus' });
     } catch (err) {
         console.error('Error in deleteSP:', err);
+        res.status(500).json({ message: 'Terjadi kesalahan server' });
+    }
+};
+
+exports.deleteBulkSP = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'Tidak ada surat peringatan yang dipilih' });
+        }
+        
+        const placeholders = ids.map(() => '?').join(',');
+        await db.query(`DELETE FROM surat_peringatan WHERE id IN (${placeholders})`, ids);
+        
+        res.json({ message: `${ids.length} Surat Peringatan berhasil dihapus` });
+    } catch (err) {
+        console.error('Error in deleteBulkSP:', err);
         res.status(500).json({ message: 'Terjadi kesalahan server' });
     }
 };

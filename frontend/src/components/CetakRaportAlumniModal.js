@@ -16,6 +16,7 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
     const [pelanggaranData, setPelanggaranData] = useState([]);
     const [mapelKelasList, setMapelKelasList] = useState([]);
     const [ekskulData, setEkskulData] = useState([]);
+    const [listAllEkskul, setListAllEkskul] = useState([]);
     const [fetchError, setFetchError] = useState(null);
     
     const [debugState, setDebugState] = useState("idle");
@@ -131,6 +132,13 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
             });
             const dataEkskul = await resEkskul.json();
             setEkskulData(Array.isArray(dataEkskul) ? dataEkskul : []);
+            
+            // 5. Fetch All Ekskul
+            const resEkskulAll = await fetch(`${API_URL}/ekskul`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const dataEkskulAll = await resEkskulAll.json();
+            setListAllEkskul(Array.isArray(dataEkskulAll) ? dataEkskulAll : []);
 
         } catch (err) {
             setDebugState("caught_error_inside: " + err.message);
@@ -313,6 +321,7 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
                                 dataPelanggaran={pelanggaranData} 
                                 listMapelKelas={mapelKelasList} 
                                 dataEkskul={ekskulData} 
+                                listAllEkskul={listAllEkskul}
                                 tahunAjaranList={tahunAjaranList} 
                                 selectedTahunAjaranId={selectedTahunAjaranId} 
                                 zoomScale={zoomScale}
@@ -350,6 +359,7 @@ export default function CetakRaportAlumniModal({ student, onClose }) {
                         dataPelanggaran={pelanggaranData} 
                         listMapelKelas={mapelKelasList} 
                         dataEkskul={ekskulData} 
+                        listAllEkskul={listAllEkskul}
                         tahunAjaranList={tahunAjaranList} 
                         selectedTahunAjaranId={selectedTahunAjaranId} 
                         zoomScale={1}

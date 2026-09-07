@@ -13,6 +13,7 @@ router.get('/rekap-sp', kedisiplinanController.getRekapSP);
 
 // Admin-only operations
 router.post('/', kedisiplinanController.createRecord);
+router.post('/bulk-delete', kedisiplinanController.deleteBulkRecord);
 router.put('/:id', kedisiplinanController.updateRecord);
 router.put('/status/:id', kedisiplinanController.updatePermissionStatus);
 router.delete('/:id', kedisiplinanController.deleteRecord);

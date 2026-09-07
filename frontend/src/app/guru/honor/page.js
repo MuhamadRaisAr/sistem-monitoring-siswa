@@ -81,7 +81,7 @@ export default function GuruHonorPage() {
                     <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300 border-collapse border border-slate-200 dark:border-slate-700">
                         <thead className="bg-slate-50 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-200 font-bold">
                             <tr>
-                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Periode</th>
+                                <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Tanggal Pembayaran</th>
                                 <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Total Pertemuan</th>
                                 <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Total Honor</th>
                                 <th className="px-4 py-3 border border-slate-200 dark:border-slate-700">Status</th>
@@ -104,7 +104,7 @@ export default function GuruHonorPage() {
                                 honors.map((h) => (
                                     <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-[#061e16]/50 transition-colors">
                                         <td className="px-4 py-4 font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
-                                            {getBulanName(h.bulan)} {h.tahun}
+                                            {h.tanggal_bayar ? new Date(h.tanggal_bayar).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
                                         </td>
                                         <td className="px-4 py-4 border border-slate-200 dark:border-slate-700">{h.total_jam_mengajar} Pertemuan</td>
                                         <td className="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700">

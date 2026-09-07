@@ -13,6 +13,7 @@ export default function GuruBkKonselingPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedKelas, setSelectedKelas] = useState('');
+    const [selectedIds, setSelectedIds] = useState([]);
     
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,6 +49,7 @@ export default function GuruBkKonselingPage() {
             const [dataBk, dataSiswa] = await Promise.all([resBk.json(), resSiswa.json()]);
             setRecords(Array.isArray(dataBk) ? dataBk : []);
             setSiswaList(Array.isArray(dataSiswa) ? dataSiswa.filter(s => s.status_aktif === 'aktif') : []);
+            setSelectedIds([]); // Clear selection when data is refreshed
         } catch (err) {
             console.error('Error fetching data:', err);
         } finally {
@@ -81,6 +83,21 @@ export default function GuruBkKonselingPage() {
             return matchSearch && matchKelas;
         }).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
     }, [records, searchQuery, selectedKelas]);
+
+    // Handle selection
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(filteredRecords.map(r => r.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelect = (id) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
 
     const handleOpenModal = (record = null) => {
         if (record) {
@@ -151,6 +168,31 @@ export default function GuruBkKonselingPage() {
         } catch (err) {
             console.error(err);
             alert('Gagal menghapus data');
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+        if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} catatan konseling yang dipilih?`)) return;
+        
+        try {
+            const res = await fetch(`${API_URL}/bimbingan-konseling/bulk-delete`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+            if (res.ok) {
+                fetchData();
+            } else {
+                const errData = await res.json();
+                alert(errData.message || 'Gagal menghapus data secara massal');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Terjadi kesalahan saat menghapus data secara massal');
         }
     };
 
@@ -236,6 +278,21 @@ export default function GuruBkKonselingPage() {
 
             {/* Table */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                {selectedIds.length > 0 && (
+                    <div className="bg-emerald-50 border-b border-emerald-100 p-3 sm:p-4 flex items-center justify-between animate-fade-in">
+                        <span className="text-sm font-bold text-emerald-800">
+                            {selectedIds.length} catatan dipilih
+                        </span>
+                        <button 
+                            onClick={handleBulkDelete}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors shadow-sm shadow-red-500/20"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Hapus Terpilih
+                        </button>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="flex h-52 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
@@ -250,17 +307,33 @@ export default function GuruBkKonselingPage() {
                         <table className="w-full text-left text-xs whitespace-nowrap min-w-max border-separate border-spacing-0">
                             <thead>
                                 <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                                    <th className="py-4 px-5 w-16 text-center border border-slate-200">No</th>
-                                    <th className="py-4 px-5 border border-slate-200 w-32">Tanggal</th>
-                                    <th className="py-4 px-5 border border-slate-200 w-[30%] text-center">Nama Siswa</th>
-                                    <th className="py-4 px-5 border border-slate-200">Topik Konseling</th>
-                                    <th className="py-4 px-5 border border-slate-200 text-center w-24">Aksi</th>
+                                    <th className="py-4 px-4 w-12 text-center border border-slate-200 rounded-tl-lg">
+                                        <input 
+                                            type="checkbox"
+                                            checked={filteredRecords.length > 0 && selectedIds.length === filteredRecords.length}
+                                            onChange={handleSelectAll}
+                                            className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                        />
+                                    </th>
+                                    <th className="py-4 px-2 w-12 text-center border border-slate-200">No</th>
+                                    <th className="py-4 px-5 text-center border border-slate-200 w-32">Tanggal</th>
+                                    <th className="py-4 px-5 text-center border border-slate-200 w-[30%]">Nama Siswa</th>
+                                    <th className="py-4 px-5 text-center border border-slate-200">Topik Konseling</th>
+                                    <th className="py-4 px-5 text-center border border-slate-200 w-24 rounded-tr-lg">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="text-sm">
                                 {filteredRecords.map((r, idx) => (
-                                    <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="py-4 px-5 text-center text-slate-500 font-black text-xs border border-slate-200">{idx + 1}</td>
+                                    <tr key={r.id} className={`hover:bg-slate-50 transition-colors group ${selectedIds.includes(r.id) ? 'bg-emerald-50/50' : ''}`}>
+                                        <td className="py-4 px-4 text-center border border-slate-200">
+                                            <input 
+                                                type="checkbox"
+                                                checked={selectedIds.includes(r.id)}
+                                                onChange={() => handleSelect(r.id)}
+                                                className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                            />
+                                        </td>
+                                        <td className="py-4 px-2 text-center text-slate-500 font-black text-xs border border-slate-200">{idx + 1}</td>
                                         <td className="py-4 px-5 border border-slate-200">
                                             <p className="font-semibold text-slate-800">
                                                 {new Date(r.tanggal).toLocaleDateString('id-ID', {

@@ -7,13 +7,206 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
         dataPelanggaran, 
         listMapelKelas,
         dataEkskul,
+        listAllEkskul,
         isBulkPrint = false,
         tahunAjaranList = [],
         selectedTahunAjaranId = null,
         zoomScale = 1
-    }) => (
-        <div className={`w-full flex justify-center overflow-hidden print:overflow-visible ${isBulkPrint ? 'page-break-after-always' : ''}`}>
-            <div style={{ zoom: isBulkPrint ? 1 : zoomScale }} id={isBulkPrint ? undefined : "raport-print-area"} className={`raport-print-content bg-white text-black p-10 shadow-sm border  w-[800px] max-w-[800px] mx-auto print:border-none print:shadow-none print:w-full print:mx-0 print:p-0 ${isBulkPrint ? 'mb-12 print:mb-0' : ''}`}>
+    }) => {
+        const processedGrades = {};
+        
+        if (listMapelKelas && Array.isArray(listMapelKelas)) {
+            listMapelKelas.forEach(mp => {
+                processedGrades[mp] = { total: 0, count: 0, keterangan: '' };
+            });
+        }
+
+        if (dataRaport && dataRaport.mapels && Array.isArray(dataRaport.mapels)) {
+            dataRaport.mapels.forEach(item => {
+                if (!processedGrades[item.mata_pelajaran]) {
+                    processedGrades[item.mata_pelajaran] = { total: 0, count: 0, keterangan: item.keterangan || '' };
+                }
+                if (item.rata_rata > 0) {
+                    processedGrades[item.mata_pelajaran].total += Number(item.rata_rata || 0);
+                    processedGrades[item.mata_pelajaran].count += 1;
+                }
+                if (item.keterangan && !processedGrades[item.mata_pelajaran].keterangan) {
+                     processedGrades[item.mata_pelajaran].keterangan = item.keterangan;
+                }
+            });
+        }
+        
+        const finalGradesList = Object.keys(processedGrades).map(mp => {
+            const avg = processedGrades[mp].count > 0 ? Math.round(processedGrades[mp].total / processedGrades[mp].count) : '-';
+            let capaian = processedGrades[mp].keterangan;
+            if (!capaian && avg !== '-') {
+                if (avg >= 85) capaian = `Sangat baik dalam memahami dan menguasai materi pembelajaran, serta mampu mengaplikasikan pengetahuannya dengan sangat efektif.`;
+                else if (avg >= 75) capaian = `Menunjukkan pemahaman yang baik dalam materi pembelajaran dan mampu menyelesaikan tugas dengan hasil yang memuaskan.`;
+                else capaian = `Menunjukkan pemahaman dasar dalam materi pembelajaran, namun masih memerlukan bimbingan dan peningkatan lebih lanjut.`;
+            } else if (!capaian) {
+                capaian = "Belum ada nilai yang diinputkan.";
+            }
+            return { mata_pelajaran: mp, nilai: avg, capaian };
+        });
+
+        // Use standard function to sort if getMapelSortIndex exists in scope
+        try {
+            finalGradesList.sort((a, b) => getMapelSortIndex(a.mata_pelajaran) - getMapelSortIndex(b.mata_pelajaran));
+        } catch(e) {}
+
+        const chunk1 = finalGradesList.slice(0, 11);
+        const chunk2 = finalGradesList.slice(11);
+
+        const renderRows = (list, startIndex) => {
+            if (list.length === 0 && startIndex === 0) {
+                return (
+                    <tr>
+                        <td colSpan="4" className="border border-slate-600 border-[0.5px] py-8 text-center italic text-gray-500">Belum ada data mata pelajaran (jadwal kelas kosong).</td>
+                    </tr>
+                );
+            }
+            return list.map((item, index) => (
+                <tr key={index} className="print:break-inside-avoid">
+                    <td className="border border-slate-600 border-[0.5px] py-2 px-1 text-center align-top">{startIndex + index + 1}</td>
+                    <td className="border border-slate-600 border-[0.5px] py-2 px-2 align-top">{item.mata_pelajaran}</td>
+                    <td className="border border-slate-600 border-[0.5px] py-2 px-1 text-center align-top">{item.nilai}</td>
+                    <td 
+                        className="border border-slate-600 border-[0.5px] py-2 px-3 text-justify align-top leading-tight outline-none focus:bg-emerald-50 transition-colors"
+                        contentEditable={true}
+                        suppressContentEditableWarning={true}
+                    >
+                        <span className={item.nilai === '-' ? 'text-gray-400 italic' : ''}>{item.capaian}</span>
+                    </td>
+                </tr>
+            ));
+        };
+
+        const extraTables = (
+            <>
+                {/* Table Ekstrakurikuler */}
+                    <div className="mt-8">
+                        <table className="w-full border-collapse text-[13px]">
+                            <thead>
+                                <tr className="">
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-1 w-10 text-center font-semibold">No</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-2 w-48 text-center font-semibold">Kegiatan Ekstrakurikuler</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-2 w-16 text-center font-semibold">Predikat</th>
+                                    <th className="border-[0.5px] border-slate-600 py-2 px-3 text-center font-semibold">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {listAllEkskul && listAllEkskul.length > 0 ? (
+                                    listAllEkskul.map((eks, index) => {
+                                        const studentEks = (dataEkskul || []).find(d => d.nama_ekskul === eks.nama_ekskul);
+                                        return (
+                                            <tr key={index} className="print:break-inside-avoid">
+                                                <td className="border-[0.5px] border-slate-600 py-1 px-1 text-center">{index + 1}</td>
+                                                <td className="border-[0.5px] border-slate-600 py-1 px-2">{eks.nama_ekskul}</td>
+                                                <td className="border-[0.5px] border-slate-600 py-1 px-2 text-center">{studentEks?.predikat || '-'}</td>
+                                                <td className="border-[0.5px] border-slate-600 py-1 px-3">{studentEks?.keterangan || '-'}</td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4" className="border-[0.5px] border-slate-600 py-4 text-center italic ">Belum ada data ekstrakurikuler di sistem</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Table Ketidakhadiran */}
+                    <div className="mt-6 w-[50%]">
+                        <table className="w-full border-collapse text-[13px]">
+                            <tbody>
+                                <tr className="print:break-inside-avoid">
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-40">Sakit</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-28">: {dataKehadiran?.sakit || 0} hari</td>
+                                </tr>
+                                <tr className="print:break-inside-avoid">
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Izin</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">: {dataKehadiran?.izin || 0} hari</td>
+                                </tr>
+                                <tr className="print:break-inside-avoid">
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Tanpa Keterangan</td>
+                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">: {dataKehadiran?.alpa || 0} hari</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Catatan Wali Kelas */}
+                    <div className="mt-6" style={{ pageBreakInside: 'avoid' }}>
+                        <div className="flex justify-between items-end mb-3">
+                            <p className="font-semibold text-[13px]">Catatan Wali Kelas</p>
+                        </div>
+                        <div 
+                            className="w-full min-h-[60px] border-[0.5px] border-slate-600 p-3 text-[13px] italic flex items-center outline-none focus: transition-colors"
+                            contentEditable={true}
+                            suppressContentEditableWarning={true}
+                        >
+                            Tetap semangat belajar dan tingkatkan terus prestasimu.
+                        </div>
+                    </div>
+
+                    {/* Signatures */}
+                    <div className="mt-6" style={{ pageBreakInside: 'avoid' }}>
+                        <div className="flex justify-between text-[13px] px-8">
+                            <div className="text-left flex flex-col h-full justify-between">
+                                <div>
+                                    <p>Mengetahui</p>
+                                    <p className="mb-14">Orang Tua/Wali,</p>
+                                </div>
+                                <div>
+                                    <div className="font-normal min-w-[180px] border-b border-black pb-1 inline-block">
+                                        {studentObj?.nama_wali || <span className="invisible">___________________</span>}
+                                    </div>
+                                    <p className="mt-1 invisible">NIP. ......................................</p>
+                                </div>
+                            </div>
+                             <div className="text-left flex flex-col h-full justify-between">
+                                <div>
+                                    <p className="flex items-center">
+                                        <span>Garut,&nbsp;</span>
+                                        <span 
+                                            className="outline-none focus: transition-colors cursor-text" 
+                                            contentEditable={true} 
+                                            suppressContentEditableWarning={true}
+                                        >
+                                            ......................................
+                                        </span>
+                                    </p>
+                                    <p className="mb-14">Wali Kelas,</p>
+                                </div>
+                                <div>
+                                    <div className="font-bold min-w-[180px] border-b border-black pb-1 inline-block">
+                                        {studentObj?.nama_wali_kelas || <span className="invisible">___________________</span>}
+                                    </div>
+                                    <p className="mt-1">NIP. ......................................</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 flex justify-center text-[13px]">
+                            <div className="text-center flex flex-col items-center">
+                                <p>Mengetahui,</p>
+                                <p className="mb-14">Kepala Sekolah</p>
+                                <div className="font-bold min-w-[200px] border-b border-black pb-1 inline-block">
+                                    <span className="invisible">________________________</span>
+                                </div>
+                                <p className="mt-1 text-left w-full pl-2">NIP. ......................................</p>
+                            </div>
+                        </div>
+                    </div>
+                
+            </>
+        );
+
+        return (
+    
+        <div className={`w-full flex justify-center overflow-hidden print:overflow-visible print:block ${isBulkPrint ? 'page-break-after-always' : ''}`}>
+            <div style={{ zoom: isBulkPrint ? 1 : zoomScale }} id={isBulkPrint ? undefined : "raport-print-area"} className={`raport-print-content bg-white text-black p-10 shadow-sm border  w-[800px] max-w-[800px] mx-auto print:border-none print:shadow-none print:w-full print:max-w-full print:mx-0 print:p-0 ${isBulkPrint ? 'mb-12 print:mb-0' : ''}`}>
                 {/* Halaman Cover */}
                 <div className="flex flex-col items-center justify-between min-h-[850px] w-full bg-white text-black pb-12 pt-4 text-center" style={{ pageBreakAfter: 'always' }}>
                     <div className="mt-0">
@@ -284,200 +477,49 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                         </div>
                     </div>
 
+                    
                     {/* Table Nilai */}
                     <div className="flex justify-end mb-1 no-print">
                     </div>
-                    <table className="w-full border-collapse text-[13px]">
+                    <table className="w-full border-collapse  text-[13px]">
                         <thead>
                             <tr className="">
-                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-10 text-center font-semibold">No</th>
-                                <th className="border-[0.5px] border-slate-600 py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
-                                <th className="border-[0.5px] border-slate-600 py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
-                                <th className="border-[0.5px] border-slate-600 py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-10 text-center font-semibold">No</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {(() => {
-                                const processedGrades = {};
-                                
-                                // Inisialisasi semua mapel dari jadwal
-                                listMapelKelas.forEach(mp => {
-                                    processedGrades[mp] = { total: 0, count: 0, keterangan: '' };
-                                });
-
-                                if (dataRaport && dataRaport.mapels && Array.isArray(dataRaport.mapels)) {
-                                    dataRaport.mapels.forEach(item => {
-                                        if (!processedGrades[item.mata_pelajaran]) {
-                                            processedGrades[item.mata_pelajaran] = { total: 0, count: 0, keterangan: item.keterangan || '' };
-                                        }
-                                        if (item.rata_rata > 0) {
-                                            processedGrades[item.mata_pelajaran].total += Number(item.rata_rata || 0);
-                                            processedGrades[item.mata_pelajaran].count += 1;
-                                        }
-                                        if (item.keterangan && !processedGrades[item.mata_pelajaran].keterangan) {
-                                             processedGrades[item.mata_pelajaran].keterangan = item.keterangan;
-                                        }
-                                    });
-                                }
-                                
-                                const finalGradesList = Object.keys(processedGrades).map(mp => {
-                                    const avg = processedGrades[mp].count > 0 ? Math.round(processedGrades[mp].total / processedGrades[mp].count) : '-';
-                                    let capaian = processedGrades[mp].keterangan;
-                                    if (!capaian && avg !== '-') {
-                                        if (avg >= 85) capaian = `Sangat baik dalam memahami dan menguasai materi pembelajaran, serta mampu mengaplikasikan pengetahuannya dengan sangat efektif.`;
-                                        else if (avg >= 75) capaian = `Menunjukkan pemahaman yang baik dalam materi pembelajaran dan mampu menyelesaikan tugas dengan hasil yang memuaskan.`;
-                                        else capaian = `Menunjukkan pemahaman dasar dalam materi pembelajaran, namun masih memerlukan bimbingan dan peningkatan lebih lanjut.`;
-                                    } else if (!capaian) {
-                                        capaian = "Belum ada nilai yang diinputkan.";
-                                    }
-                                    return { mata_pelajaran: mp, nilai: avg, capaian };
-                                });
-
-                                finalGradesList.sort((a, b) => getMapelSortIndex(a.mata_pelajaran) - getMapelSortIndex(b.mata_pelajaran));
-
-                                if (finalGradesList.length === 0) {
-                                    return (
-                                        <tr>
-                                            <td colSpan="4" className="border-[0.5px] border-slate-600 py-8 text-center italic ">Belum ada data mata pelajaran (jadwal kelas kosong).</td>
-                                        </tr>
-                                    );
-                                }
-
-                                return finalGradesList.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center align-top">{index + 1}</td>
-                                        <td className="border-[0.5px] border-slate-600 py-2 px-2 align-top">{item.mata_pelajaran}</td>
-                                        <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center align-top">{item.nilai}</td>
-                                        <td 
-                                            className="border-[0.5px] border-slate-600 py-2 px-3 text-justify align-top leading-tight outline-none focus: transition-colors"
-                                            contentEditable={true}
-                                            suppressContentEditableWarning={true}
-                                        >
-                                            <span className={item.nilai === '-' ? ' italic' : ''}>{item.capaian}</span>
-                                        </td>
-                                    </tr>
-                                ));
-                            })()}
+                            {renderRows(chunk1, 0)}
                         </tbody>
                     </table>
+                    
+                    {chunk2.length === 0 && extraTables}
+                </div>
 
-                    {/* Table Ekstrakurikuler */}
-                    <div className="mt-8">
-                        <table className="w-full border-collapse text-[13px]">
+                {chunk2.length > 0 && (
+                    <div className="flex flex-col min-h-[850px] w-full bg-white text-black pt-16 px-12" style={{ pageBreakAfter: 'always' }}>
+                        <table className="w-full border-collapse  text-[13px]">
                             <thead>
                                 <tr className="">
-                                    <th className="border-[0.5px] border-slate-600 py-2 px-1 w-10 text-center font-semibold">No</th>
-                                    <th className="border-[0.5px] border-slate-600 py-2 px-2 w-48 text-center font-semibold">Kegiatan Ekstrakurikuler</th>
-                                    <th className="border-[0.5px] border-slate-600 py-2 px-2 w-16 text-center font-semibold">Predikat</th>
-                                    <th className="border-[0.5px] border-slate-600 py-2 px-3 text-center font-semibold">Keterangan</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-10 text-center font-semibold">No</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {dataEkskul && dataEkskul.length > 0 ? (
-                                    dataEkskul.map((eks, index) => (
-                                        <tr key={index}>
-                                            <td className="border-[0.5px] border-slate-600 py-1 px-1 text-center">{index + 1}</td>
-                                            <td className="border-[0.5px] border-slate-600 py-1 px-2">{eks.nama_ekskul}</td>
-                                            <td className="border-[0.5px] border-slate-600 py-1 px-2 text-center">{eks.predikat}</td>
-                                            <td className="border-[0.5px] border-slate-600 py-1 px-3">{eks.keterangan || '-'}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="border-[0.5px] border-slate-600 py-4 text-center italic ">Belum ada data ekstrakurikuler</td>
-                                    </tr>
-                                )}
+                                {renderRows(chunk2, 11)}
                             </tbody>
                         </table>
+                        
+                        {extraTables}
                     </div>
-
-                    {/* Table Ketidakhadiran */}
-                    <div className="mt-6 w-[50%]">
-                        <table className="w-full border-collapse text-[13px]">
-                            <tbody>
-                                <tr>
-                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-40">Sakit</td>
-                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3 w-28">: {dataKehadiran?.sakit || 0} hari</td>
-                                </tr>
-                                <tr>
-                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Izin</td>
-                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">: {dataKehadiran?.izin || 0} hari</td>
-                                </tr>
-                                <tr>
-                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">Tanpa Keterangan</td>
-                                    <td className="border-[0.5px] border-slate-600 py-1.5 px-3">: {dataKehadiran?.alpa || 0} hari</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Catatan Wali Kelas */}
-                    <div className="mt-6" style={{ pageBreakInside: 'avoid' }}>
-                        <div className="flex justify-between items-end mb-3">
-                            <p className="font-semibold text-[13px]">Catatan Wali Kelas</p>
-                        </div>
-                        <div 
-                            className="w-full min-h-[60px] border-[0.5px] border-slate-600 p-3 text-[13px] italic flex items-center outline-none focus: transition-colors"
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                        >
-                            Tetap semangat belajar dan tingkatkan terus prestasimu.
-                        </div>
-                    </div>
-
-                    {/* Signatures */}
-                    <div className="mt-6" style={{ pageBreakInside: 'avoid' }}>
-                        <div className="flex justify-between text-[13px] px-8">
-                            <div className="text-left flex flex-col h-full justify-between">
-                                <div>
-                                    <p>Mengetahui</p>
-                                    <p className="mb-14">Orang Tua/Wali,</p>
-                                </div>
-                                <div>
-                                    <div className="font-normal min-w-[180px] border-b border-black pb-1 inline-block">
-                                        {studentObj?.nama_wali || <span className="invisible">___________________</span>}
-                                    </div>
-                                    <p className="mt-1 invisible">NIP. ......................................</p>
-                                </div>
-                            </div>
-                             <div className="text-left flex flex-col h-full justify-between">
-                                <div>
-                                    <p className="flex items-center">
-                                        <span>Garut,&nbsp;</span>
-                                        <span 
-                                            className="outline-none focus: transition-colors cursor-text" 
-                                            contentEditable={true} 
-                                            suppressContentEditableWarning={true}
-                                        >
-                                            ......................................
-                                        </span>
-                                    </p>
-                                    <p className="mb-14">Wali Kelas,</p>
-                                </div>
-                                <div>
-                                    <div className="font-bold min-w-[180px] border-b border-black pb-1 inline-block">
-                                        {studentObj?.nama_wali_kelas || <span className="invisible">___________________</span>}
-                                    </div>
-                                    <p className="mt-1">NIP. ......................................</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 flex justify-center text-[13px]">
-                            <div className="text-center flex flex-col items-center">
-                                <p>Mengetahui,</p>
-                                <p className="mb-14">Kepala Sekolah</p>
-                                <div className="font-bold min-w-[200px] border-b border-black pb-1 inline-block">
-                                    <span className="invisible">________________________</span>
-                                </div>
-                                <p className="mt-1 text-left w-full pl-2">NIP. ......................................</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
 
                 {/* Halaman Kelima - Buku Induk */}
-                <div className="w-full bg-white text-black pt-16 px-8" style={{ pageBreakBefore: 'always' }}>
+                <div className="w-full bg-white text-black pt-16 px-8">
                     <div className="text-center mb-8">
                         <h1 className="text-[16px] font-bold uppercase tracking-wider">
                             BUKU INDUK
@@ -545,7 +587,7 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                                 }
 
                                 return finalGradesList.map((item, index) => (
-                                    <tr key={index}>
+                                    <tr key={index} className="print:break-inside-avoid">
                                         <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center">{index + 1}</td>
                                         <td className="border-[0.5px] border-slate-600 py-2 px-3">{item.mata_pelajaran}</td>
                                         <td className="border-[0.5px] border-slate-600 py-2 px-1 text-center">{item.nilai}</td>
@@ -566,18 +608,21 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                             </tr>
                         </thead>
                         <tbody>
-                            {dataEkskul && dataEkskul.length > 0 ? (
-                                dataEkskul.map((eks, index) => (
-                                    <tr key={index}>
-                                        <td className="border-[0.5px] border-slate-600 py-1 px-1 text-center">{index + 1}</td>
-                                        <td className="border-[0.5px] border-slate-600 py-1 px-2">{eks.nama_ekskul}</td>
-                                        <td className="border-[0.5px] border-slate-600 py-1 px-2 text-center">{eks.predikat}</td>
-                                        <td className="border-[0.5px] border-slate-600 py-1 px-3">{eks.keterangan || '-'}</td>
-                                    </tr>
-                                ))
+                            {listAllEkskul && listAllEkskul.length > 0 ? (
+                                listAllEkskul.map((eks, index) => {
+                                    const studentEks = (dataEkskul || []).find(d => d.nama_ekskul === eks.nama_ekskul);
+                                    return (
+                                        <tr key={index}>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-1 text-center">{index + 1}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-2">{eks.nama_ekskul}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-2 text-center">{studentEks?.predikat || '-'}</td>
+                                            <td className="border-[0.5px] border-slate-600 py-1 px-3">{studentEks?.keterangan || '-'}</td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="border-[0.5px] border-slate-600 py-4 text-center italic ">Belum ada data ekstrakurikuler</td>
+                                    <td colSpan="4" className="border-[0.5px] border-slate-600 py-4 text-center italic ">Belum ada data ekstrakurikuler di sistem</td>
                                 </tr>
                             )}
                         </tbody>
@@ -617,6 +662,8 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
             </div>
         </div>
     );
+};
+
 export default RaportContent;
 
 

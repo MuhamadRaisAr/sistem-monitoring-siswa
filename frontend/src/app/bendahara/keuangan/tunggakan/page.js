@@ -63,7 +63,18 @@ export default function TunggakanPage() {
         const matchSearch = 
             (item.nama_siswa || '').toLowerCase().includes(searchLower) ||
             (item.nis || '').toLowerCase().includes(searchLower);
-        return matchSearch;
+            
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+        
+        let isTunggakan = false;
+        if (item.tahun < currentYear) {
+            isTunggakan = true;
+        } else if (item.tahun === currentYear && item.bulan < currentMonth) {
+            isTunggakan = true;
+        }
+
+        return matchSearch && isTunggakan;
     });
 
     // Group by TA

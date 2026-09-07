@@ -283,20 +283,107 @@ export default function CetakRaportGuru() {
     };
 
     const handleDownloadPdf = async () => {
+        const container = document.getElementById('raport-print-area');
+        if (!container) {
+            alert('Konten raport tidak ditemukan.');
+            return;
+        }
+
+        let renderWrapper = null;
         try {
-            const html2pdf = (await import('html2pdf.js')).default;
-            const element = document.getElementById('raport-print-area');
-            const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5],
-                filename:     `Raport_${selectedStudent?.nama_lengkap || 'Siswa'}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
+            const { default: html2canvas } = await import('html2canvas-pro');
+            const { default: jsPDF } = await import('jspdf');
+
+            // A4 with 1cm margins: content = 190mm x 277mm
+            const MARGIN_MM   = 10;
+            const A4_W_MM     = 210;
+            const A4_H_MM     = 297;
+            const CONTENT_W_MM = A4_W_MM - 2 * MARGIN_MM;  // 190mm
+            const CONTENT_H_MM = A4_H_MM - 2 * MARGIN_MM;  // 277mm
+
+            // 190mm at 96dpi = ~718px — matches browser print output with 1cm margins
+            const CONTENT_W_PX = 718;
+
+            // Build hidden off-screen render container at exact print width
+            renderWrapper = document.createElement('div');
+            renderWrapper.setAttribute('data-pdf-render', '1');
+            renderWrapper.style.cssText = `position:fixed;top:-99999px;left:-99999px;width:${CONTENT_W_PX}px;background:white;z-index:-9999;pointer-events:none;overflow:visible;`;
+
+            // Clone raport and apply print-equivalent styles
+            const clone = container.cloneNode(true);
+            clone.style.zoom       = '1';
+            clone.style.width      = `${CONTENT_W_PX}px`;
+            clone.style.padding    = '0';   // same as print:p-0
+            clone.style.margin     = '0';   // same as print:mx-0
+            clone.style.boxShadow  = 'none';
+            clone.style.border     = 'none';
+
+            renderWrapper.appendChild(clone);
+            document.body.appendChild(renderWrapper);
+
+            // Wait for browser layout
+            await new Promise(r => setTimeout(r, 350));
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            let firstPdfPage = true;
+            const pageEls = Array.from(clone.children);
+
+            for (let i = 0; i < pageEls.length; i++) {
+                const pageEl = pageEls[i];
+
+                const canvas = await html2canvas(pageEl, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0,
+                });
+
+                // Number of canvas pixels that represent one A4 content-height
+                const ONE_PAGE_H_PX = Math.round(
+                    (CONTENT_H_MM / CONTENT_W_MM) * canvas.width
+                );
+
+                // Slice the canvas into A4-height chunks
+                let yOffset = 0;
+                while (yOffset < canvas.height) {
+                    const sliceH = Math.min(ONE_PAGE_H_PX, canvas.height - yOffset);
+
+                    const sliceCanvas = document.createElement('canvas');
+                    sliceCanvas.width  = canvas.width;
+                    sliceCanvas.height = sliceH;
+                    const ctx = sliceCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, sliceH);
+                    ctx.drawImage(canvas, 0, -yOffset);
+
+                    const imgData   = sliceCanvas.toDataURL('image/jpeg', 0.97);
+                    const sliceHMM  = (sliceH / canvas.width) * CONTENT_W_MM;
+
+                    if (!firstPdfPage) pdf.addPage();
+                    firstPdfPage = false;
+
+                    pdf.addImage(
+                        imgData, 'JPEG',
+                        MARGIN_MM, MARGIN_MM,
+                        CONTENT_W_MM, sliceHMM
+                    );
+
+                    yOffset += ONE_PAGE_H_PX;
+                }
+            }
+
+            document.body.removeChild(renderWrapper);
+            renderWrapper = null;
+
+            pdf.save(`Raport_${selectedStudent?.nama_lengkap || 'Siswa'}.pdf`);
         } catch (error) {
-            console.error("Error generating PDF:", error);
-            alert("Gagal mengunduh PDF. Pastikan perangkat Anda mendukung fitur ini.");
+            console.error('Error generating PDF:', error);
+            if (renderWrapper && renderWrapper.parentNode) {
+                document.body.removeChild(renderWrapper);
+            }
+            alert('Gagal mengunduh PDF: ' + error.message);
         }
     };
 
@@ -944,28 +1031,32 @@ export default function CetakRaportGuru() {
     return (
         <div className="space-y-6">
             <style>{`
-                @media print {
-                    body * { visibility: hidden !important; }
-                    .print-area, .print-area * { visibility: visible !important; }
-                    .print-area { 
-                        position: absolute !important; 
-                        left: 0 !important; 
-                        top: 0 !important; 
-                        width: 100% !important; 
-                        background: white !important;
-                        color: black !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        box-shadow: none !important;
+                    @media print {
+                        body * { visibility: hidden !important; }
+                        .print-area, .print-area * { visibility: visible !important; }
+                        .print-area { 
+                            position: absolute !important; 
+                            left: 0 !important; 
+                            top: 0 !important; 
+                            width: 100% !important; 
+                            background: white !important;
+                            color: black !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            box-shadow: none !important;
+                        }
+                        .no-print { display: none !important; }
+                        
+                        @page {
+                            size: A4 portrait;
+                            margin: 1cm;
+                        }
+
+                        table { border-collapse: collapse !important; }
+                        td, th { border: 1px solid black !important; }
+                        tr { page-break-inside: avoid !important; }
                     }
-                    .no-print { display: none !important; }
-                    
-                    @page {
-                        size: A4 portrait;
-                        margin: 1cm; /* Slightly smaller margin to give more breathing room */
-                    }
-                }
-            `}</style>
+                `}</style>
             
             {/* BULK PRINT LOADING OVERLAY */}
             {printAllLoading && (
