@@ -223,12 +223,14 @@ export default function BendaharaKeuanganPage() {
 
             if (res.ok) {
                 fetchBills();
+                alert(status === 'lunas' ? 'Pembayaran berhasil dikonfirmasi!' : 'Pembayaran berhasil dibatalkan!');
             } else {
                 const data = await res.json();
                 alert(data.message || 'Gagal merubah status pembayaran.');
             }
         } catch (err) {
             console.error('Error paying bill:', err);
+            alert('Terjadi kesalahan jaringan.');
         }
     };
 
