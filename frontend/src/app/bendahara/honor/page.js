@@ -548,21 +548,21 @@ export default function HonorBendaharaPage() {
                             <h3 className="font-bold text-emerald-800 dark:text-emerald-400">Daftar Honor Guru</h3>
                             <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-0.5">Generate honor otomatis dengan memasukkan nominal tarif per pertemuan.</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-3 sm:mt-0">
+                            <div className="relative w-full sm:w-auto">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold">Rp</span>
                                 <input 
                                     type="text"
                                     value={nominalInput}
                                     onChange={handleNominalChange}
                                     placeholder="Nominal per pertemuan"
-                                    className="pl-9 pr-3 py-2 w-48 rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08] text-sm focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                                    className="pl-9 pr-3 py-2 w-full sm:w-48 rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#020c08] text-sm focus:outline-none focus:border-emerald-500 text-slate-800 dark:text-slate-100"
                                 />
                             </div>
                             <button 
                                 onClick={handleGenerateHonor}
                                 disabled={isGenerating || !selectedTahunAjaranId}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center gap-2"
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2 w-full sm:w-auto"
                             >
                                 {isGenerating ? 'Memproses...' : 'Generate Honor'}
                             </button>

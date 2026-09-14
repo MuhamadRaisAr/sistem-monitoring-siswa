@@ -70,7 +70,6 @@ export default function WaliAkademikPage() {
 
         const startYear = parseInt(years[0], 10);
         const endYear = parseInt(years[1], 10);
-        
         const months = [];
         if (ta.semester.toLowerCase() === 'ganjil') {
             for (let i = 7; i <= 12; i++) {
@@ -84,9 +83,20 @@ export default function WaliAkademikPage() {
         return months;
     }, [selectedTahunAjaranId, tahunAjaranList]);
 
+    // Menghitung Total Kehadiran H/S/I/A sesuai bulan yang dipilih (atau semua jika 1 semester)
+    const totalAbsensiStats = useMemo(() => {
+        const total = { hadir: 0, sakit: 0, izin: 0, alpa: 0 };
+        logs.forEach(log => {
+            if (!log.tanggal || !log.kehadiran) return;
+            if (selectedBulan !== 'all' && !log.tanggal.startsWith(selectedBulan)) return;
+            total[log.kehadiran] = (total[log.kehadiran] || 0) + 1;
+        });
+        return total;
+    }, [logs, selectedBulan]);
+
     // Set Default Bulan
     useEffect(() => {
-        if (availableMonths.length > 0 && (!selectedBulan || !availableMonths.includes(selectedBulan))) {
+        if (availableMonths.length > 0 && (!selectedBulan || (selectedBulan !== 'all' && !availableMonths.includes(selectedBulan)))) {
             const currentMonthStr = new Date().toISOString().substring(0, 7);
             if (availableMonths.includes(currentMonthStr)) {
                 setSelectedBulan(currentMonthStr);
@@ -99,6 +109,17 @@ export default function WaliAkademikPage() {
     // Dapatkan semua tanggal di bulan terpilih (format: YYYY-MM-DD)
     const uniqueDates = useMemo(() => {
         if (!selectedBulan) return [];
+        if (selectedBulan === 'all') {
+            return availableMonths.flatMap(m => {
+                const [year, month] = m.split('-');
+                const numDays = new Date(year, month, 0).getDate();
+                const dates = [];
+                for (let i = 1; i <= numDays; i++) {
+                    dates.push(`${year}-${month}-${String(i).padStart(2, '0')}`);
+                }
+                return dates;
+            });
+        }
         const [year, month] = selectedBulan.split('-');
         const numDays = new Date(year, month, 0).getDate();
         
@@ -108,12 +129,18 @@ export default function WaliAkademikPage() {
             dates.push(dateStr);
         }
         return dates;
-    }, [selectedBulan]);
+    }, [selectedBulan, availableMonths]);
 
     // Mendapatkan tanggal pertama dan terakhir dari log absensi yang ada
     const { firstLogDate, lastLogDate } = useMemo(() => {
         if (!selectedBulan || logs.length === 0) return { firstLogDate: null, lastLogDate: null };
-        const monthLogs = logs.filter(l => l.tanggal && l.tanggal.startsWith(selectedBulan));
+        const monthLogs = logs.filter(l => {
+            if (!l.tanggal) return false;
+            if (selectedBulan === 'all') {
+                return availableMonths.some(m => l.tanggal.startsWith(m));
+            }
+            return l.tanggal.startsWith(selectedBulan);
+        });
         if (monthLogs.length === 0) return { firstLogDate: null, lastLogDate: null };
         
         const sortedDates = monthLogs.map(l => {
@@ -125,7 +152,7 @@ export default function WaliAkademikPage() {
             firstLogDate: sortedDates[0],
             lastLogDate: sortedDates[sortedDates.length - 1]
         };
-    }, [logs, selectedBulan]);
+    }, [logs, selectedBulan, availableMonths]);
 
     // Helper to get earliest schedule for sorting
     const getEarliestSchedule = (jadwalList) => {
@@ -144,7 +171,13 @@ export default function WaliAkademikPage() {
     const activities = useMemo(() => {
         const uniqueMapels = Array.from(new Set(jadwal.map(j => j.mata_pelajaran).filter(Boolean)));
         return uniqueMapels.map(m => {
-            const mapelLogs = logs.filter(l => l.jenis_kegiatan === m && l.tanggal && l.tanggal.startsWith(selectedBulan));
+            const mapelLogs = logs.filter(l => {
+                if (l.jenis_kegiatan !== m || !l.tanggal) return false;
+                if (selectedBulan === 'all') {
+                    return availableMonths.some(am => l.tanggal.startsWith(am));
+                }
+                return l.tanggal.startsWith(selectedBulan);
+            });
             const logsByDateMap = {};
             mapelLogs.forEach(log => {
                 const d = new Date(log.tanggal);
@@ -163,13 +196,11 @@ export default function WaliAkademikPage() {
             if (aSched.day !== bSched.day) return aSched.day - bSched.day;
             return aSched.time.localeCompare(bSched.time);
         });
-    }, [jadwal, logs, selectedBulan]);
+    }, [jadwal, logs, selectedBulan, availableMonths]);
 
     // Build per-date schedule map including ALL dates in month
     const dateScheduleMap = useMemo(() => {
         if (!selectedBulan) return {};
-        const [year, month] = selectedBulan.split('-');
-        const numDays = new Date(year, month, 0).getDate();
         const dayNamesArr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
         const map = {};
 
@@ -179,7 +210,7 @@ export default function WaliAkademikPage() {
             if (!log.tanggal || !log.jenis_kegiatan) return;
             const d = new Date(log.tanggal);
             const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            if (!ds.startsWith(selectedBulan)) return;
+            if (selectedBulan !== 'all' && !ds.startsWith(selectedBulan)) return;
             if (!logsByDateMapel[ds]) logsByDateMapel[ds] = {};
             // Last log per mapel per date wins (terbaru)
             logsByDateMapel[ds][log.jenis_kegiatan] = log;
@@ -188,57 +219,64 @@ export default function WaliAkademikPage() {
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-        for (let i = 1; i <= numDays; i++) {
-            const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
-            const dObj = new Date(dateStr);
-            const dayName = dayNamesArr[dObj.getDay()];
-            const isSunday = dObj.getDay() === 0;
+        const monthsToProcess = selectedBulan === 'all' ? availableMonths : [selectedBulan];
 
-            if (isSunday) {
-                map[dateStr] = { isSunday: true, items: [] };
-                continue;
-            }
+        monthsToProcess.forEach(monthStr => {
+            const [year, month] = monthStr.split('-');
+            const numDays = new Date(year, month, 0).getDate();
 
-            const dateLogsMap = logsByDateMapel[dateStr] || {};
+            for (let i = 1; i <= numDays; i++) {
+                const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
+                const dObj = new Date(dateStr);
+                const dayName = dayNamesArr[dObj.getDay()];
+                const isSunday = dObj.getDay() === 0;
 
-            // If no logs at all for this date, consider it a holiday or non-school day (ONLY IF PAST DATE)
-            if (Object.keys(dateLogsMap).length === 0 && dateStr < todayStr) {
-                map[dateStr] = { isSunday: false, isHoliday: true, items: [] };
-                continue;
-            }
-
-            const jadwalHari = jadwal.filter(j => j.hari === dayName);
-            const seenMapel = new Set();
-            const uniqueJadwalHari = [...jadwalHari].reverse().filter(j => {
-                if (!j.mata_pelajaran || seenMapel.has(j.mata_pelajaran)) return false;
-                seenMapel.add(j.mata_pelajaran);
-                return true;
-            }).reverse();
-
-            // 1. Tampilkan semua jadwal hari ini (isi log jika ada, biarkan null jika belum diabsen)
-            let items = uniqueJadwalHari.map(j => {
-                const log = dateLogsMap[j.mata_pelajaran] || null;
-                return {
-                    mapel: j.mata_pelajaran,
-                    namaGuru: j.nama_guru || '',
-                    log: log
-                };
-            });
-
-            // 2. Tambahkan absensi (log) yang mungkin mapel-nya tidak ada di jadwal saat ini (misal jadwal berubah / kelas pengganti)
-            Object.entries(dateLogsMap).forEach(([mapelName, log]) => {
-                const exists = items.find(i => i.mapel === mapelName);
-                if (!exists) {
-                    const j = jadwal.find(jd => jd.mata_pelajaran === mapelName);
-                    const namaGuru = j?.nama_guru || '';
-                    items.push({ mapel: mapelName, namaGuru, log });
+                if (isSunday) {
+                    map[dateStr] = { isSunday: true, items: [] };
+                    continue;
                 }
-            });
 
-            map[dateStr] = { isSunday: false, items };
-        }
+                const dateLogsMap = logsByDateMapel[dateStr] || {};
+
+                // If no logs at all for this date, consider it a holiday or non-school day (ONLY IF PAST DATE)
+                if (Object.keys(dateLogsMap).length === 0 && dateStr < todayStr) {
+                    map[dateStr] = { isSunday: false, isHoliday: true, items: [] };
+                    continue;
+                }
+
+                const jadwalHari = jadwal.filter(j => j.hari === dayName);
+                const seenMapel = new Set();
+                const uniqueJadwalHari = [...jadwalHari].reverse().filter(j => {
+                    if (!j.mata_pelajaran || seenMapel.has(j.mata_pelajaran)) return false;
+                    seenMapel.add(j.mata_pelajaran);
+                    return true;
+                }).reverse();
+
+                // 1. Tampilkan semua jadwal hari ini (isi log jika ada, biarkan null jika belum diabsen)
+                let items = uniqueJadwalHari.map(j => {
+                    const log = dateLogsMap[j.mata_pelajaran] || null;
+                    return {
+                        mapel: j.mata_pelajaran,
+                        namaGuru: j.nama_guru || '',
+                        log: log
+                    };
+                });
+
+                // 2. Tambahkan absensi (log) yang mungkin mapel-nya tidak ada di jadwal saat ini (misal jadwal berubah / kelas pengganti)
+                Object.entries(dateLogsMap).forEach(([mapelName, log]) => {
+                    const exists = items.find(i => i.mapel === mapelName);
+                    if (!exists) {
+                        const j = jadwal.find(jd => jd.mata_pelajaran === mapelName);
+                        const namaGuru = j?.nama_guru || '';
+                        items.push({ mapel: mapelName, namaGuru, log });
+                    }
+                });
+
+                map[dateStr] = { isSunday: false, items };
+            }
+        });
         return map;
-    }, [selectedBulan, jadwal, logs]);
+    }, [selectedBulan, jadwal, logs, availableMonths]);
 
 
     const sortedDates = useMemo(() => {
@@ -301,6 +339,7 @@ export default function WaliAkademikPage() {
                                 onChange={(e) => setSelectedBulan(e.target.value)}
                                 className="w-full rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#061e16] py-2 px-3 md:py-2.5 md:px-4 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-emerald-500 focus:outline-none cursor-pointer shadow-sm"
                             >
+                                <option value="all">1 Semester (Semua)</option>
                                 {availableMonths.map(m => {
                                     const dateObj = new Date(m + '-01');
                                     const monthName = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
@@ -312,10 +351,61 @@ export default function WaliAkademikPage() {
                 </div>
             </div>
 
+            {/* Summary H/S/I/A */}
+            {!loading && (
+                <div className="grid grid-cols-4 gap-2 sm:gap-4">
+                    <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-900/10 flex flex-col items-center justify-center">
+                        <span className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">{totalAbsensiStats.hadir}</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Hadir</span>
+                    </div>
+                    <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-900/10 flex flex-col items-center justify-center">
+                        <span className="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">{totalAbsensiStats.sakit}</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Sakit</span>
+                    </div>
+                    <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-cyan-200 dark:border-cyan-500/20 bg-cyan-50/50 dark:bg-cyan-900/10 flex flex-col items-center justify-center">
+                        <span className="text-xl sm:text-2xl font-bold text-cyan-600 dark:text-cyan-400">{totalAbsensiStats.izin}</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Izin</span>
+                    </div>
+                    <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-500/20 bg-rose-50/50 dark:bg-rose-900/10 flex flex-col items-center justify-center">
+                        <span className="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400">{totalAbsensiStats.alpa}</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase">Alpa</span>
+                    </div>
+                </div>
+            )}
+
             {/* Content */}
             {loading ? (
                 <div className="flex h-40 items-center justify-center">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+                </div>
+            ) : selectedBulan === 'all' ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {availableMonths.map(monthStr => {
+                        const dateObj = new Date(monthStr + '-01');
+                        const monthName = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                        
+                        const mTotal = { hadir: 0, sakit: 0, izin: 0, alpa: 0 };
+                        logs.forEach(log => {
+                            if (log.tanggal && log.tanggal.startsWith(monthStr) && log.kehadiran) {
+                                mTotal[log.kehadiran] = (mTotal[log.kehadiran] || 0) + 1;
+                            }
+                        });
+
+                        return (
+                            <div key={monthStr} className="glass-panel rounded-3xl p-4 border border-slate-200 dark:border-emerald-500/10 shadow-sm flex flex-col items-center justify-center gap-3">
+                                <div className="bg-slate-100 dark:bg-[#061e16] w-full text-center py-2 rounded-xl">
+                                    <h3 className="font-extrabold text-sm text-slate-800 dark:text-white leading-none">{monthName.split(' ')[0]}</h3>
+                                    <span className="text-[10px] text-slate-500 font-bold">{monthName.split(' ')[1]}</span>
+                                </div>
+                                <div className="grid grid-cols-2 w-full gap-2 text-center bg-white dark:bg-[#020c08]/50 p-2 rounded-xl border border-slate-100 dark:border-emerald-500/5">
+                                    <div className="flex flex-col"><span className="font-bold text-emerald-600">{mTotal.hadir}</span><span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Hadir</span></div>
+                                    <div className="flex flex-col"><span className="font-bold text-amber-600">{mTotal.sakit}</span><span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Sakit</span></div>
+                                    <div className="flex flex-col"><span className="font-bold text-cyan-600">{mTotal.izin}</span><span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Izin</span></div>
+                                    <div className="flex flex-col"><span className="font-bold text-rose-600">{mTotal.alpa}</span><span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Alpa</span></div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : sortedDates.length === 0 ? (
                 <div className="glass-panel rounded-3xl p-16 flex flex-col items-center justify-center gap-3 w-full border border-slate-200 dark:border-emerald-500/10">

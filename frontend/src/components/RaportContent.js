@@ -481,12 +481,18 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                     {/* Table Nilai */}
                     <div className="flex justify-end mb-1 no-print">
                     </div>
-                    <table className="w-full border-collapse  text-[13px]">
+                    <table className="w-full table-fixed border-collapse text-[13px]">
+                        <colgroup>
+                            <col style={{ width: '5%' }} />
+                            <col style={{ width: '30%' }} />
+                            <col style={{ width: '10%' }} />
+                            <col style={{ width: '55%' }} />
+                        </colgroup>
                         <thead>
                             <tr className="">
-                                <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-10 text-center font-semibold">No</th>
-                                <th className="border border-slate-600 border-[0.5px] py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
-                                <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-1 text-center font-semibold">No</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-2 text-center font-semibold">Muatan Pelajaran</th>
+                                <th className="border border-slate-600 border-[0.5px] py-2 px-1 text-center font-semibold">Nilai<br/>Akhir</th>
                                 <th className="border border-slate-600 border-[0.5px] py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
                             </tr>
                         </thead>
@@ -499,13 +505,19 @@ import { getMapelSortIndex } from '@/utils/mapelHelper';
                 </div>
 
                 {chunk2.length > 0 && (
-                    <div className="flex flex-col min-h-[850px] w-full bg-white text-black pt-16 px-12" style={{ pageBreakAfter: 'always' }}>
-                        <table className="w-full border-collapse  text-[13px]">
+                    <div className="flex flex-col min-h-[850px] w-full bg-white text-black pt-16 px-8" style={{ pageBreakAfter: 'always' }}>
+                        <table className="w-full table-fixed border-collapse text-[13px]">
+                            <colgroup>
+                                <col style={{ width: '5%' }} />
+                                <col style={{ width: '30%' }} />
+                                <col style={{ width: '10%' }} />
+                                <col style={{ width: '55%' }} />
+                            </colgroup>
                             <thead>
                                 <tr className="">
-                                    <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-10 text-center font-semibold">No</th>
-                                    <th className="border border-slate-600 border-[0.5px] py-2 px-2 w-48 text-center font-semibold">Muatan Pelajaran</th>
-                                    <th className="border border-slate-600 border-[0.5px] py-2 px-1 w-16 text-center font-semibold">Nilai<br/>Akhir</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-1 text-center font-semibold">No</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-2 text-center font-semibold">Muatan Pelajaran</th>
+                                    <th className="border border-slate-600 border-[0.5px] py-2 px-1 text-center font-semibold">Nilai<br/>Akhir</th>
                                     <th className="border border-slate-600 border-[0.5px] py-2 px-3 text-center font-semibold">Capaian Kompetensi</th>
                                 </tr>
                             </thead>

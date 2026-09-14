@@ -200,7 +200,7 @@ export default function AdminLayout({ children }) {
             ]
         },
         {
-            title: "Data & Akademik",
+            title: "Data Akademik",
             items: [
                 { name: 'Data Guru', href: '/admin/guru', icon: GraduationCap },
                 { name: 'Data Siswa', href: '/admin/siswa', icon: Users },
