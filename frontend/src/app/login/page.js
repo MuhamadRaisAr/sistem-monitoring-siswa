@@ -77,7 +77,7 @@ export default function LoginPage() {
                 {/* Header Logo & Title */}
                 <div className="flex flex-col items-center text-center">
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                        SIAKAD
+                        Sistem Akademik
                     </h2>
                     <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400/80 font-semibold">
                         SMP Plus Ma'had Darul Ikhlas
