@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "SIAKAD MDI Siswa - SMP Ma'had Darul Ikhlas",
+  title: "SIAKAD Siswa - SMP Ma'had Darul Ikhlas",
   description: "Aplikasi monitoring akademik, tahfidz, kesehatan, kedisiplinan, keuangan, dan komunikasi wali siswa",
 };
 

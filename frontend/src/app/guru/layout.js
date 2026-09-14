@@ -376,7 +376,7 @@ export default function GuruLayout({ children }) {
                         <div className="flex items-center gap-3 overflow-hidden">
                             <div>
                                 <h1 className="font-bold text-slate-800 dark:text-white tracking-wide leading-none transition-opacity duration-300">
-                                    SIAKAD MDI
+                                    SIAKAD
                                 </h1>
                             </div>
                         </div>

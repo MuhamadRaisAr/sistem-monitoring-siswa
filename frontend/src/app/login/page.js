@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -77,7 +77,7 @@ export default function LoginPage() {
                 {/* Header Logo & Title */}
                 <div className="flex flex-col items-center text-center">
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                        E-Monitoring Siswa
+                        SIAKAD
                     </h2>
                     <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400/80 font-semibold">
                         SMP Plus Ma'had Darul Ikhlas
@@ -128,7 +128,7 @@ export default function LoginPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="block w-full rounded-xl border border-emerald-500/20 bg-[#061812]/50 py-3 pl-10 pr-10 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm"
-                                        placeholder="••••••••"
+                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                     />
                                     <button
                                         type="button"
@@ -163,7 +163,7 @@ export default function LoginPage() {
 
                 {/* Footer Info */}
                 <div className="text-center text-xs text-slate-500">
-                    <p>© 2026 SMP Plus Ma'had Darul Ikhlas E-Monitoring. All rights reserved.</p>
+                    <p>Â© 2026 SMP Plus Ma'had Darul Ikhlas E-Monitoring. All rights reserved.</p>
                 </div>
             </div>
         </div>
