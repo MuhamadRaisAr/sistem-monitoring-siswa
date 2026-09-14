@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+﻿import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Sistem Monitoring Siswa - SMP Ma'had Darul Ikhlas",
+  title: "SIAKAD MDI Siswa - SMP Ma'had Darul Ikhlas",
   description: "Aplikasi monitoring akademik, tahfidz, kesehatan, kedisiplinan, keuangan, dan komunikasi wali siswa",
 };
 

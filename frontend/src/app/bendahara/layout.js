@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -234,7 +234,7 @@ export default function BendaharaLayout({ children }) {
                         <div className="flex items-center gap-3 overflow-hidden">
                             <div>
                                 <h1 className="font-bold text-slate-800 dark:text-white tracking-wide leading-none transition-opacity duration-300">
-                                    SISTEM MONITORING
+                                    SIAKAD MDI
                                 </h1>
                             </div>
                         </div>
