@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, User, ShieldAlert, Sun, Moon } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, ShieldAlert, Sun, Moon, GraduationCap } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function LoginPage() {
@@ -57,83 +57,106 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-[#020c08] px-4 py-12 text-slate-800 dark:text-slate-100 sm:px-6 lg:px-8 transition-colors duration-300">
+        <div className="relative flex min-h-screen items-center justify-center bg-transparent overflow-hidden transition-colors duration-500">
+            <style>{`
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover, 
+                input:-webkit-autofill:focus, 
+                input:-webkit-autofill:active {
+                    -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+                    -webkit-text-fill-color: #0f172a !important;
+                }
+                .dark input:-webkit-autofill,
+                .dark input:-webkit-autofill:hover, 
+                .dark input:-webkit-autofill:focus, 
+                .dark input:-webkit-autofill:active {
+                    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+                    -webkit-text-fill-color: #f1f5f9 !important;
+                }
+            `}</style>
+
+            {/* Background Gradient Blobs */}
+            <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-emerald-400 bg-opacity-20 dark:bg-emerald-900 dark:bg-opacity-20 blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-cyan-400 bg-opacity-20 dark:bg-cyan-900 dark:bg-opacity-20 blur-3xl pointer-events-none"></div>
+
             {/* Theme Toggle Button */}
-            <div className="absolute top-6 right-6">
+            <div className="absolute top-6 right-6 z-50">
                 <button 
                     onClick={toggleTheme}
                     title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-                    className="p-2.5 rounded-xl bg-white dark:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/20 text-amber-500 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-emerald-500/20 transition-all cursor-pointer shadow-sm"
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:scale-105 hover:shadow-lg transition-all duration-300 cursor-pointer shadow-sm"
                 >
-                    {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5 text-slate-700" />}
+                    {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </button>
             </div>
 
-            {/* Glowing background circles */}
-            <div className="absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-emerald-500/5 dark:bg-emerald-800/10"></div>
-            <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-amber-500/5"></div>
+            <div className="w-full max-w-lg z-10 px-4 sm:px-6">
+                {/* Login Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-8 sm:p-10 shadow-xl border border-slate-200 dark:border-slate-700">
+                    
+                    {/* Header Logo & Title */}
+                    <div className="flex flex-col items-center text-center mb-8">
+                        <div className="h-16 w-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg mb-5 transform -rotate-3 hover:rotate-0 transition-transform duration-300 ring-4 ring-slate-50 dark:ring-slate-900">
+                            <GraduationCap className="h-8 w-8 text-white" />
+                        </div>
+                        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                            Sistem Akademik
+                        </h2>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            SMP Plus Ma'had Darul Ikhlas
+                        </p>
+                    </div>
 
-            <div className="w-full max-w-sm space-y-8 relative">
-                {/* Header Logo & Title */}
-                <div className="flex flex-col items-center text-center">
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                        Sistem Akademik
-                    </h2>
-                    <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400/80 font-semibold">
-                        SMP Plus Ma'had Darul Ikhlas
-                    </p>
-                </div>
-
-                {/* Login Form Panel */}
-                <div className="glass-panel rounded-3xl p-8 shadow-2xl">
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         {error && (
-                            <div className="flex items-center gap-3 rounded-xl bg-red-950/40 border border-red-500/30 p-4 text-sm text-red-300">
-                                <ShieldAlert className="h-5 w-5 shrink-0 text-red-400" />
+                            <div className="flex items-center gap-3 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 text-sm text-red-600 dark:text-red-400">
+                                <ShieldAlert className="h-5 w-5 shrink-0" />
                                 <span>{error}</span>
                             </div>
                         )}
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold tracking-wider text-emerald-400 uppercase mb-2">
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="block text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
                                     Username
                                 </label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <User className="h-5 w-5 text-emerald-500/60" />
+                                <div className="relative flex items-center">
+                                    <div className="absolute left-4 z-10 flex items-center justify-center">
+                                        <User className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                                     </div>
                                     <input
                                         type="text"
                                         required
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        className="block w-full rounded-xl border border-emerald-500/20 bg-[#061812]/50 py-3 pl-10 pr-3 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm"
+                                        style={{ paddingLeft: '3rem' }}
+                                        className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 py-3.5 pr-4 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 dark:focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm transition-all"
                                         placeholder="Masukkan username Anda"
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold tracking-wider text-emerald-400 uppercase mb-2">
+                            <div className="space-y-2">
+                                <label className="block text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
                                     Password
                                 </label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <Lock className="h-5 w-5 text-emerald-500/60" />
+                                <div className="relative flex items-center">
+                                    <div className="absolute left-4 z-10 flex items-center justify-center">
+                                        <Lock className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                                     </div>
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full rounded-xl border border-emerald-500/20 bg-[#061812]/50 py-3 pl-10 pr-10 text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm"
-                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                        style={{ paddingLeft: '3rem' }}
+                                        className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 py-3.5 pr-12 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500 dark:focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm transition-all"
+                                        placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500/60 hover:text-emerald-400"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                                     >
                                         {showPassword ? (
                                             <EyeOff className="h-5 w-5" />
@@ -145,25 +168,23 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <div>
+                        <div className="pt-4">
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="group relative flex w-full justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-3 px-4 text-sm font-semibold text-white shadow-lg transition-all hover:from-emerald-500 hover:to-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#020c08] disabled:opacity-50"
+                                className="flex w-full justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 dark:from-emerald-500 dark:to-emerald-400 py-4 px-4 text-sm font-bold text-white shadow-lg hover:shadow-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-[#061812] transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                             >
                                 {submitting ? (
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                    <>
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                                        <span>Memproses...</span>
+                                    </>
                                 ) : (
                                     'Masuk Aplikasi'
                                 )}
                             </button>
                         </div>
                     </form>
-                </div>
-
-                {/* Footer Info */}
-                <div className="text-center text-xs text-slate-500">
-                    <p>Â© 2026 SMP Plus Ma'had Darul Ikhlas E-Monitoring. All rights reserved.</p>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2, Users, BookOpen, Search } from 'lucide-react';
+import { Loader2, Users, BookOpen, Search, Printer } from 'lucide-react';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
 import { getAbbreviatedMapel, getMapelSortIndex } from '@/utils/mapelHelper';
 
@@ -77,7 +77,7 @@ export default function RekapNilaiKelasPage() {
     return (
         <div className="space-y-6 pb-12 animate-fade-in">
             {/* Header */}
-            <div>
+            <div className="no-print">
                 <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
                     Rekap Nilai Wali Kelas
                 </h1>
@@ -98,7 +98,7 @@ export default function RekapNilaiKelasPage() {
             </div>
 
             {/* Selectors */}
-            <div className="flex flex-col gap-4 animate-fade-in">
+            <div className="flex flex-col gap-4 animate-fade-in no-print">
                 <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 w-full">
                     <div className="grid grid-cols-1 sm:flex sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
                         {/* Tahun Ajaran */}
@@ -139,10 +139,82 @@ export default function RekapNilaiKelasPage() {
                             />
                         </div>
                     </div>
+                    
+                    {rekapNilaiData.length > 0 && (
+                        <div className="flex-none mt-3 sm:mt-0">
+                            <label className="block text-[10px] font-bold text-transparent uppercase mb-1.5 hidden sm:block">&nbsp;</label>
+                            <button 
+                                onClick={() => window.print()}
+                                className="flex-shrink-0 flex items-center justify-center w-10 h-10 bg-white dark:bg-[#061e16] border border-slate-200 dark:border-emerald-500/20 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-emerald-500/10 hover:border-emerald-200 dark:hover:border-emerald-500/30 rounded-xl transition-all shadow-sm active:scale-95"
+                                title="Cetak / Download PDF"
+                            >
+                                <Printer className="h-5 w-5" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
             {/* Main Content Area */}
             <div className="relative">
+                <style>{`
+                    @media print {
+                        /* Sembunyikan semua elemen UI utama */
+                        aside, header, nav, .no-print { display: none !important; }
+                        
+                        /* Reset margin dan padding body untuk memaksimalkan area cetak */
+                        @page {
+                            size: landscape;
+                            margin: 10mm;
+                        }
+                        
+                        html, body {
+                            height: auto !important;
+                            overflow: visible !important;
+                        }
+                        
+                        /* Paksa semua scroll container untuk visible saat diprint agar konten tidak terpotong */
+                        div { overflow: visible !important; }
+                        
+                        /* Tambahkan sedikit padding agar garis kanan tidak terpotong (clipped) oleh batas margin kertas */
+                        .print-section {
+                            width: 100% !important;
+                            margin: 0 !important;
+                            padding: 2px !important;
+                            box-sizing: border-box !important;
+                            box-shadow: none !important;
+                            border: none !important;
+                        }
+                        
+                        table { 
+                            width: 99.8% !important; /* Kurangi sedikit agar tidak menyentuh batas absolut ujung kertas */
+                            margin: 0 auto !important;
+                            font-size: 11px !important; 
+                            table-layout: auto !important; 
+                            border-collapse: separate !important; /* Gunakan separate agar border luar tidak terpotong */
+                            border-spacing: 0 !important;
+                            border: 1.5px solid #64748b !important; /* Border luar lebih tebal */
+                            box-sizing: border-box !important;
+                        }
+                        
+                        th, td { 
+                            padding: 6px 4px !important; 
+                            border-right: 1px solid #cbd5e1 !important;
+                            border-bottom: 1px solid #cbd5e1 !important;
+                            text-align: center !important;
+                            /* Jangan paksa width: auto secara agresif jika itu membuat teks bertumpuk vertikal */
+                            white-space: normal !important;
+                            word-wrap: break-word !important;
+                        }
+                        
+                        /* Fix border ganda di sel */
+                        th:first-child, td:first-child { border-left: none !important; }
+                        tr:last-child td { border-bottom: none !important; }
+                        
+                        th:nth-child(2), td:nth-child(2) { text-align: left !important; }
+                        
+                        .truncate, .whitespace-nowrap { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
+                    }
+                `}</style>
                 {/* Smooth Loading Overlay to prevent blinking */}
                 {loading && (
                     <div className="absolute inset-0 bg-white/50 dark:bg-black/40 backdrop-blur-[1px] z-50 flex items-center justify-center rounded-3xl min-h-[250px] transition-all">
@@ -155,7 +227,7 @@ export default function RekapNilaiKelasPage() {
 
                 <div className={`space-y-6 transition-all duration-200 ${loading ? 'opacity-40 blur-[0.5px] pointer-events-none' : 'opacity-100'}`}>
                     {/* Matrix Table */}
-                    <div className="bg-white dark:bg-[#041610] rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-[#041610] rounded-3xl border border-slate-200 dark:border-emerald-500/10 shadow-sm overflow-hidden print-section">
 
                         {rekapNilaiData.length === 0 ? (
                             <div className="text-center py-16 text-slate-550 flex flex-col items-center gap-3">

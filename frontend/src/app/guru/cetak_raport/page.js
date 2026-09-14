@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Printer, Search, FileText, X, Download } from 'lucide-react';
+import { Printer, Search, FileText, X, Download, AlertCircle, Bell } from 'lucide-react';
 import { useTahunAjaran } from '@/hooks/useTahunAjaran';
 import { getMapelSortIndex } from '@/utils/mapelHelper';
 
@@ -51,6 +51,17 @@ export default function CetakRaportGuru() {
 
 
 
+    const [missingGrades, setMissingGrades] = useState([]);
+    const [loadingMissing, setLoadingMissing] = useState(false);
+    const [incompleteStudentIds, setIncompleteStudentIds] = useState(new Set());
+
+    // Toast State
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+    };
+
     useEffect(() => {
         if (!token || !user?.is_wali_kelas || !user?.kelas_wali?.length) {
             setLoading(false);
@@ -71,9 +82,115 @@ export default function CetakRaportGuru() {
                 setLoading(false);
             }
         };
+        
+        const fetchMissing = async () => {
+            if (!selectedTahunAjaranId) {
+                setMissingGrades([]);
+                setIncompleteStudentIds(new Set());
+                return;
+            }
+            setLoadingMissing(true);
+            try {
+                const kelas = user.kelas_wali[0].nama_kelas;
+                const selectedTA = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId?.toString());
+                const currentSemester = selectedTA ? selectedTA.semester : '';
+                
+                const res = await fetch(`${API_URL}/nilai/cek-kelengkapan?kelas=${encodeURIComponent(kelas)}&semester=${encodeURIComponent(currentSemester)}&tahun_ajaran_id=${selectedTahunAjaranId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const mg = Array.isArray(data) ? data : [];
+                setMissingGrades(mg);
+                
+                // Kumpulkan semua ID siswa yang belum dinilai
+                const incomp = new Set();
+                mg.forEach(m => {
+                    if (Array.isArray(m.siswa_belum_dinilai)) {
+                        m.siswa_belum_dinilai.forEach(id => incomp.add(id));
+                    }
+                });
+                setIncompleteStudentIds(incomp);
+                
+            } catch (err) {
+                console.error("Error checking missing grades:", err);
+            } finally {
+                setLoadingMissing(false);
+            }
+        };
 
         fetchStudents();
-    }, [token, user, selectedTahunAjaranId]);
+        fetchMissing();
+    }, [token, user, selectedTahunAjaranId, tahunAjaranList]);
+
+    const [sendingAllPings, setSendingAllPings] = useState(false);
+
+    const handleSendAllPings = async () => {
+        if (missingGrades.length === 0) return;
+        setSendingAllPings(true);
+        let successCount = 0;
+        let failCount = 0;
+        const namaKelas = user.kelas_wali[0].nama_kelas;
+
+        for (const mg of missingGrades) {
+            if (!mg.guru_id) { failCount++; continue; }
+            try {
+                const response = await fetch(`${API_URL}/notifikasi`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        user_id: mg.guru_id,
+                        judul: 'Pengingat Input Nilai',
+                        pesan: `Tolong lengkapi nilai kelas ${namaKelas} untuk mata pelajaran ${mg.mata_pelajaran}.`
+                    })
+                });
+                if (response.ok) successCount++;
+                else failCount++;
+            } catch {
+                failCount++;
+            }
+        }
+        setSendingAllPings(false);
+        if (failCount === 0) {
+            showToast(`Pengingat berhasil dikirim ke ${successCount} guru sekaligus!`, 'success');
+        } else {
+            showToast(`${successCount} pengingat berhasil, ${failCount} gagal dikirim.`, 'warning');
+        }
+    };
+
+    const handleSendPing = async (mg) => {
+        try {
+            if (!mg.guru_id) {
+                showToast(`Pengingat tidak dapat dikirim karena ID Guru tidak ditemukan.`, 'error');
+                return;
+            }
+
+            const response = await fetch(`${API_URL}/notifikasi`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    user_id: mg.guru_id,
+                    judul: 'Pengingat Input Nilai',
+                    pesan: `Tolong lengkapi nilai kelas ${user.kelas_wali[0].nama_kelas} untuk mata pelajaran ${mg.mata_pelajaran}.`
+                })
+            });
+
+            if (response.ok) {
+                showToast(`Pengingat berhasil dikirim ke ${mg.nama_guru} untuk mata pelajaran ${mg.mata_pelajaran}.`, 'success');
+            } else {
+                showToast('Gagal mengirim pengingat.', 'error');
+            }
+        } catch (error) {
+            console.error('Error sending ping:', error);
+            showToast('Terjadi kesalahan saat mengirim pengingat.', 'error');
+        }
+    };
 
     const handleSelectStudentAndShowModal = async (student) => {
         setSelectedStudent(student);
@@ -176,14 +293,15 @@ export default function CetakRaportGuru() {
     };
 
     const handlePrintAll = async () => {
-        if (!selectedTahunAjaranId || filteredStudents.length === 0) return;
+        const completeStudents = filteredStudents.filter(s => !incompleteStudentIds.has(s.id));
+        if (!selectedTahunAjaranId || completeStudents.length === 0) return;
         
         const selectedTA = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId?.toString());
         const currentSemester = selectedTA ? selectedTA.semester : '';
 
         setPrintAllMode(true);
         setPrintAllLoading(true);
-        setPrintProgress({ current: 0, total: filteredStudents.length });
+        setPrintProgress({ current: 0, total: completeStudents.length });
         
         try {
             const resJadwal = await fetch(`${API_URL}/jadwal`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -203,9 +321,9 @@ export default function CetakRaportGuru() {
 
             const allData = [];
 
-            for (let i = 0; i < filteredStudents.length; i++) {
-                const student = filteredStudents[i];
-                setPrintProgress({ current: i + 1, total: filteredStudents.length });
+            for (let i = 0; i < completeStudents.length; i++) {
+                const student = completeStudents[i];
+                setPrintProgress({ current: i + 1, total: completeStudents.length });
 
                 const resNilai = await fetch(`${API_URL}/nilai/siswa/${student.id}?semester=${encodeURIComponent(currentSemester)}&tahun_ajaran_id=${selectedTahunAjaranId}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const dataNilai = await resNilai.json();
@@ -1077,6 +1195,77 @@ export default function CetakRaportGuru() {
                     <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">Cetak Raport</h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Kelola dan cetak raport siswa untuk kelas {user.kelas_wali[0]?.nama_kelas}</p>
                 </div>
+                
+                {/* Peringatan Kelengkapan Nilai */}
+                {missingGrades.length > 0 && !loadingMissing && (
+                    <>
+                    <div className="bg-white dark:bg-[#041610] border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm animate-fade-in">
+                        <div className="flex items-start gap-4">
+                            <div className="w-9 h-9 flex-shrink-0 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                                <AlertCircle className="w-5 h-5 text-red-500" />
+                            </div>
+                            <div className="w-full">
+                                <h3 className="text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base">
+                                    Peringatan! Raport belum bisa dicetak karena ada nilai yang belum masuk.
+                                </h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
+                                    Berikut adalah daftar guru mata pelajaran yang belum melengkapi nilai untuk kelas ini. Kirim pengingat ke semua guru sekaligus atau satu per satu.
+                                </p>
+                                <div className="mt-4 flex items-center justify-between gap-3">
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                        Total: <span className="font-bold text-red-500">{missingGrades.length} mata pelajaran</span> belum lengkap
+                                    </span>
+                                    <button
+                                        onClick={handleSendAllPings}
+                                        disabled={sendingAllPings}
+                                        className="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm whitespace-nowrap"
+                                    >
+                                        <Bell className="w-3.5 h-3.5" />
+                                        <span>{sendingAllPings ? 'Mengirim...' : `Kirim Semua Pengingat (${missingGrades.length})`}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-[#041610] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden animate-fade-in">
+                        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#061e16]">
+                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Daftar Nilai Belum Lengkap</p>
+                        </div>
+                        <table className="w-full text-left text-xs sm:text-sm">
+                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th className="py-2.5 px-4 w-1/3">Mata Pelajaran</th>
+                                    <th className="py-2.5 px-4 w-1/3">Guru Pengampu</th>
+                                    <th className="py-2.5 px-4">Status</th>
+                                    <th className="py-2.5 px-4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300">
+                                {missingGrades.map((mg, idx) => (
+                                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td className="py-3 px-4 font-medium">{mg.mata_pelajaran}</td>
+                                        <td className="py-3 px-4">{mg.nama_guru}</td>
+                                        <td className="py-3 px-4">
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900/30 whitespace-nowrap">
+                                                Kurang {mg.jumlah_kurang} Siswa
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-right">
+                                            <button 
+                                                onClick={() => handleSendPing(mg)}
+                                                className="inline-flex items-center justify-center gap-1.5 bg-white dark:bg-[#020c08] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm whitespace-nowrap"
+                                            >
+                                                <Bell className="w-3.5 h-3.5" />
+                                                <span>Kirim Pengingat</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    </>
+                )}
 
                 {/* Top Controls (Search & Semester) */}
                 <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -1099,26 +1288,27 @@ export default function CetakRaportGuru() {
                                 ))
                             )}
                         </select>
-                        
-                        <button 
-                            onClick={handlePrintAll}
-                            disabled={printAllLoading || filteredStudents.length === 0}
-                            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-400 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2"
-                        >
-                            <Printer className="w-4 h-4" />
-                            <span className="whitespace-nowrap">Cetak Semua Rapor</span>
-                        </button>
                     </div>
                     
-                    <div className="relative w-full sm:max-w-sm min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input 
-                            type="text" 
-                            placeholder="Cari nama siswa atau NIS..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#041610] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-emerald-500 transition-colors shadow-sm"
-                        />
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full md:w-auto justify-end">
+                        <div className="relative w-full sm:max-w-sm min-w-0 flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input 
+                                type="text" 
+                                placeholder="Cari nama siswa atau NIS..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-[#041610] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-emerald-500 transition-colors shadow-sm"
+                            />
+                        </div>
+                        <button 
+                            onClick={handlePrintAll}
+                            disabled={printAllLoading || filteredStudents.length === 0 || (filteredStudents.length > 0 && incompleteStudentIds.size === filteredStudents.length)}
+                            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-400 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2 shrink-0"
+                        >
+                            <Printer className="w-4 h-4" />
+                            <span className="whitespace-nowrap">Cetak Semua</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1142,7 +1332,8 @@ export default function CetakRaportGuru() {
                                     </p>
                                     <button 
                                         onClick={() => handleSelectStudentAndShowModal(student)}
-                                        className="inline-flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 px-4 py-2 md:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs md:text-sm transition-all shadow-sm shrink-0"
+                                        disabled={incompleteStudentIds.has(student.id)}
+                                        className="inline-flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-50 disabled:hover:text-emerald-700 px-4 py-2 md:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs md:text-sm transition-all shadow-sm shrink-0"
                                     >
                                         <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5" />
                                         <span>Cetak Raport</span>
@@ -1247,6 +1438,21 @@ export default function CetakRaportGuru() {
                     )
                 )}
             </div>
+            {/* Toast Notification */}
+            {toast.show && typeof window !== 'undefined' && require('react-dom').createPortal(
+                <div 
+                    style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(calc(-50% + 144px))', zIndex: 999999 }}
+                    className="bg-white dark:bg-[#061e16] border-l-4 border-l-emerald-500 border border-slate-200 dark:border-emerald-500/20 rounded-xl p-4 shadow-2xl animate-fade-in flex items-center gap-3 min-w-[300px] pointer-events-auto"
+                >
+                    <div className={`p-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                        {toast.type === 'success' ? <Bell className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                    </div>
+                    <div>
+                        <p className="font-bold text-sm text-slate-800 dark:text-slate-100">{toast.message}</p>
+                    </div>
+                </div>,
+                document.body
+            )}
             
         </div>
     );

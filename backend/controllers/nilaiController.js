@@ -377,3 +377,84 @@ exports.getNilaisiswa = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+// Mengecek kelengkapan nilai raport untuk kelas tertentu
+exports.cekKelengkapanRaport = async (req, res) => {
+    try {
+        const { kelas, semester, tahun_ajaran_id } = req.query;
+
+        if (!kelas || !semester || !tahun_ajaran_id) {
+            return res.status(400).json({ message: 'Missing required parameters.' });
+        }
+
+        // 1. Ambil data siswa aktif di kelas tersebut
+        const [siswa] = await db.query(
+            'SELECT id FROM siswa WHERE kelas = ? AND status_aktif = "aktif"',
+            [kelas]
+        );
+        
+        if (siswa.length === 0) {
+            return res.json([]); // Tidak ada siswa, jadi otomatis dianggap lengkap
+        }
+        
+        const totalSiswa = siswa.length;
+        
+        // 2. Cari mapel wajib untuk kelas tersebut dari jadwal
+        // Menggunakan SELECT DISTINCT untuk menghindari duplikasi mapel dengan guru yang sama
+        const [jadwal] = await db.query(
+            `SELECT DISTINCT j.mata_pelajaran, j.guru_id, u.nama_lengkap AS nama_guru 
+             FROM jadwal_pelajaran j 
+             LEFT JOIN users u ON j.guru_id = u.id 
+             WHERE j.kelas = ?`,
+            [kelas]
+        );
+        
+        if (jadwal.length === 0) {
+            return res.json([]); // Tidak ada jadwal, dianggap lengkap
+        }
+        
+        // 3. Cek jumlah siswa yang sudah memiliki nilai minimal 1 jenis nilai (Tugas/UTS/UAS/Praktik)
+        const missingGrades = [];
+        
+        for (const mapel of jadwal) {
+            // Count distinct siswa yang sudah dinilai oleh guru ini untuk mapel ini
+            const [nilaiResult] = await db.query(
+                `SELECT COUNT(DISTINCT siswa_id) AS jumlah_dinilai 
+                 FROM nilai_siswa 
+                 WHERE mata_pelajaran = ? AND semester = ? AND tahun_ajaran_id = ? 
+                 AND siswa_id IN (SELECT id FROM siswa WHERE kelas = ? AND status_aktif = "aktif")`,
+                [mapel.mata_pelajaran, semester, tahun_ajaran_id, kelas]
+            );
+            
+            const jumlahDinilai = nilaiResult[0].jumlah_dinilai;
+            
+            if (jumlahDinilai < totalSiswa) {
+                // Get exactly which students haven't been graded
+                const [belumDinilaiResult] = await db.query(
+                    `SELECT id FROM siswa 
+                     WHERE kelas = ? AND status_aktif = "aktif" 
+                     AND id NOT IN (
+                         SELECT DISTINCT siswa_id FROM nilai_siswa 
+                         WHERE mata_pelajaran = ? AND semester = ? AND tahun_ajaran_id = ?
+                     )`,
+                    [kelas, mapel.mata_pelajaran, semester, tahun_ajaran_id]
+                );
+                
+                missingGrades.push({
+                    mata_pelajaran: mapel.mata_pelajaran,
+                    guru_id: mapel.guru_id,
+                    nama_guru: mapel.nama_guru || 'Guru Belum Ditentukan',
+                    jumlah_kurang: totalSiswa - jumlahDinilai,
+                    total_siswa: totalSiswa,
+                    siswa_belum_dinilai: belumDinilaiResult.map(s => s.id)
+                });
+            }
+        }
+        
+        return res.json(missingGrades);
+
+    } catch (err) {
+        console.error('Cek kelengkapan raport error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};

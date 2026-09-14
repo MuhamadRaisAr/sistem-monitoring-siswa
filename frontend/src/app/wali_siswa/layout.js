@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { ChildProvider, useChild } from '@/context/ChildContext';
@@ -322,7 +322,7 @@ function WaliLayoutContent({ children }) {
                             <div className="flex items-center gap-2 min-w-0">
                                 <span className="text-xs text-slate-500 dark:text-slate-400 hidden lg:inline font-semibold">Memantau:</span>
                                 <div className="bg-emerald-600/10 border border-emerald-500/20 rounded-xl px-3 py-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 max-w-[200px] truncate">
-                                    ðŸ‘¦ {selectedChild ? selectedChild.nama_lengkap : 'Ananda'}
+                                    👦 {selectedChild ? selectedChild.nama_lengkap : 'Ananda'}
                                 </div>
                             </div>
                         ) : (

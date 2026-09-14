@@ -12,6 +12,9 @@ router.post('/bulk', verifyToken, nilaiController.saveNilaiBulk);
 // Get rekap nilai kelas
 router.get('/rekap-kelas', verifyToken, nilaiController.getRekapKelas);
 
+// Cek kelengkapan nilai raport kelas
+router.get('/cek-kelengkapan', verifyToken, nilaiController.cekKelengkapanRaport);
+
 // Get rekap nilai siswa (Untuk Wali Siswa)
 router.get('/siswa/:siswa_id', verifyToken, nilaiController.getNilaisiswa);
 

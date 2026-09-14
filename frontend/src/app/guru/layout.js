@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -68,16 +68,67 @@ export default function GuruLayout({ children }) {
 
     // Socket.io for Realtime Notifications
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || !user) return;
         socket.on('new_notification', (data) => {
             console.log('Received notification:', data);
-            setToastNotif(data);
-            setTimeout(() => setToastNotif(null), 8000);
+            if (data.user_id === user.id || !data.user_id) {
+                setToastNotif(data);
+                
+                // Trigger vibration (hanya bekerja di HP Android)
+                if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+                    try { 
+                        // Getar 2 detik, jeda 0.5 detik, diulang-ulang selama +- 10 detik
+                        const vibePattern = [2000, 500, 2000, 500, 2000, 500, 2000, 500];
+                        navigator.vibrate(vibePattern); 
+                    } catch (e) {}
+                }
+                
+                // Mainkan suara notifikasi native (Web Audio API)
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        const audioCtx = new AudioContext();
+                        
+                        // Penting: Resume context jika diblokir oleh browser (autoplay policy)
+                        if (audioCtx.state === 'suspended') {
+                            audioCtx.resume();
+                        }
+
+                        // Buat suara berulang selama 10 detik (20 kali bunyi)
+                        const duration = 10;
+                        const beepsCount = duration * 2;
+                        
+                        for (let i = 0; i < beepsCount; i++) {
+                            const startTime = audioCtx.currentTime + (i * 0.5); // setiap 0.5 detik
+                            const oscillator = audioCtx.createOscillator();
+                            const gainNode = audioCtx.createGain();
+
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioCtx.destination);
+
+                            oscillator.type = 'sine';
+                            oscillator.frequency.setValueAtTime(880, startTime);
+                            oscillator.frequency.exponentialRampToValueAtTime(1760, startTime + 0.1);
+
+                            gainNode.gain.setValueAtTime(0, startTime);
+                            gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+
+                            oscillator.start(startTime);
+                            oscillator.stop(startTime + 0.4);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Web Audio API error:", e);
+                }
+                
+                setTimeout(() => setToastNotif(null), 12000);
+            }
         });
         return () => {
             socket.off('new_notification');
         };
-    }, [socket]);
+    }, [socket, user]);
 
     // Change profile states
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -352,11 +403,11 @@ export default function GuruLayout({ children }) {
             {toastNotif && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-white text-slate-700 px-5 py-4 rounded-2xl shadow-xl flex items-start gap-4 animate-fade-in-up max-w-[90vw] md:max-w-md w-full border border-slate-200">
                     <div className="bg-slate-100 p-2 rounded-xl shrink-0">
-                        <Bell className="h-6 w-6 text-slate-500" />
+                        <Bell className="h-6 w-6 text-emerald-500 animate-pulse" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="font-extrabold text-sm mb-0.5 text-slate-800">{toastNotif.title}</p>
-                        <p className="text-xs text-slate-500 leading-relaxed">{toastNotif.message}</p>
+                        <p className="font-extrabold text-sm mb-0.5 text-slate-800">{toastNotif.judul || toastNotif.title}</p>
+                        <p className="text-xs text-slate-500 leading-relaxed">{toastNotif.pesan || toastNotif.message}</p>
                     </div>
                     <button onClick={() => setToastNotif(null)} className="shrink-0 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
                         <X className="h-5 w-5" />

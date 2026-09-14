@@ -38,7 +38,49 @@ export default function CetakRaportAdmin() {
     const [printProgress, setPrintProgress] = useState({ current: 0, total: 0 });
     const [printAllMode, setPrintAllMode] = useState(false);
 
+    const [missingGrades, setMissingGrades] = useState([]);
+    const [loadingMissing, setLoadingMissing] = useState(false);
+    const [incompleteStudentIds, setIncompleteStudentIds] = useState(new Set());
+
     const API_URL = '/api';
+
+    useEffect(() => {
+        const fetchMissing = async () => {
+            if (!selectedTahunAjaranId || !selectedKelas || !token) {
+                setMissingGrades([]);
+                setIncompleteStudentIds(new Set());
+                return;
+            }
+            setLoadingMissing(true);
+            try {
+                const selectedTA = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId?.toString());
+                const currentSemester = selectedTA ? selectedTA.semester : '';
+                
+                const res = await fetch(`${API_URL}/nilai/cek-kelengkapan?kelas=${encodeURIComponent(selectedKelas)}&semester=${encodeURIComponent(currentSemester)}&tahun_ajaran_id=${selectedTahunAjaranId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const mg = Array.isArray(data) ? data : [];
+                setMissingGrades(mg);
+                
+                const incomp = new Set();
+                mg.forEach(m => {
+                    if (Array.isArray(m.siswa_belum_dinilai)) {
+                        m.siswa_belum_dinilai.forEach(id => incomp.add(id));
+                    }
+                });
+                setIncompleteStudentIds(incomp);
+                
+            } catch (err) {
+                console.error("Error checking missing grades:", err);
+            } finally {
+                setLoadingMissing(false);
+            }
+        };
+
+        fetchMissing();
+    }, [selectedKelas, selectedTahunAjaranId, tahunAjaranList, token]);
 
     useEffect(() => {
         const updateScale = () => {
@@ -216,14 +258,15 @@ export default function CetakRaportAdmin() {
     };
 
     const handlePrintAll = async () => {
-        if (!selectedTahunAjaranId || filteredStudents.length === 0) return;
+        const completeStudents = filteredStudents.filter(s => !incompleteStudentIds.has(s.id));
+        if (!selectedTahunAjaranId || completeStudents.length === 0) return;
         
         const selectedTA = tahunAjaranList.find(t => t.id.toString() === selectedTahunAjaranId?.toString());
         const currentSemester = selectedTA ? selectedTA.semester : '';
 
         setPrintAllMode(true);
         setPrintAllLoading(true);
-        setPrintProgress({ current: 0, total: filteredStudents.length });
+        setPrintProgress({ current: 0, total: completeStudents.length });
         
         try {
             const resJadwal = await fetch(`${API_URL}/jadwal`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -243,9 +286,9 @@ export default function CetakRaportAdmin() {
 
             const allData = [];
 
-            for (let i = 0; i < filteredStudents.length; i++) {
-                const student = filteredStudents[i];
-                setPrintProgress({ current: i + 1, total: filteredStudents.length });
+            for (let i = 0; i < completeStudents.length; i++) {
+                const student = completeStudents[i];
+                setPrintProgress({ current: i + 1, total: completeStudents.length });
 
                 const resNilai = await fetch(`${API_URL}/nilai/siswa/${student.id}?semester=${encodeURIComponent(currentSemester)}&tahun_ajaran_id=${selectedTahunAjaranId}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const dataNilai = await resNilai.json();
@@ -499,7 +542,7 @@ export default function CetakRaportAdmin() {
                         
                         <button 
                             onClick={handlePrintAll}
-                            disabled={printAllLoading || filteredStudents.length === 0}
+                            disabled={printAllLoading || filteredStudents.length === 0 || (filteredStudents.length > 0 && incompleteStudentIds.size === filteredStudents.length)}
                             className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-400 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center justify-center gap-2"
                         >
                             <Printer className="w-4 h-4" />
@@ -562,7 +605,8 @@ export default function CetakRaportAdmin() {
                                             <td className="py-4 px-4 border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50/50 dark:group-hover:bg-[#061e16]">
                                                 <button 
                                                     onClick={() => handleSelectStudentAndShowModal(student)}
-                                                    className="inline-flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-sm"
+                                                    disabled={incompleteStudentIds.has(student.id)}
+                                                    className="inline-flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-50 disabled:hover:text-emerald-700 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-sm"
                                                 >
                                                     <Printer className="w-3.5 h-3.5" />
                                                     <span>Cetak Raport</span>
