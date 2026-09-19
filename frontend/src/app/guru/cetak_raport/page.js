@@ -1199,37 +1199,27 @@ export default function CetakRaportGuru() {
                 {/* Peringatan Kelengkapan Nilai */}
                 {missingGrades.length > 0 && !loadingMissing && (
                     <>
-                    <div className="bg-white dark:bg-[#041610] border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm animate-fade-in">
-                        <div className="flex items-start gap-4">
-                            <div className="w-9 h-9 flex-shrink-0 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
+                    <div className="bg-white dark:bg-[#041610] border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 flex-shrink-0 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                                <AlertCircle className="w-4 h-4 text-red-500" />
                             </div>
-                            <div className="w-full">
-                                <h3 className="text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base">
-                                    Peringatan! Raport belum bisa dicetak karena ada nilai yang belum masuk.
-                                </h3>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                                    Berikut adalah daftar guru mata pelajaran yang belum melengkapi nilai untuk kelas ini. Kirim pengingat ke semua guru sekaligus atau satu per satu.
-                                </p>
-                                <div className="mt-4 flex items-center justify-between gap-3">
-                                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                                        Total: <span className="font-bold text-red-500">{missingGrades.length} mata pelajaran</span> belum lengkap
-                                    </span>
-                                    <button
-                                        onClick={handleSendAllPings}
-                                        disabled={sendingAllPings}
-                                        className="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm whitespace-nowrap"
-                                    >
-                                        <Bell className="w-3.5 h-3.5" />
-                                        <span>{sendingAllPings ? 'Mengirim...' : `Kirim Semua Pengingat (${missingGrades.length})`}</span>
-                                    </button>
-                                </div>
-                            </div>
+                            <p className="text-slate-700 dark:text-slate-300 font-semibold text-sm flex-1">
+                                Raport belum bisa dicetak &mdash; terdapat <span className="text-red-500 font-bold">{missingGrades.length} mata pelajaran</span> yang nilai UTS/UAS-nya belum lengkap.
+                            </p>
                         </div>
                     </div>
                     <div className="bg-white dark:bg-[#041610] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden animate-fade-in">
-                        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#061e16]">
+                        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#061e16] flex items-center justify-between gap-3">
                             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Daftar Nilai Belum Lengkap</p>
+                            <button
+                                onClick={handleSendAllPings}
+                                disabled={sendingAllPings}
+                                className="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-slate-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm whitespace-nowrap"
+                            >
+                                <Bell className="w-3.5 h-3.5" />
+                                <span>{sendingAllPings ? 'Mengirim...' : `Kirim Semua Pengingat (${missingGrades.length})`}</span>
+                            </button>
                         </div>
                         <table className="w-full text-left text-xs sm:text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">

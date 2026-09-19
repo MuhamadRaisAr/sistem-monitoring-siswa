@@ -413,15 +413,18 @@ exports.cekKelengkapanRaport = async (req, res) => {
             return res.json([]); // Tidak ada jadwal, dianggap lengkap
         }
         
-        // 3. Cek jumlah siswa yang sudah memiliki nilai minimal 1 jenis nilai (Tugas/UTS/UAS/Praktik)
+        // 3. Cek kelengkapan nilai UTS/UAS (nilai inti raport).
+        //    Nilai Tugas dan Praktik bersifat opsional dan TIDAK menghalangi cetak raport.
+        //    Tombol cetak hanya terkunci jika siswa belum punya nilai UTS maupun UAS.
         const missingGrades = [];
         
         for (const mapel of jadwal) {
-            // Count distinct siswa yang sudah dinilai oleh guru ini untuk mapel ini
+            // Hitung siswa yang sudah punya nilai UTS ATAU UAS untuk mapel ini
             const [nilaiResult] = await db.query(
                 `SELECT COUNT(DISTINCT siswa_id) AS jumlah_dinilai 
                  FROM nilai_siswa 
                  WHERE mata_pelajaran = ? AND semester = ? AND tahun_ajaran_id = ? 
+                 AND jenis_nilai IN ('UTS', 'UAS')
                  AND siswa_id IN (SELECT id FROM siswa WHERE kelas = ? AND status_aktif = "aktif")`,
                 [mapel.mata_pelajaran, semester, tahun_ajaran_id, kelas]
             );
@@ -429,13 +432,14 @@ exports.cekKelengkapanRaport = async (req, res) => {
             const jumlahDinilai = nilaiResult[0].jumlah_dinilai;
             
             if (jumlahDinilai < totalSiswa) {
-                // Get exactly which students haven't been graded
+                // Cari persis siswa yang belum ada nilai UTS maupun UAS-nya
                 const [belumDinilaiResult] = await db.query(
                     `SELECT id FROM siswa 
                      WHERE kelas = ? AND status_aktif = "aktif" 
                      AND id NOT IN (
                          SELECT DISTINCT siswa_id FROM nilai_siswa 
                          WHERE mata_pelajaran = ? AND semester = ? AND tahun_ajaran_id = ?
+                         AND jenis_nilai IN ('UTS', 'UAS')
                      )`,
                     [kelas, mapel.mata_pelajaran, semester, tahun_ajaran_id]
                 );

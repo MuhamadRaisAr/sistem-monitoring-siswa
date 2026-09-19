@@ -603,14 +603,22 @@ export default function CetakRaportAdmin() {
                                                 {student.kelas}
                                             </td>
                                             <td className="py-4 px-4 border-r border-slate-200 dark:border-emerald-500/10 text-center bg-white dark:bg-[#041610] group-hover:bg-slate-50/50 dark:group-hover:bg-[#061e16]">
-                                                <button 
-                                                    onClick={() => handleSelectStudentAndShowModal(student)}
-                                                    disabled={incompleteStudentIds.has(student.id)}
-                                                    className="inline-flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-50 disabled:hover:text-emerald-700 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-sm"
-                                                >
-                                                    <Printer className="w-3.5 h-3.5" />
-                                                    <span>Cetak Raport</span>
-                                                </button>
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <button 
+                                                        onClick={() => handleSelectStudentAndShowModal(student)}
+                                                        disabled={incompleteStudentIds.has(student.id)}
+                                                        title={incompleteStudentIds.has(student.id) ? "Nilai UTS/UAS belum lengkap untuk semua mapel" : "Cetak raport siswa ini"}
+                                                        className="inline-flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-50 disabled:hover:text-emerald-700 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-sm"
+                                                    >
+                                                        <Printer className="w-3.5 h-3.5" />
+                                                        <span>Cetak Raport</span>
+                                                    </button>
+                                                    {incompleteStudentIds.has(student.id) && (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-2 py-0.5 rounded-full">
+                                                            ⚠ Nilai UTS/UAS belum lengkap
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
